@@ -1,0 +1,9 @@
+id
+sudo -n true 2>&1
+sudo -n ha core info 2>&1
+sudo -n ha supervisor info 2>&1
+sudo -n ha apps list 2>&1
+ls -ld /config /home/@@PRIVATE_VALUE_009@@ /root /run/s6/container_environment
+printenv | cut -d= -f1 | sort
+ps -o pid,user,comm
+ss -lnt 2>/dev/null || netstat -lnt

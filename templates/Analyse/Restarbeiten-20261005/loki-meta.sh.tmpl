@@ -1,0 +1,5 @@
+systemctl show loki -p ExecStart
+cat /etc/loki/config.yml
+curl -fsS http://127.0.0.1:3100/loki/api/v1/labels
+cat /etc/default/prometheus-node-exporter | grep ARGS
+systemctl list-units --all --no-pager | grep -E 'node.*exporter|exporter.*node'

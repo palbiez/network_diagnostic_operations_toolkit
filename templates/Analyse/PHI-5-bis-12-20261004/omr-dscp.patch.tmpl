@@ -1,0 +1,28 @@
+--- /etc/init.d/omr-dscp.before
++++ /etc/init.d/omr-dscp
+@@ -133,6 +133,7 @@
+ # which is a different thing to fw4 -- see the "both" case below for why
+ # that distinction matters). $3 is the dest zone.
+ _apply_dscp_rule_fields() {
++	local rulename rsrc rdst rule_src_ports rule_dest_ports port
+ 	rulename="$1"
+ 	rsrc="$2"
+ 	rdst="$3"
+@@ -161,8 +162,15 @@
+ 	else
+ 		uci -q set firewall.${rulename}.counter='0'
+ 	fi
+-	rule_src_ports="$(echo $src_port | sed 's/,/ /g')"
+-	rule_dest_ports="$(echo $dest_port | sed 's/,/ /g')"
++	# Replace port lists when regenerating: repeated calls must not append duplicates.
++	uci -q delete firewall.${rulename}.src_port 2>/dev/null
++	uci -q delete firewall.${rulename}.dest_port 2>/dev/null
++	rule_src_ports="$(printf '%s' "$src_port" | sed 's/,/ /g')"
++	rule_dest_ports="$(printf '%s' "$dest_port" | sed 's/,/ /g')"
++	case "$proto" in
++		tcp|udp|"tcp udp") ;;
++		*) rule_src_ports=''; rule_dest_ports='' ;;
++	esac
+ 	for port in $rule_src_ports; do
+ 		uci -q add_list firewall.${rulename}.src_port="$port"
+ 	done

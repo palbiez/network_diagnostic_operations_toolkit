@@ -1,0 +1,9 @@
+printf '\n--- generated DNS rules ---\n'
+grep -hEi 'application|rtl\.de|25273|29560' /var/etc/dnsmasq.conf.* /tmp/dnsmasq.d/* 2>/dev/null
+printf '\n--- local bypass implementation ---\n'
+sed -n '/^_bypass_domains()/,/^_bypass_mac()/p' /etc/init.d/omr-bypass
+printf '\n--- set names and rules ---\n'
+nft list ruleset | grep -E 'set omr|omr_dst_bypass|1100|45393|45392' | head -100
+printf '\n--- ASN files ---\n'
+find /tmp /usr/share/omr-bypass -maxdepth 2 -type f -name '*AS*' 2>/dev/null | head -25
+true

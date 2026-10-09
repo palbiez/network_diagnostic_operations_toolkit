@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+dir=/tmp/phi12-device-playstation-20261002T110458Z
+date -Is
+kill -0 23967
+kill -0 24397
+echo 'ACTUAL EGRESS PACKETS (limited sample):'
+grep -h -m 2 '@@INTERFACE_003@@ Out' "$dir/egress/"wire-*.log | head -5 || true
+echo 'CAPTURE ERRORS:'
+grep -i -e 'syntax error' -e 'permission denied' -e 'invalid' "$dir/egress/"wire-*-status.txt || true
+echo 'DEVICE CAPTURE STATUS:'
+head -3 "$dir/lan-capture-status.txt"

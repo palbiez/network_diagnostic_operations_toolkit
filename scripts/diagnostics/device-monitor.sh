@@ -1,0 +1,68 @@
+#!/bin/sh
+# Device-scoped diagnostic metadata only. No configuration or service changes.
+set -eu
+umask 077
+WAN1_TABLE=${WAN1_TABLE:?Supply WAN1_TABLE}
+WAN2_TABLE=${WAN2_TABLE:?Supply WAN2_TABLE}
+for table in "$WAN1_TABLE" "$WAN2_TABLE"; do
+ case "$table" in ''|*[!0-9]*) echo 'Route table must be numeric'; exit 2;; esac
+done
+DEVICE_IP=${DEVICE_IP:?}
+DEVICE_MAC=${DEVICE_MAC:?}
+DURATION=${DURATION:-3600}
+case "$DEVICE_IP" in ''|*[!0-9.]*) exit 2;; esac
+case "$DEVICE_MAC" in ''|*[!0-9a-fA-F:]*) exit 2;; esac
+DEVICE_MAC=$(echo "$DEVICE_MAC" | tr A-F a-f)
+case "$DURATION" in ''|*[!0-9]*) exit 2;; esac
+[ "$DURATION" -ge 5 ] && [ "$DURATION" -le 86400 ] || exit 2
+OUT_DIR=${OUT_DIR:-/tmp/phi12-device-$(date -u +%Y%m%dT%H%M%SZ)-$$}
+case "$OUT_DIR" in /tmp/phi12-device-*) ;; *) exit 2;; esac
+case "${OUT_DIR#/tmp/}" in */*) exit 2;; esac
+[ ! -e "$OUT_DIR" ] || exit 2
+dev=$(ip route get "$DEVICE_IP" | awk '{for(i=1;i<=NF;i++) if($i=="dev") {print $(i+1);exit}}')
+ip neigh show "$DEVICE_IP" dev "$dev" | grep -iq "lladdr $DEVICE_MAC" || { echo 'IP/MAC not verified'; exit 1; }
+mkdir -p "$OUT_DIR"
+printf 'utc,event\n' > "$OUT_DIR/events.csv"
+printf 'ip=%s\nmac=%s\ninterface=%s\nduration=%s\n' "$DEVICE_IP" "$DEVICE_MAC" "$dev" "$DURATION" > "$OUT_DIR/settings.txt"
+: > "$OUT_DIR/known-targets.txt"
+pids=''
+reason=duration
+cleanup() {
+ trap - EXIT INT TERM HUP
+ for pid in $pids; do kill -TERM "$pid" 2>/dev/null || true; done
+ for pid in $pids; do wait "$pid" 2>/dev/null || true; done
+ printf '%s,stopped:%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$reason" >> "$OUT_DIR/events.csv"
+ echo "STOPPED: $OUT_DIR ($reason)"
+}
+trap cleanup EXIT
+trap 'reason=signal; exit 0' INT TERM HUP
+conntrack -E -s "$DEVICE_IP" -o timestamp,extended > "$OUT_DIR/conntrack-events.log" 2> "$OUT_DIR/conntrack-event-status.txt" &
+pids="$pids $!"
+tcpdump -i "$dev" -n -tt -l -q -s 80 "ether host $DEVICE_MAC and host $DEVICE_IP and (tcp or udp)" > "$OUT_DIR/lan-packets.log" 2> "$OUT_DIR/lan-capture-status.txt" &
+pids="$pids $!"
+start=$(date +%s)
+next_rules=0
+echo "STARTED: $OUT_DIR"
+while [ "$(date +%s)" -lt "$((start+DURATION))" ]; do
+ [ ! -e "$OUT_DIR/stop" ] || { reason=stop_file; break; }
+ [ "$(du -sk "$OUT_DIR" | awk '{print $1}')" -lt 65536 ] || { reason=size_limit; break; }
+ mac=$(ip neigh show "$DEVICE_IP" dev "$dev" | awk '{for(i=1;i<=NF;i++) if($i=="lladdr") {print $(i+1);exit}}')
+ [ "$mac" = "$DEVICE_MAC" ] || { reason=mac_unverified; break; }
+ utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+ conntrack -L -s "$DEVICE_IP" -o extended > "$OUT_DIR/current-connections.txt" 2>> "$OUT_DIR/conntrack-list-status.txt" || true
+ printf '\nUTC %s\n' "$utc" >> "$OUT_DIR/connection-snapshots.log"
+ cat "$OUT_DIR/current-connections.txt" >> "$OUT_DIR/connection-snapshots.log"
+ awk '{for(i=1;i<=NF;i++) if($i ~ /^dst=/) {split($i,a,"=");print a[2];break}}' "$OUT_DIR/current-connections.txt" | sort -u > "$OUT_DIR/known-targets.next"
+ mv "$OUT_DIR/known-targets.next" "$OUT_DIR/known-targets.txt"
+ now=$(date +%s)
+ if [ "$now" -ge "$next_rules" ]; then
+  stamp=$(date -u +%Y%m%dT%H%M%SZ)
+  nft -a list ruleset | grep -i -e "$DEVICE_MAC" -e "$DEVICE_IP" > "$OUT_DIR/rule-counters-$stamp.txt" || true
+  ip rule show > "$OUT_DIR/ip-rules-$stamp.txt"
+  ip route show table "$WAN2_TABLE" > "$OUT_DIR/wan2-routes-$stamp.txt"
+  ip route show table "$WAN1_TABLE" > "$OUT_DIR/wan1-routes-$stamp.txt"
+  next_rules=$((now+30))
+ fi
+ if [ -e "$OUT_DIR/trigger" ]; then printf '%s,user_event\n' "$utc" >> "$OUT_DIR/events.csv"; rm -f "$OUT_DIR/trigger"; fi
+ sleep 2
+done

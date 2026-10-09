@@ -1,0 +1,5 @@
+sed -n '1640,1695p' /etc/init.d/omr-bypass
+sed -n '1850,1915p' /etc/init.d/omr-bypass
+sed -n '2230,2270p' /etc/init.d/omr-bypass
+grep -n -E '_delete|_remove.*rule|_remove.*ipset|_cleanup|config_foreach' /etc/init.d/omr-bypass | tail -30
+sha256sum /etc/init.d/omr-bypass /etc/init.d/omr-dscp

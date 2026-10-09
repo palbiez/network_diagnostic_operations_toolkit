@@ -1,0 +1,6 @@
+#!/bin/sh
+date -Is
+pgrep -af '^ping|/usr/bin/ping'
+for f in /tmp/phi12-diag-20261003/ping*.log; do printf '\nFILE %s\n' "$f"; tail -4 "$f"; done
+du -sk /tmp/phi12-diag-20261003/* | sort -nr | head -15
+tail -15 /tmp/phi12-diag-20261003/events.csv

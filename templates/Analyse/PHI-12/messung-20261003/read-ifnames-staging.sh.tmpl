@@ -1,0 +1,12 @@
+end=$(($(date +%s)+65))
+previous=''
+while [ "$(date +%s)" -lt "$end" ]; do
+ state=$(uci -q changes shadowsocks-libev; uci -q changes shadowsocks-rust)
+ safe=$(printf '%s\n' "$state" | grep -E '^shadowsocks-(libev|rust)\.ss_rules\.ifnames' || true)
+ if [ "$safe" != "$previous" ]; then
+  date -Is
+  printf '%s\n' "$safe"
+  previous="$safe"
+ fi
+ sleep 1
+done

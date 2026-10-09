@@ -1,0 +1,694 @@
+#!/bin/sh
+[ ! -f /root/phi12-diag-20261003/active ] || logger -p daemon.debug -t omr-schedule-010-services "diagnostic invocation pid=$$"
+#
+# Copyright (C) 2018-2025 Ycarus (Yannick Chabanois) <ycarus@zugaina.org> for OpenMPTCProuter
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+# This script check services status and do appropriate actions
+
+# Snapshot the config dump once instead of re-running `uci show
+# openmptcprouter` for every substring test below (each dump forks uci and
+# reserializes the whole config). Refreshed after the get_config commits,
+# whose result the later tests must see.
+_omr_snapshot="$(uci -q show openmptcprouter)"
+_omr_has() {
+	case "$_omr_snapshot" in
+		*"$1"*) return 0;;
+		*) return 1;;
+	esac
+}
+
+# The shipped shadowsocks configs give every server section a placeholder
+# address and an empty credential: nothing answers there, so such a section
+# is "not provisioned yet" and must not be treated as a proxy worth
+# restarting or worth tracking. The current placeholder is 127.0.0.1;
+# @@IPV4_027@@ is the one older releases shipped, still recognised for configs
+# that were never provisioned before an upgrade. Same set as the shadowsocks
+# init scripts, 021-proxy and the openmptcprouter rpcd API.
+_ss_server_configured() {  # _ss_server_configured <package> <section>
+	case "$(uci -q get "$1.$2.server")" in
+		""|127.0.0.1|::1|@@IPV4_027@@) return 1 ;;
+	esac
+	return 0
+}
+
+if [ -n "$(printf '%s\n' "$_omr_snapshot" | awk -F= '/password/ { gsub("\047","",$2);print $2 }')" ]; then
+	# If a service is down, force restart it
+	omr_schedule_vpn_setting="$(uci -q get openmptcprouter.settings.vpn)"
+	if [ -f /etc/init.d/shadowsocks-libev ] && [ "$(pgrep -f omr-tracker-ss)" = "" ] && [ "$(pgrep -f ss-redir)" = "" ] && [ "$(pgrep -f ss-local)" = "" ] && [ "$(uci -q get shadowsocks-libev.sss0.disabled)" != "1" ] && _ss_server_configured shadowsocks-libev sss0 && [ "$(uci -q get shadowsocks-libev.sss0.key)" != "" ]; then
+		_log "Can't find Shadowsocks, restart it..."
+		/etc/init.d/shadowsocks-libev restart >/dev/null 2>&1
+		sleep 5
+	fi
+	if [ -f /etc/init.d/shadowsocks-rust ] && [ "$(pgrep -f omr-tracker-ss)" = "" ] && [ "$(pgrep -f sslocal)" = "" ] && [ "$(uci -q get shadowsocks-rust.sss0.disabled)" != "1" ] && _ss_server_configured shadowsocks-rust sss0 && [ "$(uci -q get shadowsocks-rust.sss0.password)" != "" ]; then
+		_log "Can't find Shadowsocks Rust, restart it..."
+		/etc/init.d/shadowsocks-rust restart >/dev/null 2>&1
+		sleep 5
+	fi
+	if [ -f /etc/init.d/glorytun ] && [ "$(pgrep glorytun)" = "" ] && [ "$(uci -q get glorytun.vpn.enable)" = "1" ] && [ "$(uci -q get glorytun.vpn.key)" != "" ] && [ "$omr_schedule_vpn_setting" != "none" ]; then
+		# Shared restart cooldown with omr-tracker's 002-error hook (see the
+		# MQVPN watchdog further below for the full rationale)
+		glorytun_last_restart="$(cat /tmp/omr-glorytun-last-restart 2>/dev/null)"
+		[ -z "$glorytun_last_restart" ] && glorytun_last_restart=0
+		glorytun_now="$(date +%s)"
+		if [ "$((glorytun_now - glorytun_last_restart))" -ge 60 ]; then
+			_log "Can't find Glorytun, restart it..."
+			echo "$glorytun_now" > /tmp/omr-glorytun-last-restart
+			/etc/init.d/glorytun restart >/dev/null 2>&1
+			sleep 5
+		else
+			_log "Can't find Glorytun, restart skipped (already restarted less than 60s ago)"
+		fi
+	fi
+	if [ -f /etc/init.d/glorytun-udp ] && [ "$(pgrep glorytun-udp)" = "" ] && [ "$(uci -q get glorytun-udp.vpn.enable)" = "1" ] && [ "$(uci -q get glorytun-udp.vpn.key)" != "" ] && [ "$omr_schedule_vpn_setting" != "none" ]; then
+		# Shares the same cooldown file as omr-tracker's 002-error Glorytun UDP
+		# hold-down logic so the two watchdogs never restart it back-to-back
+		gtudp_last_restart="$(cat /tmp/omr-tracker-gtudp-last-restart 2>/dev/null)"
+		[ -z "$gtudp_last_restart" ] && gtudp_last_restart=0
+		gtudp_now="$(date +%s)"
+		if [ "$((gtudp_now - gtudp_last_restart))" -ge 60 ]; then
+			_log "Can't find Glorytun UDP, restart it..."
+			echo "$gtudp_now" > /tmp/omr-tracker-gtudp-last-restart
+			/etc/init.d/glorytun-udp restart >/dev/null 2>&1
+			sleep 5
+		else
+			_log "Can't find Glorytun UDP, restart skipped (already restarted less than 60s ago)"
+		fi
+	fi
+	if [ "$(pgrep openvpn)" = "" ] && [ -f /etc/init.d/openvpn ] && [ "$omr_schedule_vpn_setting" != "none" ]; then
+		openvpn_enable=0
+		openvpn_enabled() {
+			[ "$(uci -q get openvpn.$1.enabled)" = "1" ] && [ -n "$(uci -q get openvpn.$1.ca)" ] && openvpn_enable=1
+		}
+		config_load openvpn
+		config_foreach openvpn_enabled openvpn
+		if [ "$openvpn_enable" = "1" ]; then
+			# Shared restart cooldown with omr-tracker's 002-error hook (see
+			# the MQVPN watchdog further below for the full rationale)
+			openvpn_last_restart="$(cat /tmp/omr-openvpn-last-restart 2>/dev/null)"
+			[ -z "$openvpn_last_restart" ] && openvpn_last_restart=0
+			openvpn_now="$(date +%s)"
+			if [ "$((openvpn_now - openvpn_last_restart))" -ge 60 ]; then
+				_log "Can't find OpenVPN, restart it"
+				echo "$openvpn_now" > /tmp/omr-openvpn-last-restart
+				/etc/init.d/openvpn restart >/dev/null 2>&1
+				sleep 5
+			else
+				_log "Can't find OpenVPN, restart skipped (already restarted less than 60s ago)"
+			fi
+		fi
+	fi
+
+	if [ "$(pgrep mlvpn)" = "" ] && [ "$(uci -q get mlvpn.general.enable)" = "1" ] && [ -f /etc/init.d/mlvpn ] && [ "$(uci -q get mlvpn.general.password)" != "" ] && [ "$omr_schedule_vpn_setting" != "none" ]; then
+		# Shared restart cooldown with omr-tracker's 002-error hook (see the
+		# MQVPN watchdog further below for the full rationale)
+		mlvpn_last_restart="$(cat /tmp/omr-mlvpn-last-restart 2>/dev/null)"
+		[ -z "$mlvpn_last_restart" ] && mlvpn_last_restart=0
+		mlvpn_now="$(date +%s)"
+		if [ "$((mlvpn_now - mlvpn_last_restart))" -ge 60 ]; then
+			_log "Can't find MLVPN, restart it..."
+			echo "$mlvpn_now" > /tmp/omr-mlvpn-last-restart
+			/etc/init.d/mlvpn restart >/dev/null 2>&1
+			sleep 5
+		else
+			_log "Can't find MLVPN, restart skipped (already restarted less than 60s ago)"
+		fi
+	fi
+	if [ "$(pgrep mqvpn)" = "" ] && [ "$(uci -q get mqvpn.settings.enable)" = "1" ] && [ -f /etc/init.d/mqvpn ] && [ "$(uci -q get mqvpn.auth.key)" != "" ] && [ "$omr_schedule_vpn_setting" != "none" ]; then
+		# Rate-limit: omr-tracker's post-tracking 002-error hook also restarts
+		# MQVPN as soon as its interface reports down. Without this shared
+		# cooldown, both watchdogs can fire within the same outage and restart
+		# it back-to-back, force-closing every open MPTCP connection through
+		# it (confirmed live: a single MQVPN outage produced 4 @@INTERFACE_001@@ up/down
+		# flaps and a shadowsocks-rust crash loop from the resulting
+		# scheduler-restart storm)
+		mqvpn_last_restart="$(cat /tmp/omr-mqvpn-last-restart 2>/dev/null)"
+		[ -z "$mqvpn_last_restart" ] && mqvpn_last_restart=0
+		mqvpn_now="$(date +%s)"
+		if [ "$((mqvpn_now - mqvpn_last_restart))" -ge 60 ]; then
+			_log "Can't find MQVPN, restart it..."
+			echo "$mqvpn_now" > /tmp/omr-mqvpn-last-restart
+			/etc/init.d/mqvpn restart >/dev/null 2>&1
+			sleep 5
+		else
+			_log "Can't find MQVPN, restart skipped (already restarted less than 60s ago)"
+		fi
+	fi
+	if [ "$(pgrep dsvpn)" = "" ] && [ "$(uci -q get dsvpn.vpn.enable)" = "1" ] && [ -f /etc/init.d/dsvpn ] && [ "$(uci -q get dsvpn.vpn.key)" != "" ] && [ "$omr_schedule_vpn_setting" != "none" ]; then
+		# Shared restart cooldown with omr-tracker's 002-error hook (see the
+		# MQVPN watchdog above for the full rationale)
+		dsvpn_last_restart="$(cat /tmp/omr-dsvpn-last-restart 2>/dev/null)"
+		[ -z "$dsvpn_last_restart" ] && dsvpn_last_restart=0
+		dsvpn_now="$(date +%s)"
+		if [ "$((dsvpn_now - dsvpn_last_restart))" -ge 60 ]; then
+			_log "Can't find DSVPN, restart it..."
+			echo "$dsvpn_now" > /tmp/omr-dsvpn-last-restart
+			/etc/init.d/dsvpn restart >/dev/null 2>&1
+			sleep 5
+		else
+			_log "Can't find DSVPN, restart skipped (already restarted less than 60s ago)"
+		fi
+	fi
+	if [ "$(pgrep vpnclient)" = "" ] && [ "$(uci -q get softethervpn.openmptcprouter.enable)" = "1" ] && [ -f /etc/init.d/softethervpnclient ] && [ "$omr_schedule_vpn_setting" != "none" ]; then
+		# Shared restart cooldown with omr-tracker's 002-error hook (see the
+		# MQVPN watchdog above for the full rationale)
+		softethervpn_last_restart="$(cat /tmp/omr-softethervpn-last-restart 2>/dev/null)"
+		[ -z "$softethervpn_last_restart" ] && softethervpn_last_restart=0
+		softethervpn_now="$(date +%s)"
+		if [ "$((softethervpn_now - softethervpn_last_restart))" -ge 60 ]; then
+			_log "Can't find SoftEther VPN, restart it..."
+			echo "$softethervpn_now" > /tmp/omr-softethervpn-last-restart
+			/etc/init.d/softethervpnclient restart >/dev/null 2>&1
+			sleep 5
+		else
+			_log "Can't find SoftEther VPN, restart skipped (already restarted less than 60s ago)"
+		fi
+	fi
+	if [ "$(pgrep -f v2ray)" = "" ] && [ "$(uci -q get v2ray.main.enabled)" = "1" ] && [ -f /etc/init.d/v2ray ]; then
+		_log "Can't find V2Ray, restart it..."
+		/etc/init.d/v2ray restart >/dev/null 2>&1
+		sleep 5
+	fi
+	if [ "$(pgrep -f xray)" = "" ] && [ "$(uci -q get xray.main.enabled)" = "1" ] && [ -f /etc/init.d/xray ]; then
+		_log "Can't find XRay, restart it..."
+		/etc/init.d/xray restart >/dev/null 2>&1
+		sleep 5
+	fi
+	if [ "$(uci -q get v2ray.main.enabled)" = "1" ] && [ -f /etc/init.d/v2ray ] && [ "$(pgrep -f omr-tracker-v2ray)" = "" ] && [ "$(pgrep -f '/etc/init.d/omr-tracker')" = "" ]; then
+		_log "Can't find omr-tracker-v2ray, start it (procd keeps running trackers)..."
+		/etc/init.d/omr-tracker start >/dev/null 2>&1
+	fi
+	if [ "$(uci -q get xray.main.enabled)" = "1" ] && [ -f /etc/init.d/xray ] && [ "$(pgrep -f omr-tracker-xray)" = "" ] && [ "$(pgrep -f '/etc/init.d/omr-tracker')" = "" ]; then
+		_log "Can't find omr-tracker-xray, start it (procd keeps running trackers)..."
+		/etc/init.d/omr-tracker start >/dev/null 2>&1
+	fi
+
+	set_get_config() {
+		local server=$1
+		[ -n "$server" ] && uci -q set openmptcprouter.${server}.get_config=1
+	}
+
+	if ([ -f /etc/init.d/shadowsocks-libev ] && [ "$(uci -q get shadowsocks-libev.sss0.disabled)" != "1" ] && [ "$(uci -q get shadowsocks-libev.sss0.key)" = "" ] && _ss_server_configured shadowsocks-libev sss0) || ([ -f /etc/init.d/shadowsocks-rust ] && [ "$(uci -q get shadowsocks-rust.sss0.disabled)" != "1" ] && [ "$(uci -q get shadowsocks-rust.sss0.password)" = "" ] && _ss_server_configured shadowsocks-rust sss0); then
+		config_load openmptcprouter
+		config_foreach set_get_config server
+		[ -n "$(uci -q changes openmptcprouter)" ] && uci -q commit openmptcprouter
+	fi
+	if [ -f /etc/init.d/shadowsocks-libev ] && [ "$(uci -q get shadowsocks-libev.sss0.disabled)" != "1" ] && [ "$(uci -q get shadowsocks-libev.sss0.key)" != "" ] && _ss_server_configured shadowsocks-libev sss0 && [ "$(pgrep -f omr-tracker-ss)" = "" ] && [ "$(pgrep -f '/etc/init.d/omr-tracker')" = "" ]; then
+		_log "Can't find omr-tracker-ss for Shadowsocks libev, start it (procd keeps running trackers)..."
+		/etc/init.d/omr-tracker start >/dev/null 2>&1
+	fi
+
+	if [ -f /etc/init.d/shadowsocks-rust ] && [ "$(uci -q get shadowsocks-rust.sss0.disabled)" != "1" ] && [ "$(uci -q get shadowsocks-rust.sss0.password)" != "" ] && _ss_server_configured shadowsocks-rust sss0 && [ "$(pgrep -f omr-tracker-ss)" = "" ] && [ "$(pgrep -f '/etc/init.d/omr-tracker')" = "" ]; then
+		_log "Can't find omr-tracker-ss for Shadowsocks Rust, start it (procd keeps running trackers)..."
+		/etc/init.d/omr-tracker start >/dev/null 2>&1
+	fi
+
+	if [ "$(uci -q get glorytun.vpn.enable)" = "1" ] && [ "$(uci -q get glorytun.vpn.key)" = "" ]; then
+		config_load openmptcprouter
+		config_foreach set_get_config server
+		[ -n "$(uci -q changes openmptcprouter)" ] && uci -q commit openmptcprouter
+	elif [ "$(uci -q get mqvpn.settings.enable)" = "1" ] && [ "$(uci -q get mqvpn.auth.key)" = "" ]; then
+		config_load openmptcprouter
+		config_foreach set_get_config server
+		[ -n "$(uci -q changes openmptcprouter)" ] && uci -q commit openmptcprouter
+	elif [ "$(uci -q get v2ray.main.enabled)" = "1" ] && [ "$(uci -q get v2ray.omrout.s_vless_user_id)" = "" ]; then
+		config_load openmptcprouter
+		config_foreach set_get_config server
+		[ -n "$(uci -q changes openmptcprouter)" ] && uci -q commit openmptcprouter
+	elif [ "$(uci -q get xray.main.enabled)" = "1" ] && [ "$(uci -q get xray.omrout.s_vless_user_id)" = "" ]; then
+		config_load openmptcprouter
+		config_foreach set_get_config server
+		[ -n "$(uci -q changes openmptcprouter)" ] && uci -q commit openmptcprouter
+	fi
+
+	# The set_get_config/token blocks above may have just committed new flags
+	_omr_snapshot="$(uci -q show openmptcprouter)"
+	if [ "$(pgrep -f openmptcprouter-vps)" = "" ] && _omr_has "token_error='1'"; then
+		/etc/init.d/openmptcprouter-vps token >/dev/null 2>&1 &
+		sleep 5
+	fi
+	if [ "$(pgrep -f openmptcprouter-vps)" = "" ] && (! _omr_has "get_config" || _omr_has "get_config='1'" || _omr_has "admin_error='1'"); then
+		/etc/init.d/openmptcprouter-vps restart >/dev/null 2>&1 &
+		sleep 5
+	fi
+	#if [ "$(uci -q show openmptcprouter | grep server)" != "" ] && [ "$(uci -q show openmptcprouter | grep password)" != "" ] && [ "$(pgrep -f openmptcprouter-vps)" = "" ] && [ "$(uci -q show openmptcprouter | grep admin_error=\'1\')" = "" ] && ([ "$(uci -q show openmptcprouter | grep set_firewall=\'1\')" != "" ] || (([ -e /usr/sbin/iptables-nft-save ] && [ -z "$(iptables-save 2>/dev/null | grep omr_dst_bypass_${OMR_TRACKER_DEVICE})" ]) || [ -z "$(iptables-save 2>/dev/null | grep omr_dst_bypass_${OMR_TRACKER_DEVICE})" ])); then
+	if [ "$(pgrep -f set_vps_firewall)" = "" ] && _omr_has "server" && _omr_has "password" && [ "$(pgrep -f openmptcprouter-vps)" = "" ] && ! _omr_has "admin_error='1'" && _omr_has "set_firewall='1'"; then
+		check_server_fw() {
+			[ "$(uci -q get openmptcprouter.$1.set_firewall)" = "1" ] && {
+				_log "Set firewall on server $1"
+				/etc/init.d/openmptcprouter-vps set_vps_firewall $1 >/dev/null 2>&1
+			}
+		}
+		config_load openmptcprouter
+		config_foreach check_server_fw server
+
+
+	#	run_fw_include() {
+	#		[ -n "$1" ] && [ "$(uci -q get firewall.$1.reload)" = "0" ] && sh $(uci -q get firewall.$1.path) >/dev/null 2>&1
+	#	}
+	#	config_load firewall
+	#	config_foreach run_fw_include include
+
+		#/etc/init.d/shadowsocks-libev rules_up >/dev/null 2>&1
+		#/etc/init.d/v2ray rules_up >/dev/null 2>&1
+		#/etc/init.d/omr-bypass reload_rules >/dev/null 2>&1
+		#sh /etc/firewall.gre-tunnel >/dev/null 2>&1
+		/bin/blocklanfw >/dev/null 2>&1
+		sleep 5
+	fi
+
+	# VXLAN is toggled purely via UCI (openmptcprouter.settings.vxlan) but only
+	# takes effect once openmptcprouter-vps pushes/pulls it against the VPS, so
+	# catch a UCI flag that drifted from the actual omrvxlan interface state
+	if [ "$(pgrep -f openmptcprouter-vps)" = "" ]; then
+		if [ "$(uci -q get openmptcprouter.settings.vxlan)" = "1" ] && [ -z "$(uci -q get network.omrvxlan)" ]; then
+			_log "VXLAN enabled but not set up, enable it..."
+			/etc/init.d/openmptcprouter-vps set_vxlan >/dev/null 2>&1
+			sleep 5
+		elif [ "$(uci -q get openmptcprouter.settings.vxlan)" != "1" ] && [ -n "$(uci -q get network.omrvxlan)" ]; then
+			_log "VXLAN disabled but still set up, disable it..."
+			/etc/init.d/openmptcprouter-vps set_vxlan >/dev/null 2>&1
+			sleep 5
+		fi
+	fi
+fi
+
+
+if [ -f /etc/init.d/unbound ] && [ "$(uci -q get unbound.@unbound[0].enabled)" = "1" ] && [ -n "$(uci -q get dhcp.@dnsmasq[0].server | grep 127.0.0.1#5353)" ]; then
+	if [ "$(pgrep -f unbound)" = "" ]; then
+		_log "Can't find unbound, restart it..."
+		/etc/init.d/unbound restart >/dev/null 2>&1
+		sleep 5
+	elif [ "$(uci -q get openmptcprouter.settings.external_check)" != "0" ] && [ "$(uci -q get unbound.ub_main.listen_port)" = "5353" ] && [ -n "$(dig +timeout=4 +tries=2 @@HOSTNAME_005@@ -p 5353 | grep 'ANSWER: 0')" ]; then
+		_log "Can't resolve via unbound, restart it..."
+		/etc/init.d/unbound restart >/dev/null 2>&1
+		sleep 5
+	fi
+fi
+
+if [ -f /etc/init.d/unbound ] && [ "$(uci -q get unbound.@unbound[0].enabled)" = "1" ] && [ "$(uci -q get openmptcprouter.settings.external_check)" != "0" ]; then
+	_dns_hijacked_flag="$(uci -q get openmptcprouter.settings.dns_hijacked)"
+	# Nothing to do if dnsmasq isn't on unbound AND we're not already flagged hijacked
+	# (some other/manual config, not ours to touch). Cheap uci reads, so check these
+	# before bothering with the pricier WAN-status loop below.
+	if [ -n "$(uci -q get dhcp.@dnsmasq[0].server | grep '127\.0\.0\.1#5353')" ] || [ "$_dns_hijacked_flag" = "1" ]; then
+		_omr_wan_up=0
+		_omr_wan_up_check() {
+			local multipath
+			config_get multipath "$1" multipath
+			case "$multipath" in
+				on|master|backup) ;;
+				*) return ;;
+			esac
+			[ "$(uci -q get openmptcprouter.$1.state)" = "up" ] && _omr_wan_up=1
+		}
+		config_load network
+		config_foreach _omr_wan_up_check interface
+		if [ "$_omr_wan_up" = "1" ]; then
+			# Throttle to every 15min
+			_dnshijack_now="$(date +%s)"
+			_dnshijack_last="$(cat /tmp/omr-dnshijack-last-check 2>/dev/null)"
+			[ -z "$_dnshijack_last" ] && _dnshijack_last=0
+			if [ "$((_dnshijack_now - _dnshijack_last))" -ge 900 ]; then
+				echo "$_dnshijack_now" > /tmp/omr-dnshijack-last-check
+				ROOT_CHECK=$(dig +short +time=3 +tries=1 google.fr @@@IPV4_028@@ 2>/dev/null)
+				ROOT_CHECK_RC=$?
+				if [ "$ROOT_CHECK_RC" -eq 0 ] && [ -n "$ROOT_CHECK" ] && [ -z "$(uci -q get dhcp.@dnsmasq[0].server | grep '1\.1\.1\.1')" ]; then
+					_log "DNS port 53 hijacked by ISP, bypass unbound and use @@IPV4_011@@..."
+					uci -q del_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+					uci -q add_list dhcp.@dnsmasq[0].server='@@IPV4_011@@'
+					uci -q set openmptcprouter.settings.dns_hijacked=1
+					uci -q commit openmptcprouter
+					uci -q commit dhcp
+					/etc/init.d/dnsmasq restart >/dev/null 2>&1
+				elif [ "$ROOT_CHECK_RC" -eq 0 ] && [ -z "$ROOT_CHECK" ] && [ "$_dns_hijacked_flag" = "1" ]; then
+					_log "DNS port 53 hijack resolved, restoring unbound..."
+					uci -q del_list dhcp.@dnsmasq[0].server='@@IPV4_011@@'
+					uci -q add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+					uci -q del openmptcprouter.settings.dns_hijacked
+					uci -q commit openmptcprouter
+					uci -q commit dhcp
+					/etc/init.d/dnsmasq restart >/dev/null 2>&1
+				fi
+			fi
+		fi
+	fi
+fi
+
+# dnsmasq is intentionally stopped while this router is a keepalived HA
+# backup (hotplug 551-dnsmasq); only skip the watchdog while keepalived
+# is really alive so a crashed keepalived never leaves dnsmasq down
+_keepalived_backup=0
+[ "$(cat /var/run/keepalived.omr_ha.state 2>/dev/null)" = "BACKUP" ] &&
+	pidof keepalived >/dev/null 2>&1 && _keepalived_backup=1
+
+if [ -f /etc/init.d/dnsmasq ] && [ "$_keepalived_backup" != "1" ]; then
+	if [ "$(pgrep -f dnsmasq)" = "" ]; then
+		_log "Can't find dnsmasq, restart it..."
+		/etc/init.d/dnsmasq restart >/dev/null 2>&1
+		sleep 5
+	elif [ "$(uci -q get openmptcprouter.settings.external_check)" != "0" ] && [ -n "$(dig +timeout=4 +tries=2 @@HOSTNAME_005@@ 2>&1 | grep -i 'connection refused')" ]; then
+		_log "Can't resolve via dnsmasq, restart it..."
+		/etc/init.d/dnsmasq restart >/dev/null 2>&1
+		sleep 5
+	fi
+fi
+
+if [ -f /etc/init.d/dnsmasq ] && [ -z "$(uci -q get dhcp.@dnsmasq[0].server)" ]; then
+	uci -q batch <<-EOF >/dev/null
+		add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+		add_list dhcp.@dnsmasq[0].server='/lan/'
+		add_list dhcp.@dnsmasq[0].server='/@@HOSTNAME_006@@/'
+		commit dhcp
+	EOF
+fi
+
+if [ "$(pgrep miniupnpd)" = "" ] && [ "$(uci -q get upnpd.config.enabled)" = "1" ] && [ -f /etc/init.d/miniupnpd ]; then
+	_log "Can't find miniupnpd, restart it..."
+	/etc/init.d/miniupnpd restart >/dev/null 2>&1
+	sleep 5
+fi
+
+if [ "$(pgrep rpcd)" = "" ] && [ -f /etc/init.d/rpcd ]; then
+	_log "Can't find rpcd, restart it..."
+	/etc/init.d/rpcd enable >/dev/null 2>&1
+	/etc/init.d/rpcd restart >/dev/null 2>&1
+	sleep 5
+fi
+if [ "$(pgrep dbus)" = "" ] && [ -f /etc/init.d/dbus ]; then
+	_log "Can't find dbus, restart it..."
+	/etc/init.d/dbus enable >/dev/null 2>&1
+	/etc/init.d/dbus restart >/dev/null 2>&1
+	sleep 5
+fi
+
+if [ "$(pgrep uhttpd)" = "" ] && [ -f /etc/init.d/uhttpd ]; then
+	_log "Can't find uhttpd, restart it..."
+	/etc/init.d/uhttpd restart >/dev/null 2>&1
+	sleep 5
+fi
+
+if [ "$(uci -q get openmptcprouter.settings.disable_modemmanager)" != "1" ]; then
+	if [ -z "$(pgrep ModemManager)" ] && [ -f /etc/init.d/modemmanager ] && [ -n "$(uci -q show network | grep modemmanager)" ]; then
+		_log "Can't find ModemManager, restart it..."
+		/etc/init.d/modemmanager restart >/dev/null 2>&1
+		sleep 5
+	elif [ -n "$(pgrep ModemManager)" ] && [ -f /etc/init.d/modemmanager ] && [ -n "$(uci -q show network | grep modemmanager)" ] && [ -z "$(timeout 2 mmcli -L)" ]; then
+		_log "ModemManager doesn't answer, restart it..."
+		/etc/init.d/modemmanager restart >/dev/null 2>&1
+		sleep 5
+	#elif [ -n "$(pgrep ModemManager)" ] && [ -f /etc/init.d/modemmanager ] && [ -z "$(uci -q show network | grep modemmanager)" ]; then
+	#	_log "ModemManager not used, stop it..."
+	#	/etc/init.d/modemmanager stop >/dev/null 2>&1
+	#	sleep 5
+	fi
+	/etc/init.d/modemmanager enable >/dev/null 2>&1
+fi
+
+# pgrep -f matches the tracker daemon AND its short-lived bash subshells
+# (command substitutions, post-tracking blocks share the same cmdline), so a
+# raw pid count sees phantom duplicates and — once the pid space wraps — the
+# lowest pid can be a subshell, getting the real daemon killed. Only processes
+# reparented to init/procd (PPid 1) are actual daemons.
+_daemon_pids() {
+	local pid ppid daemons=""
+	for pid in $(pgrep -f "$1"); do
+		ppid=$(awk '/^PPid:/ {print $2}' "/proc/$pid/status" 2>/dev/null)
+		[ "$ppid" = "1" ] && daemons="$daemons $pid"
+	done
+	echo $daemons
+}
+
+_oldest_pid() {
+	local pid start oldest="" oldest_start=""
+	for pid in "$@"; do
+		start=$(awk '{print $22}' "/proc/$pid/stat" 2>/dev/null)
+		[ -z "$start" ] && continue
+		if [ -z "$oldest_start" ] || [ "$start" -lt "$oldest_start" ]; then
+			oldest=$pid
+			oldest_start=$start
+		fi
+	done
+	echo "$oldest"
+}
+
+restart_omrtracker() {
+	config_get multipath "$1" multipath
+	config_get ifenabled "$1" auto
+	{ [ -z "$multipath" ] || [ "$multipath" = "off" ]; } && return
+	[ "$ifenabled" = "0" ] && return
+	local daemons daemon_count keep pid
+	daemons=$(_daemon_pids "omr-tracker $1")
+	daemon_count=$(echo $daemons | wc -w)
+	[ "$daemon_count" -gt 1 ] && {
+		# keep the instance procd supervises (fall back to the oldest),
+		# kill only genuine stray daemons
+		keep=$(ubus call service list '{"name":"omr-tracker"}' 2>/dev/null | jsonfilter -q -e "@['omr-tracker'].instances['$1'].pid")
+		case " $daemons " in
+			*" $keep "*) ;;
+			*) keep=$(_oldest_pid $daemons);;
+		esac
+		for pid in $daemons; do
+			[ "$pid" != "$keep" ] && kill "$pid" 2>/dev/null
+		done
+		return
+	}
+	[ "$daemon_count" -eq 1 ] && return
+	# Atomic lock to prevent concurrent starts from overlapping cron runs
+	local lockdir="/tmp/omr-tracker-lock-${1}"
+	if ! mkdir "$lockdir" 2>/dev/null; then
+		local now mtime
+		now=$(date +%s)
+		mtime=$(stat -c "%Y" "$lockdir" 2>/dev/null || echo 0)
+		[ $((now - mtime)) -lt 60 ] && return
+		rmdir "$lockdir" 2>/dev/null
+		mkdir "$lockdir" 2>/dev/null || return
+	fi
+	/etc/init.d/omr-tracker enable
+	/etc/init.d/omr-tracker start_interface "$1"
+	sleep 10
+	rmdir "$lockdir" 2>/dev/null
+}
+
+_intf_zone_forwards_to_wan() {
+	# Only true if the firewall zone this interface belongs to actually
+	# has a forwarding path to the wan zone (either it *is* the wan zone,
+	# or a `config forwarding` src=<zone> dest=wan exists). Isolated zones
+	# (forward=REJECT, no forwarding to wan) must return false so their
+	# interfaces are never added to the ss-rust transparent-redirect scope.
+	local intf="$1" zsection znetwork zname fsection fsrc fdest
+	for zsection in $(uci -q show firewall | sed -n "s/^\(firewall\.[^.]*\)=zone\$/\1/p"); do
+		znetwork=$(uci -q get ${zsection}.network 2>/dev/null)
+		case " $znetwork " in
+			*" $intf "*)
+				zname=$(uci -q get ${zsection}.name 2>/dev/null)
+				[ "$zname" = "wan" ] && return 0
+				for fsection in $(uci -q show firewall | sed -n "s/^\(firewall\.[^.]*\)=forwarding\$/\1/p"); do
+					fsrc=$(uci -q get ${fsection}.src 2>/dev/null)
+					fdest=$(uci -q get ${fsection}.dest 2>/dev/null)
+					[ "$fsrc" = "$zname" ] && [ "$fdest" = "wan" ] && return 0
+				done
+				;;
+		esac
+	done
+	return 1
+}
+set_lan_ips() {
+	config_get ip4table "$1" ip4table
+	config_get device "$1" device
+	config_get proto "$1" proto
+	config_get multipath "$1" multipath
+	# No restrict for interfaces with strong name
+	[ -n "$(echo $device | grep -- -)" ] && uci -q set openmptcprouter.settings.restrict_to_lan="0" && uci commit openmptcprouter
+	uci -q del_list shadowsocks-libev.ss_rules.ifnames="$device"
+	uci -q del_list shadowsocks-rust.ss_rules.ifnames="$device"
+	uci -q del_list unbound.ub_main.iface_lan="$1"
+	uci -q del_list unbound.ub_main.iface_wan="$1"
+	uci -q del_list dhcp.@dnsmasq[0].interface="$1"
+	uci -q del_list dhcp.@dnsmasq[0].notinterface="$1"
+	if [ "$multipath" != "on" ] && [ "$multipath" != "master" ] && [ -n "$device" ] && [ -z "$(echo $device | grep @)" ] && ([ "$proto" = "dhcp" ] || [ "$proto" = "static" ]); then
+		if _intf_zone_forwards_to_wan "$1"; then
+			uci -q add_list shadowsocks-libev.ss_rules.ifnames="$device"
+			uci -q add_list shadowsocks-rust.ss_rules.ifnames="$device"
+		fi
+		uci -q add_list unbound.ub_main.iface_lan="$1"
+		uci -q add_list dhcp.@dnsmasq[0].interface="$1"
+	elif [ "$multipath" = "on" ] || [ "$multipath" = "master" ]; then
+		uci -q add_list unbound.ub_main.iface_wan="$1"
+		uci -q add_list dhcp.@dnsmasq[0].notinterface="$1"
+	fi
+}
+config_load network
+config_foreach restart_omrtracker interface
+# Kill any duplicate omr-tracker-server daemons (PPid-1 only: pgrep -f also
+# matches its subshells), keeping the oldest
+_srv_daemons=$(_daemon_pids "omr-tracker-server")
+_srv_count=$(echo $_srv_daemons | wc -w)
+[ "$_srv_count" -gt 1 ] && {
+	_srv_keep=$(_oldest_pid $_srv_daemons)
+	for _srv_pid in $_srv_daemons; do
+		[ "$_srv_pid" != "$_srv_keep" ] && kill "$_srv_pid" 2>/dev/null
+	done
+}
+[ "$(uci -q get openmptcprouter.settings.restrict_to_lan)" = "1" ] && config_foreach set_lan_ips interface
+[ "$(uci -q get openmptcprouter.settings.restrict_to_lan)" = "0" ] && ([ -n "$(uci -q get shadowsocks-libev.ss_rules.ifnames)" ] || [ -n "$(uci -q get shadowsocks-rust.ss_rules.ifnames)" ]) && {
+	uci -q batch <<-EOF
+		delete shadowsocks-libev.ss_rules.ifnames
+		delete shadowsocks-rust.ss_rules.ifnames
+		delete unbound.ub_main.iface_lan
+		delete unbound.ub_main.iface_wan
+		delete dhcp.@dnsmasq[0].interface
+		delete dhcp.@dnsmasq[0].notinterface
+	EOF
+}
+[ -n "$(uci -q changes shadowsocks-libev)" ] && uci -q commit shadowsocks-libev
+[ -n "$(uci -q changes shadowsocks-rust)" ] && uci -q commit shadowsocks-rust
+[ -n "$(uci -q changes unbound)" ] && uci -q commit unbound
+[ -n "$(uci -q changes dhcp)" ] && uci -q commit dhcp
+# Devices shared with a multipath-enabled interface must not be "fixed" off.
+# Collect their l3_devices once up front: resolving them inside multipath_fix
+# re-ran ifstatus+jsonfilter for every non-off interface per off-interface
+# (O(n^2) forks each minute). An off-interface can't appear in this list
+# (only non-off ones are collected), so no self-exclusion check is needed.
+_mf_shared_devs=""
+_mf_collect_shared() {
+	config_get _mf_mp "$1" multipath
+	[ "$_mf_mp" = "off" ] || [ -z "$_mf_mp" ] && return
+	_mf_dev="$(ifstatus "$1" 2>/dev/null | jsonfilter -q -e '@.l3_device' | tr -d '\n')"
+	[ -n "$_mf_dev" ] && _mf_shared_devs="$_mf_shared_devs $_mf_dev"
+}
+multipath_fix() {
+	config_get multipath "$1" multipath
+	[ "$multipath" != "off" ] && return
+	config_get device "$1" device
+	[ "$(echo $device | grep '@')" ] && return
+	interface="$(ifstatus $1 | jsonfilter -q -e '@.l3_device' | tr -d '\n')"
+	[ -z "$interface" ] && return
+	case " $_mf_shared_devs " in
+		*" $interface "*) return;;
+	esac
+	[ -n "$(multipath $interface | grep deactivated)" ] && return
+	_log "Fix Multipath status on $1 ($interface)"
+	/etc/init.d/mptcp reload $interface >/dev/null 2>&1
+}
+if [ "$(uci -q get network.globals.multipath)" = "enable" ]; then
+	config_load network
+	config_foreach _mf_collect_shared interface
+	config_foreach multipath_fix interface
+fi
+# logread -l is supported by both ubox logread and the syslog-ng compat
+# wrapper; a bare `logread | tail` dumps the whole ring buffer every minute
+if [ -n "$(logread -l 2 2>/dev/null | grep 'Ring expansion failed')" ]; then
+	_log "Workaround Ring expansion failed problem"
+	echo 1 > /sys/bus/pci/devices/0000:00:00.0/remove
+	sleep 2
+	echo 1 > /sys/bus/pci/rescan
+fi
+
+if [ "$(ip r)" = "" ]; then
+	_log "No route found, restart MPTCP..."
+	/etc/init.d/mptcp restart >/dev/null 2>&1
+fi
+
+#if [ -f /etc/init.d/omr-bypass ] && [ -z "$(pgrep -f omr-bypass)" ] && [ "$(nft list ruleset 2>/dev/null | grep omr_dst_bypass)" = "" ] && [ "$(iptables-save 2>/dev/null | grep omr-bypass)" = "" ]; then
+# nft -t (terse) omits set elements: the bypass chains/rules still show, but
+# the dump stays small even with thousands of bypassed IPs in the sets
+if [ -f /etc/init.d/omr-bypass ] && [ -z "$(pgrep -f omr-bypass)" ] && [ "$(nft -t list ruleset 2>/dev/null | grep omr_dst_bypass)" = "" ]; then
+	_log "Can't find omr-bypass rules, restart omr-bypass..."
+	/etc/init.d/omr-bypass start >/dev/null 2>&1
+	sleep 5
+fi
+
+if [ -f /etc/backup/installed_packages.txt ] && [ -n "$(grep overlay /etc/backup/installed_packages.txt)" ] && ([ "$(uci -q get openmptcprouter.settings.sysupgrade_lc)" = "" ] || [ $(($(date +"%s") + $((30 + RANDOM % 31)) - $(uci -q get openmptcprouter.settings.sysupgrade_lc))) -gt 3600 ]) && [ $(($(date +"%s") - $(stat -c "%Y" /etc/backup/installed_packages.txt))) -gt 86400 ]; then
+	_log "Reinstall packages..."
+	uci -q set openmptcprouter.settings.sysupgrade_lc=$(date +"%s")
+	/etc/init.d/sysupgrade restart >/dev/null 2>&1
+	sleep 10
+fi
+
+
+if [ -n "$OMR_TRACKER_INTERFACE" ] && [ "$(uci -q get sqm.${OMR_TRACKER_INTERFACE}.enabled)" = "1" ] && [ "$(uci -q get sqm.${OMR_TRACKER_INTERFACE}.autorate)" = "1" ] && [ -n "$OMR_TRACKER_DEVICE" ] && [ -z "$(pgrep -f "config.${OMR_TRACKER_INTERFACE}")" ]; then
+	if [ "$(uci -q get sqm.${OMR_TRACKER_INTERFACE}.max_download)" != "0" ] && [ "$(uci -q get sqm.${OMR_TRACKER_INTERFACE}.download)" != "0" ] && [ "$(uci -q get sqm.${OMR_TRACKER_INTERFACE}.max_upload)" != "0" ] && [ "$(uci -q get sqm.${OMR_TRACKER_INTERFACE}.upload)" != "0" ]; then
+		_log "Restart SQM Autorate"
+		/etc/init.d/sqm-autorate restart >/dev/null 2>&1
+		sleep 5
+	fi
+fi
+
+if [ "$(uci -q get openmptcprouter.latest_versions.lc)" = "" ] || [ $(($(date +"%s") - $(uci -q get openmptcprouter.latest_versions.lc))) -gt 3600 ]; then
+	distribution="$(ubus call system board | jsonfilter -q -e '@.release.distribution' | tr -d '\n')"
+	version="$(ubus call system board | jsonfilter -q -e '@.release.version' | tr -d '\n')"
+	latestversions="$(curl -4 -s -m 3 -A "${distribution}/${version}" https://@@HOSTNAME_007@@/version/version.json)"
+	[ -n "$latestversions" ] && {
+		uci -q set openmptcprouter.latest_versions=latest_versions
+		if [ "${distribution}" = "openmptcprouter" ]; then
+			uci -q set openmptcprouter.latest_versions.omr=$(echo $latestversions | jsonfilter -q -e '@.omr')-$(ubus call system board | jsonfilter -e '@.kernel' | cut -d'.' -f1,2)
+			uci -q set openmptcprouter.latest_versions.vps=$(echo $latestversions | jsonfilter -q -e '@.vps')
+		else
+			uci -q del openmptcprouter.latest_versions.omr
+			uci -q del openmptcprouter.latest_versions.vps
+		fi
+		uci -q set openmptcprouter.latest_versions.lc=$(date +"%s")
+		uci -q commit openmptcprouter
+	}
+	fw4check="$(fw4 check 2>&1)"
+	[ -n "$(echo $fw4check | grep Error)" ] && [ -n "$(echo $fw4check | grep bypass)" ] && {
+		_log "Restart OMR-ByPass due to firewall error"
+		/etc/init.d/omr-bypass restart >/dev/null 2>&1
+	}
+fi
+
+# OMR-ByPass domain IP refresh (reload_rules) used to piggyback on the
+# above once-an-hour version-check gate, so it always ran hourly with no
+# way to change that. Each reload_rules call can force a full fw4 restart
+# + dnsmasq restart when a bypassed domain's resolved IP actually changed,
+# interrupting established TCP connections through the tunnel (issue
+# #4353). reload_rules_hour lets a user move that disruption to a single
+# low-traffic hour of their choosing instead of every hour.
+#
+# "hourly" is the explicit opt-back-in to the historical once-an-hour
+# cadence; a plain empty/unset value is NOT treated the same, because uci
+# can't tell "explicitly set to empty" from "key never created" (`uci get`
+# returns the same empty result and exit status 1 either way) -- an empty
+# value defaults to hour 2 (matches bypass_asn's existing 2 AM cron) rather
+# than silently keeping everyone on the disruptive hourly cadence forever.
+# 41_omr-bypass writes "2" explicitly for every router on upgrade, so this
+# fallback is normally only hit for the brief window before that runs.
+if [ -n "$(uci -q show omr-bypass | grep '=domains')" ]; then
+	_bypass_reload_hour="$(uci -q get omr-bypass.global.reload_rules_hour)"
+	[ -z "$_bypass_reload_hour" ] && _bypass_reload_hour="2"
+	_bypass_reload_lc="$(uci -q get omr-bypass.global.reload_rules_lc)"
+	_bypass_should_reload=0
+	if [ "$_bypass_reload_hour" = "hourly" ]; then
+		if [ -z "$_bypass_reload_lc" ] || [ $(($(date +"%s") - _bypass_reload_lc)) -gt 3600 ]; then
+			_bypass_should_reload=1
+		fi
+	else
+		_bypass_reload_lastday="$(uci -q get omr-bypass.global.reload_rules_lastday)"
+		_bypass_today="$(date +%Y%m%d)"
+		# Zero-pad to 2 digits without printf/arithmetic: busybox printf's
+		# %d and ash's $(( )) both reject a leading-zero string like "08"/
+		# "09" outright ("invalid number"/"arithmetic syntax error"), and
+		# LuCI's own dropdown stores single digits unpadded (e.g. "8", "0"
+		# for midnight), so a plain string compare against `date +%H`
+		# (always 2 digits) would otherwise never match.
+		_bypass_reload_hour_padded="$_bypass_reload_hour"
+		[ "${#_bypass_reload_hour}" = "1" ] && _bypass_reload_hour_padded="0$_bypass_reload_hour"
+		if [ "$(date +%H)" = "$_bypass_reload_hour_padded" ] && [ "$_bypass_reload_lastday" != "$_bypass_today" ]; then
+			_bypass_should_reload=1
+		fi
+	fi
+	if [ "$_bypass_should_reload" = "1" ]; then
+		_log "Reload OMR-ByPass rules to refresh IPs"
+		/etc/init.d/omr-bypass reload_rules >/dev/null 2>&1
+		uci -q set omr-bypass.global=global
+		uci -q set omr-bypass.global.reload_rules_lc=$(date +"%s")
+		uci -q set omr-bypass.global.reload_rules_lastday="$(date +%Y%m%d)"
+		uci -q commit omr-bypass
+	fi
+fi
+
+# Remove old hidden config files
+find /etc/config/ -mtime +1 -type f -name '\.*' -exec rm {} +

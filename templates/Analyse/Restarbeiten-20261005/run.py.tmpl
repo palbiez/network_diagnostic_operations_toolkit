@@ -1,0 +1,9 @@
+from pathlib import Path
+import sys,json
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+import central_observability as obs
+out=Path(__file__).resolve().parent
+try:r=obs.run(sys.argv[1],(out/sys.argv[2]).read_text(encoding='utf-8'),timeout=90)
+except Exception as e:r={'host':sys.argv[1],'error':type(e).__name__+': '+obs.redact(str(e))}
+(out/sys.argv[3]).write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

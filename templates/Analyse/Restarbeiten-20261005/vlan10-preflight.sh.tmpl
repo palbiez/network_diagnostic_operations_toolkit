@@ -1,0 +1,13 @@
+date -Iseconds
+uci show firewall
+uci show dhcp
+uci show network | grep -E '^network\.(vlan@@VLAN_002@@|loopback|lan)\.'
+uci changes firewall
+uci changes dhcp
+ip -4 addr show @@INTERFACE_005@@
+ip -4 route show table 4
+ls /tmp/etc/dnsmasq.conf.*
+grep -E 'dhcp-range|interface=|except-interface=' /tmp/etc/dnsmasq.conf.*
+nft list chain inet fw4 forward
+nft list chain inet fw4 forward_lan
+cat /usr/local/libexec/network-archive-compress.py 2>/dev/null || true

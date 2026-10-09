@@ -1,0 +1,15 @@
+#!/bin/sh
+# Manual rollback. Refuse subsequent UCI/file edits; never reload the full firewall.
+set -eu
+test -z "$(uci changes firewall)"
+test -z "$(uci changes dhcp)"
+test "$(sha256sum /etc/config/firewall | cut -d' ' -f1)" = 9a2d83881701366a9b6f72ffabf71e3dc9ac2a2b0fca73cae0fb0411fd8a344b
+test "$(sha256sum /etc/config/dhcp | cut -d' ' -f1)" = aa5ca78b6674e2fb8e2e6b72405ee9a531f007d46606a61ab9516d4824af00ab
+test -s /root/phi21-vlan@@VLAN_002@@-backup-20261005/firewall
+test -s /root/phi21-vlan@@VLAN_002@@-backup-20261005/dhcp
+cp -p /root/phi21-vlan@@VLAN_002@@-backup-20261005/firewall /etc/config/firewall
+cp -p /root/phi21-vlan@@VLAN_002@@-backup-20261005/dhcp /etc/config/dhcp
+nft delete chain inet fw4 phi21_vlan10_input
+nft delete chain inet fw4 phi21_vlan10_forward
+/etc/init.d/dnsmasq reload
+echo 'Original firewall/DHCP restored and vlan@@VLAN_002@@ guards removed; no full firewall reload'

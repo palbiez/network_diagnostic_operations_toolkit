@@ -1,0 +1,29 @@
+#!/bin/sh
+set -eu
+if uci -q get firewall.omr_vps_syslog >/dev/null; then
+    echo 'Existing section; refusing to overwrite' >&2
+    exit 1
+fi
+backup=/root/firewall-before-vps-syslog-$(date -u +%Y%m%dT%H%M%SZ)
+cp -a /etc/config/firewall "$backup"
+uci set firewall.omr_vps_syslog=redirect
+uci set firewall.omr_vps_syslog.name='OMR-VPS-Syslog-to-logserver2'
+uci set firewall.omr_vps_syslog.family='ipv4'
+uci set firewall.omr_vps_syslog.src='vpn'
+uci set firewall.omr_vps_syslog.src_ip='@@IPV4_002@@'
+uci set firewall.omr_vps_syslog.src_dip='@@IPV4_001@@'
+uci set firewall.omr_vps_syslog.src_dport='514'
+uci set firewall.omr_vps_syslog.proto='tcp'
+uci set firewall.omr_vps_syslog.dest='lan'
+uci set firewall.omr_vps_syslog.dest_ip='@@IPV4_007@@'
+uci set firewall.omr_vps_syslog.dest_port='514'
+uci set firewall.omr_vps_syslog.target='DNAT'
+uci set firewall.omr_vps_syslog.reflection='0'
+if ! fw4 check; then
+    uci revert firewall.omr_vps_syslog
+    exit 1
+fi
+uci commit firewall
+/etc/init.d/firewall reload
+printf 'Backup: %s\n' "$backup"
+uci show firewall.omr_vps_syslog

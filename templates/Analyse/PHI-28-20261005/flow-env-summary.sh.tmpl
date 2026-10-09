@@ -1,0 +1,18 @@
+sudo -n python3 - <<'PY'
+import json,re
+from pathlib import Path
+flows=json.loads(Path('/addon_configs/a0d7b954_nodered/flows.json').read_text())
+byid={n['id']:n for n in flows}
+sub=byid['7a5cb8b5ea6556ca']
+print('subflow', {k:v for k,v in sub.items() if k not in ['env']})
+print('envnames',[v['name'] for v in sub.get('env',[])])
+for n in flows:
+    if n.get('type')=='subflow:7a5cb8b5ea6556ca':
+        print('instance',n['id'],n.get('name'),[v['name'] for v in n.get('env',[])])
+for n in flows:
+    for k,v in n.items():
+        if isinstance(v,str) and 'mqtt_password' in v:
+            print('password-setting-node',n['id'],n.get('name'),k)
+    if n['id'] in ['f8492ede27568764','7ba697d0eebe8fe5','dc5f2e0c7c818551']:
+        print('connect-target',n['id'],n['type'],n.get('broker'))
+PY

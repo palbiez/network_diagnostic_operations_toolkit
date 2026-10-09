@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+bin=/root/phi12-evening-20261002
+cp -p /etc/crontabs/root "$bin/crontab.after"
+crontab "$bin/crontab.after"
+end=$(($(date +%s)+20))
+SCOPE=@@IPV4_006@@/24 MODE=gaming LAN_DEV=@@INTERFACE_008@@ END_EPOCH="$end" OUT_DIR=/tmp/phi12-evening-smoke-gaming sh "$bin/phi12-scope-monitor.sh" > /tmp/phi12-evening-smoke-gaming-console.txt 2>&1 &
+gaming=$!
+SCOPE=@@IPV4_026@@ MODE=application LAN_DEV=@@INTERFACE_009@@ END_EPOCH="$end" OUT_DIR=/tmp/phi12-evening-smoke-chat sh "$bin/phi12-scope-monitor.sh" > /tmp/phi12-evening-smoke-chat-console.txt 2>&1 &
+chat=$!
+wait "$gaming"
+wait "$chat"
+echo 'GAMING PATHS:'
+head -5 /tmp/phi12-evening-smoke-gaming/paths.csv
+echo 'OBSERVER ERRORS:'
+grep -i -e 'error' -e 'invalid' -e 'denied' /tmp/phi12-evening-smoke-gaming/*status.txt /tmp/phi12-evening-smoke-chat/*status.txt 2>/dev/null || true
+echo 'EVENT COLLECTOR:'
+cat /tmp/phi12-evening-smoke-gaming/flow-events-1-status.txt
+echo 'BOTH STOPPED:'
+cat /tmp/phi12-evening-smoke-gaming/events.csv /tmp/phi12-evening-smoke-chat/events.csv
+echo 'CRON REGISTRATION:'
+crontab -l | grep PHI12-EVENING

@@ -1,0 +1,13 @@
+#!/bin/sh
+# Manual rollback only; refuses later edits. Local permanent copies:
+# Backups/Restarbeiten-20261005/{sqm,omr-bypass}.before
+set -eu
+test -z "$(uci changes sqm)"
+test -z "$(uci changes omr-bypass)"
+test "$(sha256sum /etc/config/sqm | cut -d' ' -f1)" = ba2ca0ef68dbe7e4b9ae4fa14826e036dc2c5cb68ae28bf92a8c465681c27b50
+test "$(sha256sum /etc/config/omr-bypass | cut -d' ' -f1)" = 13f50c4a227fd58c669b656a544f7c18b6f89b180d0d9a5031ade4507af0db72
+test -s /tmp/phi21-backup-20261005/sqm
+test -s /tmp/phi21-backup-20261005/omr-bypass
+cp -p /tmp/phi21-backup-20261005/sqm /etc/config/sqm
+cp -p /tmp/phi21-backup-20261005/omr-bypass /etc/config/omr-bypass
+echo 'Original two UCI files restored; no service reload executed'

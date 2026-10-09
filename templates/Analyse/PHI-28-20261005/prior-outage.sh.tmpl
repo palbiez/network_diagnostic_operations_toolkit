@@ -1,0 +1,2 @@
+bash -lc 'ha host logs -b -1 -t kernel -n 500' | grep -E 'oom|Out of memory|Killed process' | tail -n 12
+sudo -n docker logs --tail 500 homeassistant 2>&1 | grep -E 'ERROR|CRITICAL|Starting Home Assistant|Setup of domain|setup.*(seconds|longer)' | tail -n 20

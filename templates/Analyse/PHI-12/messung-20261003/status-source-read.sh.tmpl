@@ -1,0 +1,4 @@
+date -Is
+grep -n -B 14 -A 14 'dnsmasq.*restart\|firewall.*reload' /bin/omr-tracker-server
+ps w | grep -E 'minecraft.sh|ping-supervised|deadline-guard' | grep -v grep
+tail -n 6 /tmp/phi12-diag-20261003/minecraft-@@IPV4_018@@/ping-minecraft-@@IPV4_018@@.log

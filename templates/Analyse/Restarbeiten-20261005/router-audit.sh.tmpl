@@ -1,0 +1,16 @@
+date -Iseconds
+uptime
+ip -4 rule show
+ip -4 route show table 2
+ip -4 route show table 3
+ip link show @@INTERFACE_001@@
+uci show sqm
+uci show nlbwmon
+nlbw -c help 2>&1
+uci show omr-bypass | grep -E 'ifmap_|\.interface=|\.macaddr=|\.ip=' | head -n 70
+uci show dhcp | grep -E '=dhcp|\.interface=|\.start=|\.limit=|\.leasetime=|\.ignore='
+cat /tmp/dhcp.leases | grep '@@NETWORK_PREFIX_003@@@@VLAN_001@@.'
+logread | grep -E 'MTU changed externally|Netlink receive|Unable to dump conntrack|no address range available' | tail -n 15
+grep -R -n -E 'mtu|ip link|ifconfig|tuntap' /etc/init.d/mqvpn /etc/hotplug.d/iface/* /lib/netifd/proto/mqvpn* 2>/dev/null | head -n 75
+fw4 check 2>&1
+nft list chain inet fw4 mangle_forward | grep -E 'gaming|dscp|tcp dport|udp sport' | head -n 35

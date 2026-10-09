@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+echo 'OVERLAY NON-CONFIG CANDIDATES:'
+find /overlay/upper/etc /overlay/upper/usr /overlay/upper/lib /overlay/upper/sbin /overlay/upper/bin -type f 2>/dev/null | sed 's#^/overlay/upper##' | grep -v -e '^/etc/config/' -e '^/lib/apk/' -e '^/lib/modules/' -e '^/usr/lib/' -e '^/usr/bin/' -e '^/usr/sbin/' -e '^/etc/luci-uploads/' -e '^/etc/ssl/' || true
+echo 'APK CONFIG AUDIT (paths only):'
+apk audit --backup --recursive /etc 2>&1 || true
+echo 'DEPENDENCIES OF ADDED FIREWALL INCLUDES:'
+for file in /etc/firewall.omr-bypass-reply /etc/firewall.omr-bypass-reply.nft; do
+ echo "FILE $file"; head -35 "$file"
+done
+echo 'GENERATION REFERENCES:'
+grep -n -e '90-proxy-ssr-rules' -e 'omr-bypass-reply' /etc/init.d/shadowsocks-rust /etc/init.d/omr-bypass /etc/firewall.omr-bypass /usr/share/shadowsocks-rust/* 2>/dev/null || true
+echo 'MODIFIED PACKAGE FILE OWNERS:'
+for file in /usr/share/ucode/fw4.uc /usr/share/omr-bypass/omr-bypass-proto.lst /sbin/ip /usr/bin/nc /usr/lib/libwebp.so /lib/upgrade/keep.d/firewall4; do
+ echo "FILE $file"; apk info --who-owns "$file" 2>&1 || true
+ ls -ld "$file" "/rom$file" 2>/dev/null || true
+done
+echo 'SYSUPGRADE BACKUP FUNCTIONS:'
+sed -n '245,370p' /sbin/sysupgrade
+echo 'SSH KNOWN_HOSTS REFERENCED BY SERVICES (filenames only):'
+grep -Rl -e 'known_hosts' -e '/root/.ssh' /etc/init.d /usr/share/omr* 2>/dev/null || true

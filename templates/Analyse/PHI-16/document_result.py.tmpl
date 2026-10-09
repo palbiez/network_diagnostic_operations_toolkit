@@ -1,0 +1,28 @@
+"""Record PHI-16 evidence and correct derived findings, keeping raw snapshots."""
+from pathlib import Path
+import json
+
+root=Path(__file__).resolve().parents[2]
+correction=@@PYTHON_STRING_014@@
+for path in ['Analyse/tunnel-erkenntnisse-2026-10-02.json','Chats/02-config.json']:
+    file=root/path;data=json.loads(file.read_text(encoding='utf-8'))
+    data['debuglogger']['normaler_syslog']=correction
+    data['syslog_empfang_verifikation']={'zeit_lokal':'2026-10-02T10:30:00+02:00','ziel':'@@IPV4_007@@:514/TCP','server':'logserver2','dienst':'syslog-ng','datei':'/var/log/network/@@IPV4_008@@/2026-10-02-syslog.log','marker':'PHI-16-SYSLOG-20261002T083000Z','konfigurationsaenderung':False}
+    file.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
+file=root/'Analyse/create_reports.py';s=file.read_text(encoding='utf-8')
+s=s.replace(@@PYTHON_STRING_039@@,correction)
+file.write_text(s,encoding='utf-8')
+report=(root/'Analyse/PHI-16/ergebnis-2026-10-02.md').read_text(encoding='utf-8')
+issue=root/'Linear/issues/PHI-16.md'
+issue.write_text(report+@@PYTHON_STRING_040@@,encoding='utf-8')
+meta=root/'Linear/issues/PHI-16.json';data=json.loads(meta.read_text(encoding='utf-8'))
+states=json.loads((root/'Linear/config.json').read_text(encoding='utf-8'))['states']
+data['stateId']=next(x['id'] for x in states if x['name']=='Done')
+meta.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
+file=root/'Linear/work-packages.json';packages=json.loads(file.read_text(encoding='utf-8'))
+for package in packages:
+    if package['key']=='syslog-target':
+        package['state']='Done';package['description']=issue.read_text(encoding='utf-8')
+        package['sources'].append('Analyse/PHI-16/ergebnis-2026-10-02.md') if 'Analyse/PHI-16/ergebnis-2026-10-02.md' not in package['sources'] else None
+file.write_text(json.dumps(packages,ensure_ascii=False,indent=2),encoding='utf-8')
+print('PHI-16 result recorded; original live evidence retained.')

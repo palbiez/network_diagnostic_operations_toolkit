@@ -1,0 +1,214 @@
+from pathlib import Path
+import json, re, collections, tarfile, shlex, shutil
+
+root = Path.cwd()
+out = root / 'Analyse'
+def write(name, data):
+    (out / name).write_text(data if isinstance(data, str) else json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+
+attachments = [
+    ('production-readiness.json', Path(@@PYTHON_STRING_001@@)),
+    ('mqvpn-fehleranalyse-vorher.json', Path(@@PYTHON_STRING_002@@)),
+]
+(root / 'Chats').mkdir(exist_ok=True)
+for name, path in attachments:
+    data = json.loads(path.read_text(encoding='utf-8-sig'))
+    (root / 'Chats' / name).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+
+sources = [
+    {'thema':'Intel I226: bekannte Verbindungsabbrüche, EEE als Workaround', 'url':@@PYTHON_STRING_003@@, 'einordnung':'Herstellerkommunikation; keine Bestätigung eines Defekts in diesem Netz.'},
+    {'thema':'MQVPN 0.16.3: stiller Pfadausfall und Reassembly-Fixes', 'url':'https://github.com/mp0rta/mqvpn/releases/tag/v0.16.3', 'einordnung':@@PYTHON_STRING_004@@},
+    {'thema':'Integration des XQUIC-Pfadstillstand-Fixes', 'url':'https://github.com/mp0rta/mqvpn/pull/351'},
+    {'thema':'Stiller Blackhole-Pfad: WLB-Fix', 'url':'https://github.com/mp0rta/xquic/pull/71'},
+    {'thema':'Gleiche BBR2-Warnung bei MQVPN-Schedulerproblem', 'url':'https://github.com/Ysurac/openmptcprouter/issues/4277', 'einordnung':'Geschlossen/Stale; kein Beleg einer Fehlerbehebung oder identischen Ursache.'},
+    {'thema':'MQVPN-Konfigurationsparameter', 'url':'https://@@HOSTNAME_001@@/guide/configuration'},
+]
+for issue, title in [(4254,'Redundanz: 20–50 Sekunden Ausfall beim Masterverlust'),(4016,'Pingverlust bei Ausfall des primären WAN'),(3392,'Client-Verbindungen bei WAN-Verlust'),(3821,'Verbindungsabbruch beim Trennen des Masters'),(3401,'Starlink/LTE-Tunnel unter Last')]:
+    sources.append({'thema':title,'url':f'https://github.com/Ysurac/openmptcprouter/issues/{issue}', 'einordnung':@@PYTHON_STRING_005@@})
+write('quellen-known-bugs.json', {'stand':'2026-10-02','quellen':sources})
+
+syslines = (root / 'Logs/Router-und-Client/syslog.log').read_text(encoding='utf-8').splitlines()
+vps = (root / 'Logs/VPS/vps-mqvpn-24h/mqvpn-journal.log').read_text(encoding='utf-8').splitlines()
+tunnel = (root / 'Logs/VPS/vps-mqvpn-24h/tunnel-errors.log').read_text(encoding='utf-8').splitlines()
+closes = [l for l in vps if 'xqc_conn_destroy' in l and 'conn_persist:' in l]
+closes_hourly = dict(collections.Counter(l[:13] for l in closes))
+write('tunnel-erkenntnisse-2026-10-02.json', {
+    'stand':'2026-10-02',
+    'quellenumfang':@@PYTHON_STRING_006@@,
+    'zeitbasis':{'router':'Europe/Berlin UTC+02:00','vps':'Explizit +0000/+00:00; zur Korrelation 2 Stunden addieren','omr_log':'Kein Offset im Text; VPS-Kontext deutet auf UTC, vor exakter Korrelation bestätigen.'},
+    'syslog':{'zeilen':len(syslines),'zeitraum_lokal':['2026-10-02 06:59:13','2026-10-02 08:13:32'],'info_mqvpn':745,'warnungen_bbr2':32,'mqvpn_ERR':0,'statusproben':149,'status':'Alle Statusproben established, paths=2, gleicher PID 22654','dgram_lost':'149-mal 1; kein Anstieg innerhalb dieses Dateiausschnitts, kumulativer Zähler, keine Verlustrate.','restart_signaturen':0,'dhcp_vlan150_warnungen':0,'physische_link_down_meldungen':0,'weitere_befunde':['07:03 und 07:17 Firewall-/DNS-Neuladungen; procd instance omr not found',@@PYTHON_STRING_007@@]},
+    'live_router':{'kernel':'6.18.39','mqvpn':'0.16.2','tunnel':'@@INTERFACE_001@@ @@IPV4_001@@ peer @@IPV4_002@@ MTU 1382','pfade':['@@INTERFACE_002@@','@@INTERFACE_003@@'],'ping_tunnelpeer':'5/5 Antworten, 0% Loss, Mittel 8.911 ms; kurzer Funktionstest, kein Stabilitätsnachweis','dgram_lost':@@PYTHON_STRING_008@@,'fw4_check':'Exit 0, Ruleset passes nftables check.','ram':'ca. 7.7 GB verfügbar; conntrack 570/262144 beim Snapshot'},
+    'vps_logs':{'journal_zeilen':len(vps),'zeitraum_utc':['2026-10-01 08:30:41','2026-10-02 06:17:15'],'ERR_zeilen':5974,'bbr2_warnungen':388,'close_reports_mit_persist':len(closes),'close_reports_pro_utc_stunde':closes_hourly,'remote_close_vorkommen':2977,'server_signale_utc':['2026-10-01 12:34:02','2026-10-01 21:08:54'],'letzte_close_reports_utc':['2026-10-01 21:35:00 idle timeout','2026-10-01 21:40:13 remote close'],'nacht':@@PYTHON_STRING_009@@,'einordnung':@@PYTHON_STRING_010@@},
+    'vps_monitoring':{'tunnel_timeout_zeilen':152952,'ziel':'@@IPV4_003@@','aktuelle_router_ip':'@@IPV4_001@@','operstate':'unknown ist bei TUN normal und bedeutet nicht down','internet_errors_log':@@PYTHON_STRING_011@@,'einschraenkungen':['Falsches/wechselndes Ziel sehr plausibel; historische Belegung von .3 nicht belegt.','ping nicht an @@INTERFACE_004@@ gebunden; Routing und ICMP-Freigabe ungeprüft.','stderr wird verworfen: lokale ping-Fehler erscheinen ebenfalls als TUNNEL_TIMEOUT.','Nur Fehler statt Gesamtzahl/Erfolge: keine belastbare Lossquote.',@@PYTHON_STRING_012@@,'Journalfilter enthält fremde Dienste wie OpenVPN und Glorytun.','24h-Messung endete nach ca. 21h48 mit STOP, inklusive einer Zeile ohne Timestamp.']},
+    'debuglogger':{'erledigt':True,'aktion':'/etc/init.d/mqvpn-debuglog disable und stop ausgeführt','vorher':'Kein procd-Service und kein zugehöriger logread-Prozess gefunden','nachher':'service list leer, enabled Exit 1, kein Debuglogger-Prozess','stop_fehler':'Not found: bereits nicht laufender/registrierter procd-Dienst','logfehler':@@PYTHON_STRING_013@@,'normaler_syslog':@@PYTHON_STRING_014@@},
+    'chat_bewertung':@@PYTHON_STRING_015@@,
+    'vps_livezugriff':'SSH mit omr.ppk an Port 22: Connection timed out; kein aktueller VPS-Zustand bestätigt.',
+    'schuetzenswerte_werte':['WAN-Adressen @@IPV4_004@@/24 und @@IPV4_005@@/24 bleiben','MSS 1384, @@INTERFACE_001@@ MTU 1382, VPS MTU 1350 nicht pauschal ändern','Kein network restart zu Diagnosezwecken; orphaned Pfad laut Chat','MQVPN-Neustart kann LAN-Routingproblem auslösen'],
+    'naechste_schritte':['Monitoring mit aktuellen Tunneladressen und Interface-Bindung korrigieren','Gleichzeitige Messung pro WAN zu Fritzbox, Internet und VPS sowie durch @@INTERFACE_001@@','Delta der NIC- und MQVPN-Losszähler zeitgleich sammeln','MQVPN 0.16.3 und OMR-Patches auf Router/VPS prüfen, Update mit Rollback planen','Gaming-Regelkonflikt und DSCP-Erzeugung getrennt beheben'],
+    'quellen':sources
+})
+
+write('config-pruefung-2026-10-02.txt', '''CONFIG-PRÜFUNG OPENMPTCPROUTER – 02.10.2026
+Grundlage: backup-OpenMPTCProuter-2026-10-02.tar.gz und SSH-Snapshot ca. 08:29–08:32 Europe/Berlin.
+Keine Routing-, MTU-, Firewall- oder Tunneländerungen vorgenommen. Debuglogger-Autostart deaktiviert.
+Die Vorschläge sind einzelne Arbeitspakete; nach jedem Schritt Wirkung und Rückweg prüfen.
+
+1. HOCH: Gaming hat zwei konkurrierende Konfigurationswege.
+UCI /etc/config/omr-bypass: lan_ip @@IPV4_006@@/24 -> wan1, failback wan2; auch zwei MAC-Regeln -> wan1.
+Zusätzlich live: /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft setzt .@@VLAN_003@@ auf WAN1 und alle anderen Gaming-IP auf WAN2.
+/etc/hotplug.d/iface/99-gaming-policy verändert Tabellen 2 und 3. Diese Zusatzdateien fehlen im aktuellen Backup!
+Damit kann eine spätere OMR-Regel eine vorherige Markierung überschreiben. Reihenfolge und Zähler prüfen, keine feste wirksame WAN-Zuordnung aus der UCI-Anzeige allein ableiten.
+Laienverständlicher Zielzustand: OMR-Bypass als eine zentrale Quelle. Entweder ganzes Gaming-Netz WAN1 oder gezielt einzelne Geräte WAN1/WAN2; Entscheidung dokumentieren.
+Dann die Zusatzdateien mit Sicherung stilllegen, nicht parallel beide Wege weiterführen. WAN-Failover ändert öffentliche IP: bestehende Direct-WAN-Sessions können abbrechen.
+Prüfung: ip route get mit Quelladresse/Markierung, nft-Zähler, tatsächliche öffentliche IP je Client. Rückweg: gesicherte Zusatzdateien und UCI export omr-bypass.
+
+2. HOCH: Erzeugte DSCP-Regeln verlieren ihre Port-Einschränkungen.
+UCI dscp.@classify[1..5] enthält src_port/dest_port, doch firewall.omr_dscp_rule2..6 und *_output enthalten keine Ports.
+Live nft bestätigt pauschale Regeln: alles TCP wird nacheinander CS4, CS4, CS7, CS6; alles UDP CS4, CS7, soweit keine spätere Regel wirkt.
+omr_dscp_rule3/4 sind identisch, ebenso ihre output-Varianten. Zwei echte Dublettenpaare.
+Quelle bevorzugt /etc/config/dscp bzw. OMR-DSCP-Oberfläche korrigieren; generierte Firewallregeln können wieder überschrieben werden.
+Generator prüfen: Umsetzung von src_port, dest_port und auto_dest_port. Fehlendes target bei omr_dscp_rule_cs5_4 separat korrigieren/Generator prüfen.
+Nicht als bewiesene Ausfallursache werten. Ohne aktive SQM werden DSCP-Klassen lokal nicht automatisch in Bandbreitengarantien umgesetzt.
+Prüfung: fw4 check, nft list chain inet fw4 mangle_forward/mangle_output; danach Portgrenzen vorhanden und keine pauschale Überschreibung.
+
+3. MITTEL: Zwei DHCP-Bereiche für dasselbe Management-Interface.
+@@HOSTNAME_002@@ und dhcp.@@SECTION_001@@ verweisen beide auf interface lan: .100–.199 und .200–.229.
+Bereiche überlappen nicht, sind aber zwei Quellen für dasselbe Interface. Im aktuellen dnsmasq-Startlog erscheint nur .100–.199.
+Bevorzugt Netzwerk > Schnittstellen > lan > DHCP-Server: einen gewünschten Bereich festlegen und den zusätzlichen @@SECTION_001@@-Block anschließend entfernen/deaktivieren.
+Vorher prüfen, ob @@SECTION_001@@ absichtlich Zusatzpool ist; aktuelle Leases sichern. Kein belegter aktueller DHCP-Ausfall.
+vlan@@VLAN_001@@: korrekte .1/24, Pool .20–.239; im aktuellen Syslog keine 'no address range available'-Warnung. Statische Leases innerhalb des Pools werden von dnsmasq reserviert, daher nicht pauschal als Kollision bewerten.
+vlan@@VLAN_002@@ hat ignore=1: DHCP absichtlich aus oder noch nicht final? Anforderung prüfen.
+
+4. MITTEL: SQM-WAN1 zeigt auf LAN-Port.
+sqm.wan1.interface=@@INTERFACE_005@@, während network.wan1.device=@@INTERFACE_002@@. enabled=0: aktuell keine Wirkung.
+Vor einem SQM-Lasttest in Netzwerk > SQM QoS Interface @@INTERFACE_002@@ setzen; WAN2 @@INTERFACE_003@@. Reale Upload-/Downloadwerte messen, zunächst ca. 90–95 Prozent der dauerhaft verfügbaren Rate testen. Keine Nullraten aktivieren.
+Bufferbloat nur unter Last nachweisen; nicht gleichzeitig Scheduler, MTU und SQM ändern.
+
+5. ERLEDIGT / KORRIGIERT: Syslog-Ziel und Empfang stimmen überein.
+system.@system[0].log_ip=@@IPV4_007@@, log_proto=tcp, log_port=514.
+Vollständige Argumente von PID 4059 und procd bestätigen @@IPV4_007@@:514/TCP. Die frühere .1-Anzeige war eine nach 78 Zeichen abgeschnittene BusyBox-ps-Ausgabe, kein abweichendes Sendeziel.
+Am 02.10.2026 um 10:30 Berlin wurde eine eindeutige PHI-16-Testmeldung auf logserver2 in /var/log/network/@@IPV4_008@@/2026-10-02-syslog.log nachgewiesen. Aktiver Empfänger ist syslog-ng. Keine Dienstneuladung oder Konfigurationsänderung nötig. Details: Analyse/PHI-16/ergebnis-2026-10-02.md.
+128-KB-Ringpuffer ist bei den häufigen MQVPN-Statuszeilen klein; Dauerbeobachtung braucht funktionierenden externen Empfang.
+MQVPN Runtime LogLevel=warn, trotzdem INF-Status sichtbar: periodische Statusausgabe gesondert prüfen, nicht jeden daemon.err als echten Fehler zählen.
+
+6. MITTEL: Backup ist für vollständigen Restore unvollständig.
+Archive enthält UCI, aber nicht die live gefundenen Gaming-NFT-/Hotplug-Dateien und nicht mqvpn-debuglog.init.
+Auch referenzierte /etc/firewall.user, /etc/firewall.omr-bypass* und weitere Includes sind im Archiv nicht enthalten; teils Paketdateien, teils eventuell Anpassungen.
+Vor Änderungen Zusatzdateien sichern und /etc/sysupgrade.conf um echte eigene Dateien ergänzen. Paketdateien nicht blind als eigene Konfiguration kopieren.
+network.bak und v2ray.apk-new sind passive Altdateien, keine parallel aktiven UCI-Konfigurationen.
+
+7. NIEDRIG/MITTEL: weitere Redundanzen und Migrationseffekte.
+Allow-Lan-to-Wan dupliziert funktional das forwarding lan->wan; Allow-All-LAN-to-VPN das forwarding fwlantovpn. Keine Syntaxfehler; optional nach Zählerprüfung die zusätzliche Regel deaktivieren.
+omr-bypass.ifmap_@@SECTION_002@@ und ifmap_@@SECTION_003@@ zeigen beide @@INTERFACE_006@@; ifmap_@@SECTION_004@@/ifmap_@@SECTION_005@@ beide @@INTERFACE_007@@. Groß-/Kleinschreibung ist unterschiedlich. Alte Großschreibungen als Migrationsreste prüfen; Generator kann sie wieder erzeugen.
+Viele omr_dst_bypass_*-Abschnitte sind deaktivierte generierte Vorlagen. Die Größe allein ist kein Fehler. Einträge mit anderen Set-Namen sind keine Dubletten.
+Live ip rule enthält zweimal iif lo lookup 4 (Priorität 90001/90003): loopback und vlan@@VLAN_002@@ benutzen Tabelle 4. Redundant, kein belegter Ausfallgrund.
+Mehrere Default-Routen in Tabellen 2/3 haben unterschiedliche Metriken und dienen dem Fallback; nicht als identische Dubletten löschen. Der Hotplug-Handler löscht/ersetzt jedoch alle Default-Routen bei WAN-Ereignissen, mögliche kurze Lücke separat messen.
+Firewall: lan, @@SECTION_002@@, @@SECTION_006@@ und @@SECTION_004@@ liegen gemeinsam in Zone lan mit forward ACCEPT. Keine VLAN-Isolation durch diese Zone garantiert. Falls Trennung gewünscht, eigenes späteres Arbeitspaket; nicht während Tunnelanalyse umbauen.
+
+8. MQVPN/UCI: Chat-Werte sind teilweise keine expliziten Backup-Werte.
+Backup und live UCI enthalten scheduler=minrtt; cc, insecure, FEC, Reinjection und Reorderwerte fehlen als explizite Optionen.
+Runtime enthält Insecure=true, LogLevel=warn und Pfade @@INTERFACE_002@@/@@INTERFACE_003@@. cc muss aus Paketdefaults/Version ermittelt werden; BBR2-Warnungen zeigen die aktive BBR2-Komponente.
+Fehlende Optionen bedeuten nicht automatisch falsche Werte. API-Synchronisation von gestern nicht ohne Vorher/Nachher wieder verändern.
+MQVPN 0.16.2 -> 0.16.3 als vorrangigen Prüfkandidaten aufnehmen: Upstream behebt Blackhole/WLB-Stall und Reassembly-Abbruch. Aktuell minrtt, daher WLB-Fix keine sichere Diagnose.
+VPS-Versionsstand und OMR-Paketpatches fehlen. Nur OMR-kompatible Routerpakete nutzen; abgestimmte Router/VPS-Änderung mit Rückweg planen. Kein blindes Ersetzen dynamischer XQUIC-Bibliotheken.
+
+9. Unverändert beibehalten.
+WAN1 @@IPV4_004@@ und WAN2 @@IPV4_005@@ sind produktive WAN-Adressen.
+LAN/VLAN-Endadressen .1/24 sind im Backup bereinigt; keine alten .245-Stagingadressen auf diesen LANs gefunden.
+MSS 1384 / @@INTERFACE_001@@ 1382 / VPS 1350 aus den Chats beibehalten. @@INTERFACE_001@@ hat in UCI keine feste MTU; ein externer 1500-Setter ist im aktuellen Log nicht nachgewiesen.
+network restart vermeiden, weil laut Chat ein leerer MQVPN-Pfad entstehen kann. Ein späterer MQVPN-Restart braucht zeitgleichen Routing-/Firewallvergleich und Client-Erreichbarkeitstest.
+
+10. Validierung und Grenzen.
+Live fw4 check bestanden (Exit 0). Das bestätigt nftables-Syntax, nicht korrekte Absicht oder Routingwirkung.
+Der erste automatisierte Dublettenbericht ignorierte Namensfelder und konnte dadurch Sets/Domains falsch gruppieren. config-duplicates.json wurde auf echte Regelvergleiche korrigiert; Dubletten sind Prüfkandidaten, keine automatische Löschliste.
+Vollständige Config nur im Originalarchiv; Analyseauszüge entfernen Schlüssel/Passwörter. Historische Netzwerkinventare unter Inventar/ sind nicht überall nach Cutover aktualisiert.
+''')
+
+write('messplan-und-stabilisierung.txt', '''MESSPLAN UND STABILISIERUNG – 02.10.2026
+Zuerst belastbare Messung, dann jeweils eine Änderung. Bestehende stabile Direct-WAN-Bypässe als Referenz beibehalten.
+
+A. Parallel messen, alle Uhren synchronisieren, Router Europe/Berlin, VPS UTC +2h umrechnen.
+Auf dem Router gleichzeitig je ein unabhängiger Prozess:
+  ping -n -D -I @@INTERFACE_002@@ -i 0.2 -W 1 @@IPV4_009@@   (WAN1 -> Fritzbox1)
+  ping -n -D -I @@INTERFACE_003@@ -i 0.2 -W 1 @@IPV4_010@@   (WAN2 -> Fritzbox2)
+  ping -n -D -I @@INTERFACE_002@@ -i 0.2 -W 1 @@IPV4_011@@       (WAN1 -> Internet)
+  ping -n -D -I @@INTERFACE_003@@ -i 0.2 -W 1 @@IPV4_011@@       (WAN2 -> Internet)
+  ping -n -D -I @@INTERFACE_002@@ -i 0.2 -W 1 @@IPV4_012@@ (WAN1 -> VPS direkt)
+  ping -n -D -I @@INTERFACE_003@@ -i 0.2 -W 1 @@IPV4_012@@ (WAN2 -> VPS direkt)
+  ping -n -D -I @@INTERFACE_001@@ -i 0.2 -W 1 @@IPV4_002@@    (Router -> Tunnelpeer)
+Vorher ping -h prüfen: ob installierte Variante -D/-i unterstützt. Erfolg UND Timeout/Stderr/Sequenznummer speichern. -W 1 gewährt verspäteten Paketen Zeit; >150/200 ms separat als Latenzereignis auswerten statt jede Verzögerung Paketverlust zu nennen.
+Mit ip route get ZIEL oif @@INTERFACE_002@@/@@INTERFACE_003@@/@@INTERFACE_001@@ Routing vorab bestätigen. nft-Markierungen können Policy-Routing beeinflussen; bei Zweifeln tcpdump auf physischem Interface zur Verifikation.
+Zusätzlich zweites Internetziel @@IPV4_013@@ pro WAN, damit ICMP-Ratelimit eines Ziels nicht als Leitungsausfall zählt.
+Am Notebook lokales Gateway @@IPV4_014@@ (bei @@SECTION_002@@-VLAN) separat pingen; alte .@@VLAN_004@@.245 ist abgeschaltete Stagingadresse. Der bisherige Client-Monitor testet Ziele seriell, ein Timeout verzögert alle anderen: für Korrelation ungeeignet.
+
+B. VPS-Messung reparieren.
+TUNNEL_TARGET aus aktueller MQVPN-Session ermitteln, zurzeit Router .2 statt .3. Erst ping -I @@INTERFACE_004@@ -c 5 -W 1 @@IPV4_001@@ mit Ausgaben prüfen. Auch ICMP-Firewall prüfen.
+Das alte Skript ist kein belastbarer Ausfallnachweis: falsches/wechselndes Ziel, keine Bindung, nur Fehler, verworfenes stderr, keine Messgesamtheit.
+Neuer Lauf: konstante Session-IP oder Ziel bei Sessionwechsel erfassen; erfolgreiche Proben mitloggen, Session-ID/PID, ip addr/route und STOP-Zeit speichern.
+journalctl -u mqvpn -f -o short-iso-precise bevorzugen; Logs anderer VPN-Dienste getrennt. Nur BBR2-/Close-Zeilen reichen zur vollständigen Diagnose nicht.
+VPS-SSH Port 22 war hier nicht erreichbar; vor Live-Diagnose richtigen SSH-Port/Zugang klären.
+
+C. Hardware-/Paketmessung.
+Alle 1–5 Sekunden ip -s link und ethtool -S @@INTERFACE_002@@/@@INTERFACE_003@@ sichern; Deltas statt absoluter Werte auswerten. Kernel-Linkmeldungen und /sys/class/net/*/carrier_changes erfassen.
+Bei kurzem Fehlerfenster begrenzte rotierende tcpdump-Captures auf @@INTERFACE_002@@/@@INTERFACE_003@@ für udp port 65443 sowie @@INTERFACE_001@@ auf beiden Enden aufnehmen. QUIC außen verschlüsselt: Zeit/Größe/Richtung und innere ICMP-Sequenzen vergleichen, keine ausgedachten äußeren Paket-IDs zuordnen.
+Fritzbox: DSL-Synchronisationsereignisse, CRC/ES/SES, PPP-Reconnects und Auslastung im gleichen Zeitraum sichern. Router->Fritzbox-Ping kann CPU/Ratelimit widerspiegeln, daher zusammen mit Ethernet-Zählern bewerten.
+Idle-Referenz mindestens 30–60 Minuten, anschließend kontrollierte Upload-/Downloadlast. Mikroausfälle <200 ms können zwischen 200-ms-Proben verschwinden; für gezielte 5–10-Minuten-Fenster 50–100-ms-Proben mit klar begrenzter Last plus Paketmitschnitt nutzen.
+
+D. Zuordnung.
+Gateway-Ping schlecht + NIC-CRC/Carrier steigt: Kabel/Port/NIC/Fritzbox-LAN sehr plausibel.
+Gateway gut, mehrere externe Ziele nur auf einem WAN schlecht: Fritzbox-WAN/ISP oder Last/Queue dieses WAN; Fritzbox-DSL/PPP-Daten entscheiden weiter.
+Internetziele gut, VPS direkt nur auf einem WAN schlecht: Weg/Peering zum VPS; ICMP-Verhalten des VPS prüfen.
+Beide direkte VPS-Wege gut, Tunnelpeer gleichzeitig schlecht: MQVPN/QUIC/TUN/Policy-Routing/VPS als Hauptkandidat; Mitschnitt und Sessionereignisse erforderlich.
+Tunnelpeer gut, Client-Internetziel schlecht: LAN-Forwarding/DNS/Shadowsocks/Proxy/Server-Egress unterscheiden. TCP/WebSockets können parallel über Shadowsocks laufen; Tunnelping prüft diesen Proxyweg nicht vollständig.
+Notebook-Gateway schlecht: zuerst Client/WLAN/LAN prüfen.
+Nur einzelne ICMP-Ziele schlecht: keine pauschale Ausfalldiagnose. Erfolgreiche Pings beweisen keine fehlerfreie QUIC-/UDP-Nutzdatenübertragung.
+
+E. Vorschläge in sinnvoller Reihenfolge.
+1. Monitoringziel, Pfadbindung und Logempfang korrigieren; reale Mikroabbrüche mit Anwendungstimestamps erfassen.
+2. MQVPN-Versionen/OMR-Patches prüfen; 0.16.3 als konkreten Fix-Kandidaten bewerten. Aktuell minrtt, Upstream-Blackhole-Fix stammt aus WLB-Reihe: nicht automatisch deckungsgleich.
+3. Gaming auf einen verständlichen OMR-Bypass-Regelweg bringen; eigene nft-/Hotplug-Regeln sichern und anschließend entflechten.
+4. DSCP-Portfilter wiederherstellen, damit nicht alles TCP/UDP pauschal priorisiert wird.
+5. Nur bei Lastkorrelation SQM auf richtigen WAN-Geräten mit realistischen Raten testen.
+6. I226: @@INTERFACE_002@@/@@INTERFACE_005@@ EEE bereits aus, Kernel 6.18.39, CRC/Timeout/Queue-Drops null. Kein aktueller Beleg für I226 als Ursache. @@INTERFACE_003@@ ist e1000e, EEE aktiv, tx_dropped=6 absolut: Delta messen. EEE-off dort wäre ein einzelner A/B-Versuch, keine nachgewiesene Lösung.
+7. Bei begründetem NIC-Verdacht ein Kabel/einen Fritzbox-LAN-Port austauschen und identischen Test wiederholen. NVM/BIOS nur für exakt identifiziertes OEM-Modell prüfen; Windows-Treiberversionen helfen OpenWrt nicht.
+8. Später CC-Test bbr2->bbr/cubic oder Redundanz/Reinjection nur mit kompatiblen Versionen, abgestimmter API-Konfiguration und Rollback. FEC/Redundanz kostet Bandbreite, Reorder erhöht Latenz; keine Kombination ohne Messgrundlage einschalten.
+9. Falls Aggregation Echtzeitanwendungen weiter stört: Gaming/Citrix/Chat gezielt Direct-WAN, Massentransfers über OMR. Failover bestehender Direct-WAN-Sessions bleibt wegen öffentlicher IP-Wechsel begrenzt.
+
+Jede Änderung: UCI-Export/Dateisicherung, ein Parameter, identischer Messlauf, Erfolgsmaß Loss/Jitter/Sessionabbrüche, Rückweg. Keine pauschale MTU-Erhöhung und kein network restart.
+''')
+
+# Recompute meaningful duplicates: names identify sets/domains and must not be dropped.
+t = tarfile.open(root / 'Backups/backup-OpenMPTCProuter-2026-10-02.tar.gz')
+duplicates = {}
+for member in t.getmembers():
+    if not member.isfile() or not member.name.startswith('etc/config/'):
+        continue
+    sections=[]; current=None
+    for line, text in enumerate(t.extractfile(member).read().decode(errors='replace').splitlines(),1):
+        try: a=shlex.split(text,comments=True)
+        except ValueError: continue
+        if not a: continue
+        if a[0]=='config':
+            current={'type':a[1],'id':a[2] if len(a)>2 else '@'+str(len(sections)),'line':line,'opts':{}}; sections.append(current)
+        elif current and a[0] in ('option','list') and len(a)>2:
+            current['opts'].setdefault(a[1],[]).append(a[2])
+    groups=collections.defaultdict(list)
+    for x in sections:
+        if x['type'] not in ('rule','forwarding','ifmap'): continue
+        signature=(x['type'],tuple(sorted((k,tuple(v)) for k,v in x['opts'].items() if k not in ('name','counter'))))
+        groups[signature].append({'section':x['id'],'line':x['line'],'enabled':x['opts'].get('enabled',['1'])[0]})
+    duplicates[member.name]=[g for g in groups.values() if len(g)>1]
+write('config-duplicates.json', {'hinweis':@@PYTHON_STRING_016@@,'duplicates':duplicates})
+
+# Independent contexts for follow-up chats.
+main=json.loads((out/'tunnel-erkenntnisse-2026-10-02.json').read_text(encoding='utf-8'))
+for name, keys, task in [
+    ('01-tunnel.json',['syslog','live_router','vps_logs','vps_monitoring','zeitbasis','schuetzenswerte_werte'],'Monitoring korrigieren, Loss zeitgleich zu WAN/QUIC/Proxy lokalisieren, 0.16.3-Fixes prüfen.'),
+    ('02-config.json',['debuglogger','schuetzenswerte_werte'],@@PYTHON_STRING_017@@),
+    ('03-wan-intel.json',['live_router','schuetzenswerte_werte'],@@PYTHON_STRING_018@@),
+]:
+    context={'stand':'2026-10-02','auftrag':task, **{k:main[k] for k in keys},'dokumente':['Analyse/config-pruefung-2026-10-02.txt','Analyse/messplan-und-stabilisierung.txt'],'quellen':sources}
+    if 'intel' in name:
+        context['nic_snapshot']={'@@INTERFACE_002@@':'Intel 8086:125c, igc, EEE disabled, WAN1 1Gbps full, Fehlermetriken null','@@INTERFACE_005@@':'Intel 8086:125c, igc, EEE disabled, LAN 1Gbps full, Fehlermetriken null','@@INTERFACE_003@@':'Intel 8086:153a, e1000e, EEE enabled-active, WAN2 1Gbps full, tx_dropped 6, CRC/Timeout null'}
+    (root/'Chats'/name).write_text(json.dumps(context,ensure_ascii=False,indent=2),encoding='utf-8')
+print('Reports and chat contexts generated.')

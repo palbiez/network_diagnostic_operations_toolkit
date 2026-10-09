@@ -1,0 +1,7 @@
+sed -n '65,150p' /etc/init.d/omr-dscp
+grep -n 'config_load\|config_foreach' /etc/init.d/omr-dscp
+cat /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft
+mqvpn --status 2>/dev/null || true
+cat /proc/18869/cmdline | tr '\000' ' ' | sed -E 's/(--[^ ]*(password|token|key)[^ ]* )[^ ]+/\1[REDACTED]/g'
+echo
+ls -l /etc/rc.d/S*omr*

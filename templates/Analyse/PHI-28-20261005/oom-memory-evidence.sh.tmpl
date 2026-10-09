@@ -1,0 +1,5 @@
+bash -lc 'ha host logs -t kernel -n 600' | python3 -c 'import sys,re; rows=[]
+for l in sys.stdin:
+ m=re.search(r"\[\s*\d+\]\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(-?\d+)\s+(\S+)",l)
+ if m: rows.append((int(m.group(4))*4,m.group(11),m.group(2)))
+print(sorted(set(rows),reverse=True)[:12])'

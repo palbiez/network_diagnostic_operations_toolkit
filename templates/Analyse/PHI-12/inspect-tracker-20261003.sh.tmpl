@@ -1,0 +1,11 @@
+#!/bin/sh
+grep -nE 'tries|count|failure|debug|config_load|config_get' /etc/init.d/omr-tracker | head -100
+grep -nE 'TRIES|tries|failure|debug' /bin/omr-tracker | head -70
+grep -nE '^(start|stop|reload|restart|start_service|reload_service|stop_service).*|debug' /etc/init.d/firewall /etc/init.d/dnsmasq /etc/init.d/omr-tracker /etc/init.d/omr-bypass
+command -v ping
+lsblk
+ip route get @@IPV4_025@@ oif @@INTERFACE_002@@
+ip route get @@IPV4_025@@ oif @@INTERFACE_003@@
+ip route get @@IPV4_025@@ oif @@INTERFACE_001@@
+head -100 /etc/rc.common
+sed -n '1,100p' /etc/init.d/firewall

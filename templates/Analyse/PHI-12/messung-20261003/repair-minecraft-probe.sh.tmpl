@@ -1,0 +1,15 @@
+set -eu
+B=/root/phi12-diag-20261003
+D=/tmp/phi12-diag-20261003
+sh -n "$B/ping-supervised.sh"
+sh -n "$B/minecraft-end-guard.sh"
+if [ ! -f "$D/minecraft-ping-supervised.pid" ]; then
+ TARGET_IP=@@IPV4_018@@ PING_LOG="$D/minecraft-@@IPV4_018@@/ping-minecraft-@@IPV4_018@@.log" nohup sh "$B/ping-supervised.sh" >> "$D/minecraft-supervised-console.log" 2>&1 < /dev/null &
+ echo $! > "$D/minecraft-ping-supervised.pid"
+ nohup sh "$B/minecraft-end-guard.sh" >> "$D/minecraft-end-guard-console.log" 2>&1 < /dev/null &
+ echo $! > "$D/minecraft-end-guard.pid"
+ date -Is > "$D/minecraft-@@IPV4_018@@/ping-repair.txt"
+fi
+sleep 3
+cat "$D/minecraft-@@IPV4_018@@/ping-repair.txt"
+tail -n 5 "$D/minecraft-@@IPV4_018@@/ping-minecraft-@@IPV4_018@@.log"

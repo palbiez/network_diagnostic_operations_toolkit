@@ -1,0 +1,23 @@
+date -Iseconds
+printf '\n--- UCI ---\n'
+uci -q show omr-bypass
+printf '\n--- DNS processes ---\n'
+ps w | grep '[d]nsmasq'
+dnsmasq --version | head -3
+printf '\n--- generated nftset configuration ---\n'
+grep -h 'nftset=' /var/etc/dnsmasq.conf.*
+printf '\n--- DNS policy ---\n'
+uci -q get dhcp.@dnsmasq[0].cachesize
+uci -q get dhcp.@dnsmasq[0].server
+printf '\n--- relevant log ---\n'
+logread | grep -Ei 'dnsmasq.*(nftset|error|failed|bad option)|omr-bypass' | tail -25
+printf '\n--- ruleset ---\n'
+nft -a list ruleset
+printf '\n--- routes ---\n'
+ip -4 rule show
+ip -4 route show table 3
+printf '\n--- connections ---\n'
+grep 'src=@@IPV4_054@@ ' /proc/net/nf_conntrack
+printf '\n--- resolver tool ---\n'
+command -v dig
+true

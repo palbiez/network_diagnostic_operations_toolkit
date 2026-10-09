@@ -1,0 +1,37 @@
+set -eu
+b=/root/central-telemetry-backup-20261004
+mkdir -p "$b"
+chmod 700 "$b"
+[ -f "$b/luci_statistics" ] || cp -p /etc/config/luci_statistics "$b/luci_statistics"
+[ -f "$b/collectd-generated.conf" ] || cp -p /var/etc/collectd.conf "$b/collectd-generated.conf"
+uci set 'luci_statistics.@collectd_mqtt_block[0].blocktype=Publish'
+if [ "$(uci -q get 'system.@system[0].hostname')" = 'OpenMPTCProuter' ]; then
+ # This router's Collectd MQTT writer accumulates minutes of delay with QoS 1.
+ uci set 'luci_statistics.@collectd_mqtt_block[0].QoS=0'
+else
+ uci set 'luci_statistics.@collectd_mqtt_block[0].QoS=1'
+fi
+uci set 'luci_statistics.@collectd_mqtt_block[0].StoreRates=false'
+uci set 'luci_statistics.collectd.BaseDir=/var/run/collectd'
+if [ -f /usr/lib/collectd/syslog.so ]; then uci set 'luci_statistics.collectd_syslog.enable=1'; else uci set 'luci_statistics.collectd_syslog.enable=0'; fi
+uci set 'luci_statistics.collectd_syslog.LogLevel=warning'
+uci set 'luci_statistics.collectd_cpu.enable=1'
+uci -q delete luci_statistics.collectd_interface.Interfaces || true
+uci set 'luci_statistics.collectd_interface.IgnoreSelected=1'
+uci set 'luci_statistics.collectd_interface.enable=1'
+for plugin in conntrack df ping thermal uptime; do
+ if [ ! -f "/usr/lib/collectd/$plugin.so" ]; then uci set "luci_statistics.collectd_$plugin.enable=0"; fi
+done
+uci commit luci_statistics
+/usr/libexec/stat-genconfig > /tmp/central-collectd-validated.conf
+if ! /usr/sbin/collectd -t -C /tmp/central-collectd-validated.conf; then
+ cp -p "$b/luci_statistics" /etc/config/luci_statistics
+ exit 1
+fi
+/usr/sbin/collectd -T -C /tmp/central-collectd-validated.conf
+/etc/init.d/luci_statistics enable
+/etc/init.d/collectd enable
+/etc/init.d/luci_statistics restart
+logger -t CENTRAL-AUDIT 'CENTRAL-AUDIT-20261004-repaired-collectd'
+/etc/init.d/collectd status
+uptime

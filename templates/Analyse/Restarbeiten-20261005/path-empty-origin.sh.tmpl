@@ -1,0 +1,3 @@
+sed -n '205,252p' /etc/init.d/mqvpn
+grep -E '^Path|^BackupPath' /var/run/mqvpn.conf
+mqvpn --version

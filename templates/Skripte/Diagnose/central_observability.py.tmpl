@@ -1,0 +1,71 @@
+"""SSH audit helper. Credentials stay in memory; outputs redact known secrets."""
+from pathlib import Path
+import base64, configparser, concurrent.futures, io, json, re, socket, struct, sys
+import paramiko
+from cryptography.hazmat.primitives.asymmetric import rsa
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / 'Analyse/Zentrale-Telemetrie-20261004'
+OUT.mkdir(exist_ok=True)
+cfg = configparser.ConfigParser(interpolation=None)
+cfg.read(ROOT/'Zugangsdaten/infos', encoding='utf-8-sig')
+def clean(v): return (v or '').strip().strip('"\'')
+SECRETS = [clean(v) for s in cfg.sections() for k,v in cfg[s].items() if k in ('passwort','password')]
+def redact(s):
+    for v in SECRETS:
+        if v: s=s.replace(v,'[REDACTED]')
+    s=re.sub(r'(?im)^(.*(?:password|passwd|privatekey|token|secret|community)\s*[=: ]\s*).+$',r'\1[REDACTED]',s)
+    return s
+def key(name):
+    lines=(ROOT/'Zugangsdaten'/f'{name}.ppk').read_text().splitlines()
+    def blob(label):
+        i=next(i for i,l in enumerate(lines) if l.startswith(label+':'))
+        return base64.b64decode(''.join(lines[i+1:i+1+int(lines[i].split(':')[1])]))
+    def parts(b):
+        result=[]
+        while b:
+            n=struct.unpack('>I',b[:4])[0]; result.append(b[4:4+n]); b=b[4+n:]
+        return result
+    pub=parts(blob('Public-Lines')); priv=parts(blob('Private-Lines'))
+    e,n=[int.from_bytes(b,'big') for b in pub[1:]]
+    d,p,q,iq=[int.from_bytes(b,'big') for b in priv]
+    obj=rsa.RSAPrivateNumbers(p,q,d,d%(p-1),d%(q-1),iq,rsa.RSAPublicNumbers(e,n)).private_key()
+    return paramiko.RSAKey(key=obj)
+KEYS=[key('openwrt'),key('omr')]
+def connect(ip):
+    host, _, port = ip.partition(':')
+    port=int(port or 22)
+    last=None
+    for auth in [dict(pkey=k) for k in KEYS]+[dict(password=clean(cfg['old_router']['passwort']))]:
+        c=paramiko.SSHClient()
+        known=OUT/'ssh_known_hosts'
+        if known.exists(): c.load_host_keys(str(known))
+        c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            c.connect(host,port=port,username='root',timeout=7,auth_timeout=8,banner_timeout=8,look_for_keys=False,allow_agent=False,**auth)
+            c.save_host_keys(str(known)); return c
+        except paramiko.AuthenticationException as e: last=e;c.close()
+        except Exception: c.close();raise
+    raise last
+def run(ip,cmd,timeout=60):
+    c=connect(ip)
+    try:
+        stdin,out,err=c.exec_command('sh -s',timeout=timeout)
+        stdin.write(cmd+'\n'); stdin.flush(); stdin.channel.shutdown_write()
+        result=out.read().decode(errors='replace')+err.read().decode(errors='replace')
+        return {'host':ip,'exit':out.channel.recv_exit_status(),'output':redact(result)}
+    finally:c.close()
+def audit(ip,cmd):
+    try: result=run(ip,cmd)
+    except Exception as e: result={'host':ip,'error':type(e).__name__+': '+redact(str(e))}
+    (OUT/(ip+'-audit.json')).write_text(json.dumps(result,indent=2),encoding='utf-8')
+    return result
+if __name__=='__main__':
+    if sys.argv[1]=='run':
+        result=run(sys.argv[2],Path(sys.argv[3]).read_text(encoding='utf-8') if Path(sys.argv[3]).is_file() else sys.argv[3])
+        if len(sys.argv)>4:(OUT/sys.argv[4]).write_text(json.dumps(result,indent=2),encoding='utf-8')
+        print(json.dumps(result,indent=2))
+    elif sys.argv[1]=='audit':
+        cmd=Path(sys.argv[2]).read_text(encoding='utf-8')
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+            for result in pool.map(lambda ip:audit(ip,cmd),sys.argv[3:]): print(json.dumps(result,indent=2))

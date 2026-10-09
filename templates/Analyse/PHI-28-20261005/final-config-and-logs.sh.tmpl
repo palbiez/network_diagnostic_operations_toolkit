@@ -1,0 +1,15 @@
+bash -lc 'ha supervisor info' | grep -E 'healthy|supported|version:'
+sudo -n docker logs --since 2026-10-05T08:21:00Z homeassistant 2>&1 | grep -E 'debugpy|Home Assistant initialized|Starting Home Assistant|ERROR|CRITICAL' | tail -n 15
+sudo -n docker logs --since 2026-10-05T08:15:00Z app_a0d7b954_nodered 2>&1 | grep -E 'mqtt-broker:homeassistant|server:Home Assistant.*Connected' | tail -n 12
+sudo -n python3 - <<'PY'
+import socket,json,urllib.request
+from pathlib import Path
+for p in [5678,8123,9100]:
+    try:
+        s=socket.create_connection(('127.0.0.1',p),timeout=1);s.close();print(p,'open')
+    except OSError:print(p,'closed')
+token=Path('/run/s6/container_environment/SUPERVISOR_TOKEN').read_text().strip()
+for slug in ['a0d7b954_ssh','5f3a9361_logspout','0d869efa_prometheus_node_exporter']:
+    r=urllib.request.urlopen(urllib.request.Request('http://supervisor/addons/'+slug+'/info',headers={'Authorization':'Bearer '+token}))
+    d=json.load(r)['data'];print(slug,{k:d[k] for k in ['state','boot','watchdog','protected']})
+PY

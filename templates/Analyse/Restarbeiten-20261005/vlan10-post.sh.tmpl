@@ -1,0 +1,11 @@
+date -Iseconds
+fw4 check >/tmp/phi21-vlan@@VLAN_002@@-final-check.log 2>&1; echo fw4_exit=$?
+uci show firewall.zone_vlan10
+uci show dhcp.vlan@@VLAN_002@@
+ip route get @@IPV4_011@@ from @@IPV4_051@@ iif @@INTERFACE_005@@
+ip route get @@IPV4_007@@ from @@IPV4_051@@ iif @@INTERFACE_005@@
+nft list chain inet fw4 dstnat 2>/dev/null || true
+nft list ruleset | grep -E '@@INTERFACE_005@@".*(redirect|tproxy)|redirect.*(808|108)|chain xr_|hook prerouting' | head -35
+grep -F '@@NETWORK_PREFIX_004@@' /tmp/dhcp.leases || true
+ubus call service list '{"name":"dnsmasq"}' | grep -E 'running|pid'
+ip netns add phi21-test 2>/dev/null && { echo netns_available; ip netns del phi21-test; } || echo netns_unavailable

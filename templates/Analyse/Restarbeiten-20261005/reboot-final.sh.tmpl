@@ -1,0 +1,23 @@
+date -Iseconds
+cat /proc/uptime
+mqvpn-path list
+ip link show @@INTERFACE_001@@ | head -1
+logread | grep -E 'MTU changed externally|Netlink receive failure|Unable to dump conntrack'
+fw4 check >/tmp/phi-reboot-final-fw4.log 2>&1; echo fw4_exit=$?
+uci get firewall.omr_dscp_rule2.src_port
+uci get firewall.omr_dscp_rule3.src_port
+uci get firewall.omr_dscp_rule4.dest_port
+uci get firewall.omr_dscp_rule7.dest_port
+nft list chain inet fw4 mangle_forward | grep -c 'omr_dscp_rule[1-7]'
+nft list chain inet fw4 mangle_output | grep -c 'omr_dscp_rule[1-7]'
+ip route get @@IPV4_011@@ from @@IPV4_015@@ iif @@INTERFACE_008@@ mark 0x45392
+ip route get @@IPV4_011@@ from @@IPV4_016@@ iif @@INTERFACE_008@@ mark 0x45393
+printf 'wan1_public='; curl -4 -fsS --max-time 12 --interface @@INTERFACE_002@@ https://@@HOSTNAME_013@@; echo
+printf 'wan2_public='; curl -4 -fsS --max-time 12 --interface @@INTERFACE_003@@ https://@@HOSTNAME_013@@; echo
+ping -c 2 -W 1 @@IPV4_015@@ || true
+ping -c 2 -W 1 @@IPV4_016@@ || true
+conntrack -L -s @@IPV4_015@@ 2>/dev/null | head -3
+conntrack -L -s @@IPV4_016@@ 2>/dev/null | head -3
+grep -F '@@NETWORK_PREFIX_004@@' /tmp/dhcp.leases || true
+nft list chain inet fw4 forward_vlan10
+ip netns list

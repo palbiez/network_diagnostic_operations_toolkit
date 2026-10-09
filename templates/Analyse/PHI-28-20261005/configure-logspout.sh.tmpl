@@ -1,0 +1,14 @@
+sudo -n python3 - <<'PY'
+import urllib.request,json
+from pathlib import Path
+token=Path('/run/s6/container_environment/SUPERVISOR_TOKEN').read_text().strip()
+def api(path,body=None):
+    req=urllib.request.Request('http://supervisor'+path,data=None if body is None else json.dumps(body).encode(),headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'})
+    return json.load(urllib.request.urlopen(req,timeout=30))
+slug='5f3a9361_logspout'
+data=api('/addons/'+slug+'/info')['data']
+print({k:data[k] for k in ['slug','version','state','protected','options']})
+options=data['options'];options['routes']=['syslog+tcp://@@IPV4_007@@:514'];options['hostname']='homeassistant';options['strip_ansi']=True
+print(api('/addons/'+slug+'/options',{'options':options,'boot':'auto','watchdog':True}))
+print(api('/addons/'+slug+'/start',{}))
+PY

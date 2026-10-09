@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+B=/root/phi12-diag-20261003
+sh -n "$B/minecraft.sh"
+# The old recorded PID must still be the intended diagnostic process.
+if [ -r /proc/32390/cmdline ] && tr '\0' ' ' < /proc/32390/cmdline | grep -Fq 'sh /root/phi12-diag-20261003/minecraft.sh'; then
+ kill -TERM 32390
+ n=0
+ while kill -0 32390 2>/dev/null && [ "$n" -lt 10 ]; do sleep 1; n=$((n+1)); done
+ kill -0 32390 2>/dev/null && { echo 'Old Minecraft logger did not stop'; exit 1; }
+fi
+D=/tmp/phi12-diag-20261003
+printf '%s,user-ip-correction,minecraft:@@IPV4_017@@-to-@@IPV4_018@@\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$D/events.csv"
+printf 'This directory recorded @@IPV4_017@@ before the user corrected Minecraft to @@IPV4_018@@. Do not attribute these device logs to Minecraft.\n' > "$D/minecraft-@@IPV4_017@@/NOT-MINECRAFT.txt"
+nohup sh "$B/minecraft.sh" > "$D/minecraft-@@IPV4_018@@-console.log" 2>&1 < /dev/null &
+printf '%s\n' "$!" > "$B/minecraft.pid"
+sleep 3
+cat "$D/minecraft-@@IPV4_018@@/settings.txt"
+head -7 "$D/minecraft-@@IPV4_018@@/ping-minecraft-@@IPV4_018@@.log"
+cat "$D/minecraft-@@IPV4_017@@/finished.txt"

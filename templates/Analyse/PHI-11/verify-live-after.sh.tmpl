@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+date -Is
+echo 'MQVPN SERVICE:'
+ubus call service list '{"name":"mqvpn"}'
+echo 'LOG SERVICE:'
+ubus call service list '{"name":"log"}'
+echo 'MQVPN DEBUGLOGGER AUTOSTART:'
+if /etc/init.d/mqvpn-debuglog enabled; then echo 'FAIL: unexpectedly enabled'; exit 1; else echo 'PASS: disabled'; fi
+echo 'SYSLOG REMOTE:'
+test "$(uci -q get 'system.@system[0].log_remote')" = 0
+echo 'PASS: remote disabled'
+echo 'TUNNEL ADDRESS:'
+ip -brief addr show @@INTERFACE_001@@
+echo 'TUNNEL PEER SHORT REACHABILITY CHECK:'
+ping -c 3 -W 2 @@IPV4_002@@
+echo 'FIREWALL SYNTAX CHECK:'
+fw4 check
+echo 'BACKUP FOLDER:'
+ls -lh /tmp/PHI-11-20261002/*.tar.gz

@@ -1,0 +1,15 @@
+#!/bin/sh
+sed -n '630,780p' /bin/omr-tracker
+sed -n '940,1020p' /bin/omr-tracker
+sed -n '98,120p' /etc/init.d/omr-tracker
+sed -n '514,610p' /etc/init.d/omr-tracker
+grep -nEi 'debug|loglevel' /bin/omr-tracker* /bin/omr-schedule /usr/share/omr/schedule.d/010-services /etc/init.d/omr-bypass /etc/init.d/firewall | head -50
+uci -q show network.wan1
+uci -q show network.wan2
+for pid in $(pgrep -f '/bin/omr-tracker wan'); do tr '\0' '\n' < /proc/$pid/environ | grep -E '^OMR_TRACKER_(INTERFACE|TRIES|COUNT|TYPE|TIMEOUT|DEVICE)='; done
+ubus call service list '{"name":"omr-tracker"}' | head -35
+ping -n -c 2 -W 2 -I @@INTERFACE_002@@ @@IPV4_025@@
+ping -n -c 2 -W 2 -I @@INTERFACE_003@@ @@IPV4_025@@
+ping -n -c 2 -W 2 -I @@INTERFACE_001@@ @@IPV4_025@@
+ls /usr/bin/python* /usr/bin/perl* /usr/bin/timeout /sbin/block 2>/dev/null
+cat /proc/partitions

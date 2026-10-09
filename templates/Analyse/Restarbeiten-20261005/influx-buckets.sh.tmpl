@@ -1,0 +1,14 @@
+python3 - <<'PY'
+from pathlib import Path
+import json,tomllib,urllib.request,urllib.error
+configs=tomllib.loads(Path('/root/.influxdbv2/configs').read_text())
+credentials=[Path('/root/superuser_influx').read_text().strip()]+[v.get('token','') for v in configs.values()]
+opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+for credential in credentials:
+    request=urllib.request.Request('http://127.0.0.1:8086/api/v2/buckets',headers={'Authorization':'Token '+credential})
+    try:
+        data=json.load(opener.open(request,timeout=10))
+        print(json.dumps([{'name':b['name'],'retentionRules':b['retentionRules']} for b in data['buckets']],indent=2));break
+    except urllib.error.HTTPError:continue
+else:raise SystemExit('No working credential for retention metadata read')
+PY

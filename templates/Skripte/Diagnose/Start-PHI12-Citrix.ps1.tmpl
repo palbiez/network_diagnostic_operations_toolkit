@@ -1,0 +1,14 @@
+param(
+    [ValidateRange(10,86400)][int]$DurationSeconds = 3600,
+    [long]$EndEpoch = 0,
+    [string]$CitrixEndpoint = '@@IPV4_031@@',
+    [ValidateRange(1,65535)][int]$CitrixPort = 8443,
+    [string]$OutputDirectory
+)
+# Endpoint observed in wfica32 on 2026-10-02. No network/security settings changed.
+$options = @{Gateway='@@IPV4_008@@';CitrixHost=$CitrixEndpoint;CitrixPort=$CitrixPort;CitrixSessionName='@@PRIVATE_VALUE_006@@';CitrixCheckIntervalSeconds=30;DurationSeconds=$DurationSeconds}
+if ($OutputDirectory) { $options.OutputDirectory=$OutputDirectory }
+if ($EndEpoch -gt 0) { $options.EndEpoch=$EndEpoch }
+Write-Host 'PHI-12: Citrix endpoint observed as @@IPV4_031@@:8443; route/interface and application are recorded.'
+Write-Host 'If Citrix uses a different endpoint in a later session, supply -CitrixEndpoint and -CitrixPort.'
+& (Join-Path $PSScriptRoot 'phi12-client-monitor.ps1') @options

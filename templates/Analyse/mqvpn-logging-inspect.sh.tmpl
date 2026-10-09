@@ -1,0 +1,5 @@
+cat /etc/init.d/mqvpn
+printf '\nPROCESS\n'
+/bin/busybox ps | grep /usr/sbin/mqvpn
+stat /var/run/mqvpn.conf
+ubus call service list '{"name":"mqvpn"}'

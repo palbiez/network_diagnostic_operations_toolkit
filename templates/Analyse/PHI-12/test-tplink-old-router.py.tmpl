@@ -1,0 +1,26 @@
+from pathlib import Path
+import configparser,http.cookiejar,json,re,urllib.parse,urllib.request,urllib.error
+root=Path(__file__).resolve().parents[2];c=configparser.ConfigParser(interpolation=None);c.read(root/'Zugangsdaten/infos',encoding='utf-8')
+def clean(s):
+ s=(s or '').strip();return s[1:-1] if len(s)>1 and s[0]==s[-1] and s[0] in "\"'" else s
+section=c['old_router'];username=clean(section.get('user'));password=clean(section.get('passwort'))
+client=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+summary={'target':'@@IPV4_019@@','model':'TP-Link TL-SG105E','attempts':[]}
+page=(root/'Analyse/PHI-12/switch-management-20261002/@@IPV4_019@@.html').read_text(errors='replace')
+action=re.search(r'<FORM[^>]+action=["\']([^"\']+)',page,re.I)
+if not action:raise SystemExit('Form action not identified')
+url=urllib.parse.urljoin('http://@@IPV4_019@@/',action.group(1))
+for variant,secret in [('old_router password',password),('old_router password plus ...',password+'...')]:
+ body=urllib.parse.urlencode({'username':username,'password':secret,'logon':'Login'}).encode()
+ req=urllib.request.Request(url,data=body,headers={'Content-Type':'application/x-www-form-urlencoded','Referer':'http://@@IPV4_019@@/logon.cgi','User-Agent':'Mozilla/5.0'})
+ try:
+  with client.open(req,timeout=6) as response:reply=response.read(384000).decode(errors='replace');status=response.status;final=response.geturl()
+  bad=bool(re.search(r't_error1|user name or the password is wrong|errType["\']?\s*[=:]\s*1',reply,re.I))
+  login=bool(re.search(r'function doOnclick|id=["\']password["\']',reply,re.I))
+  accepted=not bad and not login and '/logon.cgi' not in final
+  summary['attempts'].append({'variant':variant,'http_status':status,'wrong_credential_message':bad,'login_page_returned':login,'accepted':accepted})
+  if accepted:
+   (root/'Analyse/PHI-12/switch-management-20261002/@@IPV4_019@@-authenticated-landing.html').write_text(reply,encoding='utf-8');break
+ except Exception as error:summary['attempts'].append({'variant':variant,'error':type(error).__name__})
+(root/'Analyse/PHI-12/switch-management-20261002/tplink-credential-test.json').write_text(json.dumps(summary,indent=2)+'\n',encoding='utf-8')
+print(json.dumps(summary,indent=2))

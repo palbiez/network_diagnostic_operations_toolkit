@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+remaining=$((@@EPOCH_002@@-$(date +%s)))
+[ "$remaining" -gt 0 ] || exit 0
+base=/tmp/phi12-evening-20261002-network
+command -v /usr/bin/ping >/dev/null
+/usr/bin/ping -V
+mkdir "$base/ps-lan-probes-v2.lock" 2>/dev/null || exit 0
+date -Is > "$base/ps-lan-probes-start.txt"
+for device in @@IPV4_015@@ @@IPV4_016@@; do
+ nohup /usr/bin/ping -n -D -O -I @@INTERFACE_008@@ -i 1 -W 1 -w "$remaining" "$device" > "$base/ping-lan-$device.log" 2>&1 < /dev/null &
+ printf 'device=%s pid=%s deadline=00:00-Berlin\n' "$device" "$!" >> "$base/ps-lan-probes-start.txt"
+done
+cat "$base/ps-lan-probes-start.txt"
+sleep 2
+for device in @@IPV4_015@@ @@IPV4_016@@; do head -4 "$base/ping-lan-$device.log"; done

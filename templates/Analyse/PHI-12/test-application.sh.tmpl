@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+sh -n /tmp/phi12-application-monitor.sh
+DURATION=10 OUT_DIR=/tmp/phi12-application-smoke-20261002 sh /tmp/phi12-application-monitor.sh
+echo 'TARGETS:'
+cat /tmp/phi12-application-smoke-20261002/known-targets.txt
+echo 'ERROR CHECK:'
+grep -i -e 'invalid' -e 'syntax' -e 'unknown option' /tmp/phi12-application-smoke-20261002/* 2>/dev/null || true
+tar -czf /tmp/phi12-application-smoke-20261002.tar.gz -C /tmp phi12-application-smoke-20261002

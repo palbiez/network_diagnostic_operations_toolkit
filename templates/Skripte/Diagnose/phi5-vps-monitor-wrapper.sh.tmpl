@@ -1,0 +1,9 @@
+#!/bin/sh
+# Require a current, confirmed router session address. No stale .3 default.
+set -eu
+: "${TUNNEL_TARGET:?Set TUNNEL_TARGET to the confirmed current router tunnel IP}"
+exec python3 /usr/local/sbin/phi5-vps-probes.py \
+    --target "$TUNNEL_TARGET" --interface "${TUNNEL_IFACE:-@@INTERFACE_004@@}" \
+    --internet-target "${INTERNET_TARGET:-@@IPV4_011@@}" \
+    --samples 1000000 --duration-seconds "${DURATION_SECONDS:-86400}" \
+    --interval 2 --log-root "${LOG_DIR:-/root/phi5-vps-probes}"

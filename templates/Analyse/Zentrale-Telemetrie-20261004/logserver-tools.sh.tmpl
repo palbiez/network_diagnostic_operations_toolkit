@@ -1,0 +1,7 @@
+command -v mosquitto_sub
+find /etc /root -maxdepth 3 \( -iname '*influx*' -o -iname '*telegraf*' \) -printf '%m %s %p\n'
+curl --noproxy '*' --max-time 3 -I -s http://@@IPV4_034@@:8123
+curl --noproxy '*' --max-time 3 -s http://@@IPV4_034@@:9100/metrics | grep -E 'node_uname_info|node_exporter_build_info'
+ls -l /root/superuser_influx
+syslog-ng --syntax-only 2>&1 | tail -8
+apt-cache policy python3-paho-mqtt mosquitto-clients

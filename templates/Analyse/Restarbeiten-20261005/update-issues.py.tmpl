@@ -1,0 +1,32 @@
+from pathlib import Path
+import json
+ROOT=Path(__file__).resolve().parents[2]
+issues=ROOT/'Linear/issues'
+states={s['name']:s['id'] for s in json.loads((ROOT/'Linear/config.json').read_text(encoding='utf-8'))['states']}
+updates={
+19:('Done', @@PYTHON_STRING_044@@),
+21:('In Progress', @@PYTHON_STRING_045@@),
+22:('Done', @@PYTHON_STRING_046@@),
+14:('In Progress', @@PYTHON_STRING_047@@),
+29:('In Progress', @@PYTHON_STRING_048@@),
+9:(None,@@PYTHON_STRING_049@@),
+10:(None,@@PYTHON_STRING_050@@),
+13:(None,@@PYTHON_STRING_051@@)
+}
+for number,(state,body) in updates.items():
+    p=issues/f'PHI-{number}.md';description=p.read_text(encoding='utf-8')
+    if '## Bearbeitung Restarbeiten 05.10.2026' in description:raise SystemExit(f'Already updated PHI-{number}')
+    if number in (19,22):description=description.replace('- [ ]','- [x]')
+    p.write_text(description+'\n\n## Bearbeitung Restarbeiten 05.10.2026\n\n'+body+'\n\nNachweise: `Analyse/Restarbeiten-20261005/Ergebnis.md` und die dort aufgeführten Rohprüfungen.\n',encoding='utf-8')
+    if state:
+        p=issues/f'PHI-{number}.json';meta=json.loads(p.read_text(encoding='utf-8'));meta['stateId']=states[state]
+        p.write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+p=issues/'PHI-28.md';s=p.read_text(encoding='utf-8')
+s=s.replace(@@PYTHON_STRING_052@@,@@PYTHON_STRING_053@@)
+s=s.replace('Persönliche Browser-Bestätigung wurde angefragt und steht noch aus.','Der Nutzer hat den persönlichen Browsertest inzwischen erfolgreich bestätigt.')
+s+=@@PYTHON_STRING_054@@
+p.write_text(s,encoding='utf-8')
+p=ROOT/'Dokumentation/home-assistant-zugang-PHI-28.md';s=p.read_text(encoding='utf-8')
+s=s.replace('Der persönliche Browser-Aufruf steht noch aus; PHI-28 bleibt deshalb In Review.','Der Nutzer bestätigte am 05.10.2026 den erfolgreichen persönlichen Browsertest und schloss PHI-28.')
+p.write_text(s,encoding='utf-8')
+print('Updated PHI-9/10/13/14/19/21/22/28/29 descriptions; state changes only 14/19/21/22/29')

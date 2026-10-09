@@ -1,0 +1,10 @@
+#!/bin/sh
+echo 'LAN ROUTES'
+ip route get @@IPV4_015@@
+ip route get @@IPV4_016@@
+echo 'LAN TEST PS128'
+ping -n -I @@INTERFACE_008@@ -c 4 -W 1 @@IPV4_015@@
+echo 'LAN TEST PS139'
+ping -n -I @@INTERFACE_008@@ -c 4 -W 1 @@IPV4_016@@
+echo 'CONFIG FILE OBSERVER'
+cat /tmp/phi12-evening-20261002-network/config-file-changes.csv

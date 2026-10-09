@@ -1,0 +1,20 @@
+from pathlib import Path
+import json
+
+ROOT = Path(__file__).resolve().parents[2]
+report = (ROOT / "Analyse/PHI-12/diagnoseplan-2026-10-02.md").read_text(encoding="utf-8")
+(ROOT / "Linear/issues/PHI-12.md").write_text(report, encoding="utf-8")
+p = ROOT / "Linear/issues/PHI-12.json"
+data = json.loads(p.read_text(encoding="utf-8"))
+data["stateId"] = "@@IDENTIFIER_002@@"
+p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+p = ROOT / "Linear/work-packages.json"
+data = json.loads(p.read_text(encoding="utf-8"))
+package = next(x for x in data if x["key"] == "restart-routing")
+package["state"] = "In Progress"
+package["description"] = report
+for source in ["Analyse/PHI-12/diagnoseplan-2026-10-02.md", "Skripte/Diagnose/phi12-router-monitor.sh", "Skripte/Diagnose/phi12-client-monitor.ps1"]:
+    if source not in package["sources"]:
+        package["sources"].append(source)
+p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+print("PHI-12-Diagnose vorbereitet; Ursache und Fix noch offen.")

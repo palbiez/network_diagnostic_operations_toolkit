@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+CLIENT_IP=@@IPV4_023@@ CITRIX_IP=@@IPV4_031@@ DURATION=30 OUT_DIR=/tmp/phi12-citrix-application-20261002 sh /tmp/phi12-router-monitor.sh
+tar -czf /tmp/phi12-citrix-application-20261002.tar.gz -C /tmp phi12-citrix-application-20261002

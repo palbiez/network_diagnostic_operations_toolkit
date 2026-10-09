@@ -1,0 +1,13 @@
+sudo -n python3 - <<'PY'
+from pathlib import Path
+import json
+old=json.loads(Path('/share/phi28-backup-20261005/flows.json').read_text());new=json.loads(Path('/addon_configs/a0d7b954_nodered/flows.json').read_text())
+old={n['id']:n for n in old};new={n['id']:n for n in new}
+print('flow nodes before/after',len(old),len(new),'added/removed',set(new)-set(old),set(old)-set(new))
+print('changed fields',[(i,[k for k in set(old[i])|set(new[i]) if old[i].get(k)!=new[i].get(k)]) for i in old.keys()&new.keys() if old[i]!=new[i]])
+backup=json.loads(Path('/share/phi28-backup-20261005/ssh-options.json').read_text());current=json.loads(Path('/data/options.json').read_text())
+print('SSH username preserved',backup['ssh']['username']==current['ssh']['username'])
+print('SSH password preserved',backup['ssh']['password']==current['ssh']['password'])
+print('SSH keys count',len(current['ssh']['authorized_keys']))
+print('debug config',Path('/homeassistant/configuration.yaml').read_text().split('debugpy:',1)[1].split('\n',2)[:2])
+PY

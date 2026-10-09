@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+date -Is
+echo 'CLOCK AND CRON:'
+date +%s
+/etc/init.d/cron enabled && /etc/init.d/cron running || true
+echo 'AVAILABLE MONITOR DATA:'
+for dir in /tmp/phi12-network-20261002T095306Z /tmp/phi12-application-20261002T095306Z /tmp/phi12-application-wan-20261002T100942Z /tmp/phi12-device-playstation-20261002T110458Z; do
+ [ -d "$dir" ] || continue
+ du -sk "$dir"
+done
+tar -czf /tmp/phi12-daytime-20261002.tar.gz -C /tmp phi12-network-20261002T095306Z phi12-application-20261002T095306Z phi12-application-wan-20261002T100942Z phi12-device-playstation-20261002T110458Z
+echo 'CURRENT CHANGED BYPASS RULES:'
+awk 'BEGIN{RS=""} /application|application|config dport|config sport|config macs|@@IPV4_006@@/ {print $0 "\n"}' /etc/config/omr-bypass
+echo 'FLOW OFFLOAD CONFIG:'
+uci show firewall | grep -E 'flow_offloading|flow_offloading_hw' || true
+echo 'LIVE PORT AND GAMING RULES:'
+nft -a list ruleset | grep -i -e 'application' -e 'dport' -e 'gaming-ps' -e '@@MAC_001@@' | head -85
+echo 'STORAGE:'
+df -h /tmp /overlay
+echo 'BACKUP HASH:'
+sha256sum /tmp/phi12-daytime-20261002.tar.gz

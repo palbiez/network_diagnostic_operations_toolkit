@@ -1,0 +1,8 @@
+python3 - <<'PY'
+import gzip,hashlib,json
+from pathlib import Path
+p=Path('/var/log/network/@@IPV4_002@@/2026-10-02-syslog.log')
+data=p.read_bytes();archive=gzip.compress(data);restored=gzip.decompress(archive)
+assert data==restored
+print(json.dumps({'sample':str(p),'originalBytes':len(data),'archiveBytes':len(archive),'restoredEqual':True,'originalUntouched':True}))
+PY

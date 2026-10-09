@@ -1,0 +1,49 @@
+#!/bin/sh
+set -u
+umask 077
+D=${DIAG_DIR:-/tmp/phi12-diag-20261003}
+reason=${1:-manual}
+# Compare managed tracker PIDs, excluding transient bash probe subprocesses.
+managed=$({ pidof dnsmasq unbound sslocal mqvpn 2>/dev/null; ubus call service list '{"name":"omr-tracker"}' 2>/dev/null | jsonfilter -e '@["omr-tracker"].instances.*.pid'; } | sort)
+previous_managed=$(cat "$D/managed-service-pids.last" 2>/dev/null)
+case "$reason" in
+ 'event: pid-change')
+  [ "$managed" != "$previous_managed" ] || exit 0
+ ;;
+esac
+printf '%s\n' "$managed" > "$D/managed-service-pids.last"
+stamp=$(date -u +%Y%m%dT%H%M%SZ)-$$
+s="$D/snapshots/$stamp.partial"
+mkdir -p "$s"
+date -Is > "$s/time.txt"
+printf '%s\n' "$reason" > "$s/reason.txt"
+ps w > "$s/processes.txt"
+ubus call service list '{}' > "$s/services.json" 2>&1
+uci changes > "$s/uci-changes.txt" 2>&1
+for c in network firewall dhcp omr-tracker omr-bypass dscp openmptcprouter; do
+ sha256sum "/etc/config/$c" >> "$s/config-hashes.txt" 2>/dev/null || true
+ case "$c" in openmptcprouter) ;; *) cp "/etc/config/$c" "$s/config-$c" 2>/dev/null || true;; esac
+done
+timeout 20 fw4 print > "$s/fw4-print.nft" 2> "$s/fw4-print.err"
+printf '%s\n' "$?" > "$s/fw4-print.exit"
+timeout 20 fw4 check > "$s/fw4-check.txt" 2>&1
+printf '%s\n' "$?" > "$s/fw4-check.exit"
+timeout 15 nft -a list ruleset > "$s/nft-ruleset.txt" 2>&1
+ip rule > "$s/ip-rules.txt"; ip route show table all > "$s/ip-routes.txt"
+ip -s link > "$s/ip-links.txt"
+logread -l 300 > "$s/syslog-context.txt" 2>&1
+pidof dnsmasq > "$s/dnsmasq-pids.txt"
+find /var/etc -maxdepth 2 -type f -name '*dnsmasq*' | while read -r f; do
+ case "$f" in */dnsmasq.conf*) cp "$f" "$s/$(basename "$f")";; esac
+done
+timeout 5 nslookup example.com 127.0.0.1 > "$s/dns-local-test.txt" 2>&1
+printf '%s\n' "$?" > "$s/dns-local-test.exit"
+printf 'utc,dev,carrier,carrier_changes,rx_errors,tx_errors,rx_dropped,tx_dropped\n' > "$s/nic.csv"
+for dev in @@INTERFACE_002@@ @@INTERFACE_003@@ @@INTERFACE_005@@; do
+ printf '%s,%s' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$dev" >> "$s/nic.csv"
+ for n in carrier carrier_changes statistics/rx_errors statistics/tx_errors statistics/rx_dropped statistics/tx_dropped; do
+  printf ',%s' "$(cat "/sys/class/net/$dev/$n" 2>/dev/null)" >> "$s/nic.csv"
+ done
+ printf '\n' >> "$s/nic.csv"
+done
+mv "$s" "${s%.partial}"

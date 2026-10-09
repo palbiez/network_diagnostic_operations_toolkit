@@ -1,0 +1,32 @@
+#!/usr/bin/python3
+"""Archive original Collectd MQTT messages before acknowledging QoS 1 delivery."""
+import base64,json,os,re,signal
+from datetime import datetime,timezone
+from pathlib import Path
+import paho.mqtt.client as mqtt
+
+CONFIG=json.loads(Path('/etc/mqtt-archive/config.json').read_text())
+ROOT=Path('/var/log/network/mqtt')
+client=mqtt.Client(client_id='network-collectd-archive',clean_session=False,protocol=mqtt.MQTTv311)
+client.username_pw_set(CONFIG['username'],CONFIG['password'])
+client.reconnect_delay_set(1,30)
+def connected(c,userdata,flags,rc):
+    if rc:raise RuntimeError('MQTT connection refused code '+str(rc))
+    c.subscribe([('collectd/#',1),('openmptcp/#',1)])
+    print('MQTT archive connected and subscribed',flush=True)
+def message(c,userdata,m):
+    now=datetime.now(timezone.utc)
+    pieces=m.topic.split('/')
+    source=re.sub(r'[^A-Za-z0-9_.-]','_',pieces[1] if len(pieces)>1 else 'unknown')[:100]
+    if source in ('.','..',''):source='unknown'
+    target=ROOT/source;target.mkdir(mode=0o750,parents=True,exist_ok=True)
+    record={'received_at':now.isoformat(),'topic':m.topic,'qos':m.qos,'retained':bool(m.retain),'duplicate':bool(m.dup),'payload_b64':base64.b64encode(m.payload).decode()}
+    try:record['payload']=m.payload.decode('utf-8')
+    except UnicodeDecodeError:pass
+    with (target/(now.strftime('%Y-%m-%d')+'.jsonl')).open('a',encoding='utf-8') as f:
+        f.write(json.dumps(record,ensure_ascii=False)+'\n');f.flush();os.fsync(f.fileno())
+client.on_connect=connected
+client.on_message=message
+client.connect('127.0.0.1',1883,60)
+signal.signal(signal.SIGTERM,lambda *_: (client.disconnect(),exit(0)))
+client.loop_forever(retry_first_connection=True)

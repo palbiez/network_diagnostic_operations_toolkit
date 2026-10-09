@@ -1,0 +1,32 @@
+import runpy, json, re, time
+from datetime import datetime, timezone
+
+m = runpy.run_path(__file__.replace('collect-switch-readonly.py','read-switch-authenticated.py'))
+Switch, OUT = m['Switch'], m['OUT']
+targets = {
+ '@@IPV4_019@@':['PortSettingRpm.htm','PortStatisticsRpm.htm','Vlan8021QRpm.htm','Vlan8021QPvidRpm.htm','LoopPreventionRpm.htm'],
+ '@@IPV4_020@@':['mac.cgi?page=fwd_tbl','port.cgi?page=stats','port.cgi','vlan.cgi?page=static','vlan.cgi?page=port_based','loop.cgi?page=stp_global','loop.cgi?page=stp_port'],
+ '@@IPV4_021@@':['mac.cgi?page=fwd_tbl','port.cgi?page=stats','port.cgi','vlan.cgi?page=static','vlan.cgi?page=port_based','loop.cgi?page=stp_global','loop.cgi?page=stp_port'],
+}
+rows=[]
+clients={}
+for ip, paths in targets.items():
+ s=Switch(ip); clients[ip]=s
+ result=s.login()
+ if not result['authenticated_candidate']:
+  rows.append({'ip':ip,'error':'Login not accepted'}); continue
+ for p in paths:
+  try:
+   url,body=s.request(p);s.save(p,body)
+   rows.append({'ip':ip,'path':p,'utc':datetime.now(timezone.utc).isoformat(),'bytes':len(body)})
+  except Exception as e:rows.append({'ip':ip,'path':p,'error':type(e).__name__})
+# Read again without clearing counters or changing any port settings.
+time.sleep(5)
+for ip,s in clients.items():
+ p='PortStatisticsRpm.htm' if ip.endswith('.3') else 'port.cgi?page=stats'
+ try:
+  url,body=s.request(p);s.save('second-'+p,body)
+  rows.append({'ip':ip,'path':p,'sample':2,'utc':datetime.now(timezone.utc).isoformat(),'bytes':len(body)})
+ except Exception as e:rows.append({'ip':ip,'sample':2,'error':type(e).__name__})
+(OUT/'read-only-collection.json').write_text(json.dumps(rows,indent=2),encoding='utf-8')
+print(json.dumps(rows,indent=2))

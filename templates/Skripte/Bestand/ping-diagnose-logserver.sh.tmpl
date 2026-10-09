@@ -1,0 +1,40 @@
+#!/bin/bash
+# Dauerping vom Ubuntu-Logserver. Abbruch: Ctrl+C
+
+set -u
+
+LOG_FILE="${1:-./ping-logserver-$(date +%Y%m%d-%H%M%S).log}"
+
+TARGETS=(
+  "Gateway|@@IPV4_008@@"
+  "OMR|@@IPV4_096@@"
+  "Client|@@IPV4_023@@"
+  "TunnelPeer|@@IPV4_002@@"
+  "Hetzner|@@IPV4_012@@"
+  "Internet|@@IPV4_011@@"
+)
+
+printf 'timestamp\tname\taddress\tstatus\trtt_ms\n' | tee "$LOG_FILE"
+echo "Logging nach: $LOG_FILE"
+echo 'Abbruch mit Ctrl+C.'
+
+trap 'printf "# beendet: %s\n" "$(date "+%Y-%m-%d %H:%M:%S.%3N")" >> "$LOG_FILE"; echo; echo "Log gespeichert: $LOG_FILE"' EXIT
+
+while true; do
+  for ENTRY in "${TARGETS[@]}"; do
+    NAME="${ENTRY%%|*}"
+    ADDRESS="${ENTRY##*|}"
+    TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S.%3N')"
+    RESULT="$(ping -n -c 1 -W 1 "$ADDRESS" 2>/dev/null || true)"
+
+    if printf '%s\n' "$RESULT" | grep -q 'bytes from'; then
+      RTT="$(printf '%s\n' "$RESULT" | sed -n 's/.*time=\([0-9.]*\).*/\1/p' | head -n 1)"
+      LINE="${TIMESTAMP}\t${NAME}\t${ADDRESS}\tOK\t${RTT:-?}"
+    else
+      LINE="${TIMESTAMP}\t${NAME}\t${ADDRESS}\tTIMEOUT\t-"
+    fi
+
+    printf '%b\n' "$LINE" | tee -a "$LOG_FILE"
+  done
+  sleep 0.5
+done

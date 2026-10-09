@@ -1,0 +1,13 @@
+[Unit]
+Description=24h MQVPN and network diagnostic monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/vps-mqvpn-24h-monitor.sh
+Restart=no
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

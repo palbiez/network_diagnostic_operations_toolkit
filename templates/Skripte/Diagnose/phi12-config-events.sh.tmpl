@@ -1,0 +1,24 @@
+#!/bin/sh
+# Finite read-only monitor of committed config file changes; no file contents.
+umask 077
+remaining=$((@@EPOCH_010@@-$(date +%s)))
+[ "$remaining" -gt 0 ] || exit 0
+base=/tmp/phi12-evening-20261002-network
+out="$base/config-file-changes.csv"
+previous="$base/config-file-hashes.previous"
+current="$base/config-file-hashes.current"
+printf 'utc,config_package\n' > "$out"
+hashes() {
+ for package in firewall dhcp unbound shadowsocks-rust shadowsocks-libev network omr-bypass openmptcprouter; do
+  [ ! -f "/etc/config/$package" ] || md5sum "/etc/config/$package"
+ done
+}
+hashes > "$previous"
+printf '%s,observer_started\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$out"
+while [ "$(date +%s)" -lt @@EPOCH_010@@ ]; do
+ sleep 1
+ hashes > "$current"
+ stamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+ awk -v stamp="$stamp" 'NR==FNR{old[$2]=$1;next}old[$2]!=$1{n=split($2,a,"/");print stamp "," a[n]}' "$previous" "$current" >> "$out"
+ mv "$current" "$previous"
+done

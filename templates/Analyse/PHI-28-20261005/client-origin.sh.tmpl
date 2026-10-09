@@ -1,0 +1,5 @@
+sudo -n docker exec app_a0d7b954_nodered sh -c 'ss -ntp | grep ":1883"'
+sudo -n docker exec homeassistant sh -c 'ls /proc/1/fd | wc -l'
+sudo -n docker top app_df2164f9_ps5_mqtt
+sudo -n docker logs --since 2026-10-05T08:11:00Z app_a0d7b954_nodered 2>&1 | grep 'mqtt-broker:homeassistant' | tail -n 8
+bash -lc 'ha host logs boots'

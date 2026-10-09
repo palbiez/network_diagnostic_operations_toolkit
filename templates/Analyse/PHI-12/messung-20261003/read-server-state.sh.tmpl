@@ -1,0 +1,5 @@
+echo 'SAFE SERVER OPTIONS'
+uci -q show openmptcprouter | grep -E '\.(ip|master|backup|current|ip_down|server|proxy|vpn)='
+echo 'DEFAULT MULTIPATH INTERFACES'
+multipath
+printf 'live server current-state: '; uci -q get openmptcprouter.vps.current

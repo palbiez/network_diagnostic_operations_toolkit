@@ -1,0 +1,14 @@
+sudo -n sh -c '
+docker logs --since 2026-10-05T07:23:00Z app_a0d7b954_nodered 2>&1 | head -n 90
+docker exec app_a0d7b954_nodered sh -c "find /etc -iname '*red*'; ls /opt; ps -o pid,comm,args" 
+'
+sudo -n docker exec -i app_a0d7b954_nodered node - <<'JS'
+const fs=require('fs');
+const options=JSON.parse(fs.readFileSync('/data/options.json'));
+console.log('Option names',Object.keys(options));
+console.log('credential_secret present',!!options.credential_secret);
+const flows=JSON.parse(fs.readFileSync('/config/flows.json'));
+console.log('broker node',flows.find(n=>n.id==='489094618c340eef'));
+const mqttNodes=flows.filter(n=>n.broker==='489094618c340eef');
+console.log('mqttNodes',mqttNodes.length, mqttNodes.map(n=>({id:n.id,type:n.type,z:n.z})));
+JS

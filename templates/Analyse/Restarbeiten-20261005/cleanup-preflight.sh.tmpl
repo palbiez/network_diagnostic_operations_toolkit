@@ -1,0 +1,7 @@
+uci changes
+uci show omr-bypass | grep -E '^omr-bypass\.ifmap_(@@SECTION_002@@|@@SECTION_003@@|@@SECTION_004@@|@@SECTION_005@@)'
+uci show firewall | grep -A 6 '=forwarding' | head -n 55
+uci show network | grep -E '=rule|\.lookup=|\.in=|\.out=|\.priority='
+grep -R -n -E '\biif\b|90000|90001' /etc/init.d /lib/functions /lib/netifd /usr/share/omr* 2>/dev/null | head -n 45
+logread | grep -E 'phi19-test|@@MAC_006@@|no address range available' | tail -n 12
+grep '@@MAC_006@@' /tmp/dhcp.leases || echo test-lease-absent

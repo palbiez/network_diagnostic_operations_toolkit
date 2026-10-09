@@ -1,0 +1,35 @@
+from pathlib import Path
+from datetime import datetime,timezone
+import json,urllib.request,urllib.parse,tomllib,subprocess,collections,sys
+op=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+base='http://127.0.0.1:9090/api/v1/query?query='
+for query in ['up','network_switch_up','node_textfile_scrape_error','time() - network_switch_last_success_timestamp_seconds']:
+ d=json.load(op.open(base+urllib.parse.quote(query),timeout=10))
+ print('PROM_QUERY',query,[(r['metric'],r['value'][1]) for r in d['data']['result']])
+for path in Path('/var/log/network/switches').glob('*/*.jsonl'):
+ last=None;count=0
+ with path.open() as f:
+  for line in f:count+=1;last=json.loads(line)
+ print('SWITCH_ARCHIVE',path,'records',count,'latest',last['time'],'up',last['up'],'ports',len(last.get('ports',[])))
+for host in ['OpenMPTCProuter','WR1300v3','wr1300ap']:
+ path=Path('/var/log/network/mqtt')/host/'2026-10-04.jsonl';live=0;latest=None
+ with path.open() as f:
+  for line in f:
+   r=json.loads(line)
+   if not r['retained'] and r['qos']==1:live+=1;latest=r
+ print('MQTT_FRESH_QOS1',host,live,'last_received',latest['received_at'] if latest else None)
+ for pattern in ['interface-','memory','cpu-','load']:
+  found=collections.deque(maxlen=1)
+  with path.open() as f:
+   for line in f:
+    r=json.loads(line)
+    if pattern in r['topic'] and not r['retained']:found.append(r['topic'])
+  print('MQTT_METRIC',host,pattern,list(found))
+config=tomllib.loads(Path('/root/.influxdbv2/configs').read_text())
+token=Path('/root/superuser_influx').read_text().strip()
+req=urllib.request.Request('http://127.0.0.1:8086/api/v2/query?org=monitor',data=json.dumps({'query':'from(bucket: "telegraf") |> range(start: -5m) |> filter(fn: (r) => r._measurement == "cpu") |> last() |> limit(n: 1)'}).encode(),headers={'Authorization':'Token '+token,'Content-Type':'application/json','Accept':'application/csv'})
+body=op.open(req,timeout=15).read().decode()
+print('INFLUX_TELEGRAF_CPU_QUERY','records_present',bool('logserver2' in body),'bytes',len(body))
+req=urllib.request.Request('http://127.0.0.1:8086/api/v2/query?org=monitor',data=json.dumps({'query':'from(bucket: "telegraf") |> range(start: -5m) |> filter(fn: (r) => r._measurement == "syslog") |> last() |> limit(n: 1)'}).encode(),headers={'Authorization':'Token '+token,'Content-Type':'application/json','Accept':'application/csv'})
+body=op.open(req,timeout=15).read().decode();print('INFLUX_SYSLOG_QUERY','records_present',len(body)>100,'bytes',len(body))
+print(subprocess.run(['journalctl','-u','telegraf','--since','2 min ago','--no-pager'],capture_output=True,text=True).stdout[-1600:])

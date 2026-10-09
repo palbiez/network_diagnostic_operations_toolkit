@@ -1,0 +1,56 @@
+"""PHI-28 access helper; credentials are loaded in memory and redacted."""
+from pathlib import Path
+import sys, json, socket, concurrent.futures, urllib.request, re
+import paramiko
+import central_observability as obs
+
+OUT = obs.ROOT / 'Analyse/PHI-28-20261005'
+OUT.mkdir(exist_ok=True)
+
+def ssh():
+    c = paramiko.SSHClient()
+    known = obs.OUT / 'ssh_known_hosts'
+    if known.exists(): c.load_host_keys(str(known))
+    c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    c.connect('@@IPV4_034@@', username='@@PRIVATE_VALUE_009@@',
+              password=obs.clean(obs.cfg['old_router']['passwort']),
+              timeout=8, auth_timeout=8, banner_timeout=8,
+              look_for_keys=False, allow_agent=False)
+    c.save_host_keys(str(OUT / 'ssh_known_hosts'))
+    return c
+
+def run(command):
+    c = ssh()
+    try:
+        stdin, stdout, stderr = c.exec_command('sh -s', timeout=90)
+        stdin.write(command+'\n'); stdin.flush(); stdin.channel.shutdown_write()
+        output=stdout.read().decode(errors='replace')+stderr.read().decode(errors='replace')
+        output=re.sub(r'/api/hassio_ingress/[^\s/"\\]+', '/api/hassio_ingress/[REDACTED]', output)
+        return {'exit': stdout.channel.recv_exit_status(), 'output': obs.redact(output)}
+    finally: c.close()
+
+def probe(port):
+    try:
+        with socket.create_connection(('@@IPV4_034@@',port),timeout=5): pass
+        return {'port':port, 'tcp':'open'}
+    except Exception as e: return {'port':port,'error':str(e)}
+
+if __name__ == '__main__':
+    if sys.argv[1] == 'probe':
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            result = {'ports':list(pool.map(probe,[22,8123,9100,4357]))}
+        try: result['ssh'] = run('id; command -v ha; ha core info; ha supervisor info; ha addons list')
+        except Exception as e: result['ssh']={'error':type(e).__name__+': '+obs.redact(str(e))}
+    elif sys.argv[1] == 'http':
+        result = []
+        import ssl
+        for url in ['http://@@IPV4_034@@:8123/', 'https://@@IPV4_034@@:8123/', 'http://@@IPV4_034@@:4357/']:
+            try:
+                r=urllib.request.urlopen(url, timeout=8, context=ssl._create_unverified_context())
+                result.append({'url':url,'status':r.status,'body':r.read(1500).decode(errors='replace')})
+            except Exception as e: result.append({'url':url,'error':str(e)})
+    else:
+        try: result = run(Path(sys.argv[2]).read_text(encoding='utf-8'))
+        except Exception as e: result={'error':type(e).__name__+': '+obs.redact(str(e))}
+    (OUT / (sys.argv[3] if len(sys.argv)>3 else 'initial-access.json')).write_text(json.dumps(result,indent=2),encoding='utf-8')
+    print(json.dumps(result,indent=2))

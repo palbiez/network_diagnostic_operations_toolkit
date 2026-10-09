@@ -1,0 +1,3 @@
+date -Iseconds
+influx bucket list --json 2>/dev/null | python3 -c 'import sys,json; data=json.load(sys.stdin); print(json.dumps([{k:b.get(k) for k in ("name","retentionRules")} for b in data],indent=2))'
+journalctl -u prometheus --no-pager -b | grep -i 'retention was set' | tail -3

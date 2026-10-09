@@ -1,0 +1,42 @@
+"""Legt das beauftragte Arbeitspaket zur Logserver-Aufbewahrung einmalig an."""
+import json
+import sys
+import uuid
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'Skripte' / 'Linear'))
+from linear_api import Linear
+from linear_sync import ISSUE_FIELDS, save, write_local
+
+KEY = 'logserver-retention-archive'
+DESCRIPTION = @@PYTHON_STRING_120@@
+
+
+def main():
+    config = json.loads((ROOT / 'Linear/config.json').read_text(encoding='utf-8'))
+    mapping = json.loads((ROOT / 'Linear/issue-map.json').read_text(encoding='utf-8'))
+    if KEY not in mapping:
+        payload = {
+            'id': str(uuid.UUID(bytes=uuid.uuid5(uuid.UUID(config['projectId']), KEY).bytes, version=4)),
+            'teamId': config['teamId'], 'projectId': config['projectId'],
+            'title': 'Logserver: regelmäßige Archivierung und Löschung mit Aufbewahrungsfristen einrichten',
+            'priority': 2,
+            'stateId': next(s['id'] for s in config['states'] if s['name'] == 'Todo'),
+            'description': DESCRIPTION,
+        }
+        result = Linear().query(
+            'mutation($input:IssueCreateInput!){issueCreate(input:$input){success issue{'+ISSUE_FIELDS+'}}}',
+            {'input': payload})['issueCreate']
+        assert result['success']
+        issue = result['issue']
+        write_local(issue)
+        mapping[KEY] = dict(id=issue['id'], identifier=issue['identifier'], url=issue['url'],
+                            sources=['Analyse/Zentrale-Telemetrie-20261004/Ergebnis-und-Rueckweg.md',
+                                     'Dokumentation/telemetrie-uebersicht-2026-10-04.json'])
+        save(ROOT / 'Linear/issue-map.json', mapping)
+    print(mapping[KEY]['identifier'], mapping[KEY]['url'])
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,14 @@
+import sys,importlib.util,urllib.request,base64,json,re
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2]
+spec=importlib.util.spec_from_file_location('switch',ROOT/'Analyse/PHI-12/read-switch-authenticated.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+out=ROOT/'Analyse/Zentrale-Telemetrie-20261004/switches';out.mkdir(exist_ok=True)
+auth=base64.b64encode((m.username+':'+m.password).encode()).decode()
+client=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+try:
+ req=urllib.request.Request('http://@@IPV4_090@@/',headers={'Authorization':'Basic '+auth})
+ with client.open(req,timeout=8) as r:body=r.read().decode(errors='replace')
+ body=body.replace(m.password,'[REDACTED]').replace(auth,'[REDACTED]');(out/'@@IPV4_090@@-basic-root.html').write_text(body,encoding='utf-8')
+ print(json.dumps({'ip':'@@IPV4_090@@','basic_auth':'accepted','title':re.findall('<title>(.*?)</title>',body,re.S),'paths':re.findall(r'(?:src|href)=["\']([^"\']+)',body)},indent=2))
+except urllib.error.HTTPError as e:
+ print(json.dumps({'ip':'@@IPV4_090@@','basic_auth':'rejected','http_code':e.code,'challenge':e.headers.get('WWW-Authenticate')}))

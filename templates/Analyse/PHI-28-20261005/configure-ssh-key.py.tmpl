@@ -1,0 +1,31 @@
+from pathlib import Path
+import sys,json
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+import central_observability as obs
+from phi28_homeassistant import ssh,OUT
+pub=obs.KEYS[1].get_name()+' '+obs.KEYS[1].get_base64()+' omr-local-management'
+code='''import json,urllib.request
+from pathlib import Path
+token=Path('/run/s6/container_environment/SUPERVISOR_TOKEN').read_text().strip()
+def api(path,body=None):
+    r=urllib.request.Request('http://supervisor'+path,data=None if body is None else json.dumps(body).encode(),headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'})
+    return json.load(urllib.request.urlopen(r,timeout=20))
+info=api('/addons/a0d7b954_ssh/info')['data']
+options=info['options']
+backup=Path('/share/phi28-backup-20261005/ssh-options.json')
+if not backup.exists():
+    backup.write_text(json.dumps(options));backup.chmod(0o600)
+keys=options['ssh'].get('authorized_keys',[])
+pub=PUBLIC_KEY
+if not any(k.split()[:2]==pub.split()[:2] for k in keys):keys.append(pub)
+options['ssh']['authorized_keys']=keys
+print(api('/addons/a0d7b954_ssh/options',{'options':options,'boot':'auto','watchdog':True}))
+print('Configured keys',len(keys))
+'''.replace('PUBLIC_KEY',repr(pub))
+c=ssh()
+try:
+    i,o,e=c.exec_command('sudo -n python3 -');i.write(code);i.channel.shutdown_write()
+    result={'output':obs.redact(o.read().decode()+e.read().decode()),'exit':o.channel.recv_exit_status()}
+finally:c.close()
+(OUT/'ssh-key-configure.json').write_text(json.dumps(result,indent=2),encoding='utf-8');print(json.dumps(result))

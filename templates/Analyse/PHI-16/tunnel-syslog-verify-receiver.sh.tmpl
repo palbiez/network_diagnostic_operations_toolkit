@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+date -Iseconds
+ss -ntp '( sport = :514 )' | grep '@@IPV4_002@@' || true
+find /var/log/network -type f -name '*2026-10-02*' -exec grep -H -F 'PHI-16-VPS-TUNNEL-SYSLOG-20261002T194740Z' {} +

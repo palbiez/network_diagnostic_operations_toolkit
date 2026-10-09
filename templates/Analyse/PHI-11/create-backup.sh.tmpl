@@ -1,0 +1,100 @@
+#!/bin/sh
+set -eu
+umask 077
+work=/tmp/PHI-11-20261002
+[ ! -e "$work" ] || { echo 'ABORT: work directory already exists'; exit 1; }
+mkdir -p "$work/support/uci-export" "$work/support/logs" "$work/support/package-patches" "$work/support/baseline" "$work/support/inventory"
+date -Is > "$work/support/inventory/snapshot-time.txt"
+cp -p /etc/sysupgrade.conf "$work/support/baseline/sysupgrade.conf.before"
+sysupgrade -k -b "$work/backup-before-PHI-11.tar.gz"
+sysupgrade -l > "$work/support/inventory/backup-list.before.txt"
+
+cat > "$work/additions.txt" <<'EOF'
+/etc/sysupgrade.conf
+/usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft
+/etc/hotplug.d/iface/99-gaming-policy
+/etc/init.d/mqvpn-debuglog
+/etc/firewall.omr-bypass
+/etc/firewall.omr-bypass-reply
+/etc/firewall.omr-bypass-reply.nft
+/etc/nftables.d/90-proxy-ssr-rules.nft
+/etc/sysctl.d/10-default.conf
+/etc/sysctl.d/zzz_openmptcprouter.conf
+/etc/modules.d/mt7915e
+/etc/mptcpd/mptcpd.conf
+EOF
+while IFS= read -r file; do
+ [ -f "$file" ] || { echo "ABORT: missing $file"; exit 1; }
+done < "$work/additions.txt"
+if [ -n "$(uci changes system)" ]; then echo 'ABORT: pending system changes'; exit 1; fi
+{
+ cat /etc/sysupgrade.conf
+ printf '\n# PHI-11: explicit custom rules, hooks and settings (2026-10-02)\n'
+ while IFS= read -r file; do
+  grep -Fxq "$file" /etc/sysupgrade.conf || echo "$file"
+ done < "$work/additions.txt"
+} > "$work/sysupgrade.conf.new"
+cp -p "$work/sysupgrade.conf.new" /etc/sysupgrade.conf
+chmod 644 /etc/sysupgrade.conf
+sysupgrade -k -l > "$work/support/inventory/backup-list.after.txt"
+while IFS= read -r file; do
+ grep -Fxq "$file" "$work/support/inventory/backup-list.after.txt" || { echo "FAIL: not backed up $file"; exit 1; }
+done < "$work/additions.txt"
+sysupgrade -k -b "$work/backup-OpenMPTCProuter-2026-10-02-PHI-11.tar.gz"
+
+# Uncommitted UCI is preserved separately, never committed implicitly.
+uci changes > "$work/support/uci-pending-changes.txt"
+for file in /etc/config/*; do
+ [ -f "$file" ] || continue
+ name=${file##*/}
+ case "$name" in *.bak|*.apk-new) continue;; esac
+ uci -q export "$name" > "$work/support/uci-export/$name.uci" || true
+done
+apk info -v > "$work/support/inventory/packages-with-versions.txt"
+apk info > "$work/support/inventory/package-names.txt"
+cp -p /etc/openwrt_release "$work/support/inventory/openwrt_release"
+uname -a > "$work/support/inventory/kernel.txt"
+cp -p /etc/apk/world "$work/support/inventory/apk-world"
+cp -p /etc/apk/repositories.d/*.list "$work/support/inventory/"
+apk audit --full --recursive /etc /usr /sbin /bin /lib > "$work/support/inventory/apk-audit-system.txt" 2>&1 || true
+apk audit --backup --recursive /etc > "$work/support/inventory/apk-audit-config.txt" 2>&1 || true
+ls -l /etc/rc.d > "$work/support/inventory/service-autostart.txt"
+for name in mqvpn-debuglog mqvpn log; do
+ if /etc/init.d/"$name" enabled >/dev/null 2>&1; then echo "$name enabled"; else echo "$name disabled"; fi
+done > "$work/support/inventory/selected-service-state.txt"
+ubus call service list '{"name":"mqvpn"}' > "$work/support/inventory/mqvpn-service.json"
+ubus call service list '{"name":"log"}' > "$work/support/inventory/log-service.json"
+ip -brief addr > "$work/support/inventory/ip-addresses.txt"
+ip rule show > "$work/support/inventory/ip-rules.txt"
+ip route show table all > "$work/support/inventory/ip-routes.txt"
+nft list ruleset > "$work/support/inventory/nft-ruleset.txt"
+cp -p "$work/additions.txt" "$work/support/inventory/sysupgrade-added-paths.txt"
+
+# Package modifications are evidence; not automatically overwritten on upgrade.
+for file in /usr/share/ucode/fw4.uc /usr/share/omr-bypass/omr-bypass-proto.lst; do
+ mkdir -p "$work/support/package-patches/live$(dirname "$file")" "$work/support/package-patches/rom$(dirname "$file")"
+ cp -p "$file" "$work/support/package-patches/live$file"
+ cp -p "/rom$file" "$work/support/package-patches/rom$file"
+done
+mkdir -p "$work/support/package-patches/rom/lib/upgrade/keep.d"
+cp -p /rom/lib/upgrade/keep.d/firewall4 "$work/support/package-patches/rom/lib/upgrade/keep.d/firewall4"
+printf 'Live /lib/upgrade/keep.d/firewall4 is absent. Preserve this finding; do not silently restore the package file.\n' > "$work/support/package-patches/firewall4-keep-file-deleted.txt"
+for file in /root/*.log; do
+ [ -f "$file" ] || continue
+ cp -p "$file" "$work/support/logs/"
+done
+logread > "$work/support/logs/local-logread-snapshot.log"
+if [ -d /root/omr-migration-final ]; then cp -pR /root/omr-migration-final "$work/support/migration-scripts"; fi
+(cd "$work/support"; find . -type f ! -name SHA256SUMS -exec sha256sum {} \; > SHA256SUMS)
+tar -czf "$work/PHI-11-support-2026-10-02.tar.gz" -C "$work" support
+sha256sum "$work/backup-before-PHI-11.tar.gz" "$work/backup-OpenMPTCProuter-2026-10-02-PHI-11.tar.gz" "$work/PHI-11-support-2026-10-02.tar.gz" > "$work/archive-sha256.txt"
+echo 'SUCCESS: backup and support archive created; no services restarted.'
+cat "$work/archive-sha256.txt"
+echo 'ARCHIVE SIZES:'
+ls -lh "$work/"*.tar.gz
+echo 'PERSISTENT BACKUP PATHS:'
+cat /etc/sysupgrade.conf
+echo 'SELECTED SERVICES:'
+cat "$work/support/inventory/selected-service-state.txt"
+echo 'PENDING UCI PACKAGES:'
+cut -d. -f1 "$work/support/uci-pending-changes.txt" | sort -u

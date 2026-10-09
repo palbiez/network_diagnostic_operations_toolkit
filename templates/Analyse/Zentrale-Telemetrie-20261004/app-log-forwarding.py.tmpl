@@ -1,0 +1,41 @@
+from pathlib import Path
+import subprocess,shutil,json,socket,hashlib
+host=socket.gethostname();root=Path('/var/log')
+b=Path('/root/central-telemetry-backup-20261004');b.mkdir(mode=0o700,exist_ok=True)
+standard={'auth.log','cron.log','daemon.log','kern.log','lpr.log','mail.log','user.log','syslog','messages','debug','error','syslog-ng_dbg.log'}
+exclude_dirs={'network','journal','private','dist-upgrade','upgrade'}
+dirs=[p for p in root.iterdir() if p.is_dir() and p.name not in exclude_dirs and not p.is_symlink() and any(p.rglob('*.log'))]
+files=[p for p in root.glob('*.log') if p.name not in standard and p.is_file()]
+if not dirs and not files:print('No additional text logfiles on',host);raise SystemExit(0)
+if subprocess.run(['systemctl','is-active','--quiet','syslog-ng']).returncode==0:
+ p=Path('/etc/syslog-ng/conf.d/80-central-app-files.conf')
+ if p.exists() and not (b/p.name).exists():shutil.copy2(p,b/p.name)
+ sources=[]
+ for d in dirs:sources.append('wildcard-file(base-dir('+json.dumps(str(d))+') filename-pattern("*.log") recursive(yes) flags(no-parse) program-override("filelog") max-files(2048));')
+ for f in files:sources.append('file('+json.dumps(str(f))+' flags(no-parse) program-override("filelog") follow-freq(1));')
+ dest='d_network' if host=='logserver2' else 'd_net'
+ conf='source s_central_app_files {\n'+'\n'.join(sources)+'\n};\nrewrite r_central_app_path { set("FILE=${FILE_NAME} ${MESSAGE}", value("MESSAGE")); };\nlog { source(s_central_app_files); rewrite(r_central_app_path); destination('+dest+'); flags(flow-control); };\n'
+ p.write_text(conf)
+ r=subprocess.run(['syslog-ng','--syntax-only'],capture_output=True,text=True)
+ if r.returncode:
+  if (b/p.name).exists():shutil.copy2(b/p.name,p)
+  else:p.unlink()
+  raise SystemExit(r.stderr)
+ subprocess.run(['systemctl','reload','syslog-ng'],check=True)
+else:
+ p=Path('/etc/rsyslog.d/55-central-app-files.conf')
+ if p.exists() and not (b/p.name).exists():shutil.copy2(p,b/p.name)
+ existing=''.join(f.read_text(errors='replace') for f in Path('/etc/rsyslog.d').glob('*.conf') if f!=p)+Path('/etc/rsyslog.conf').read_text()
+ conf='' if 'load="imfile"' in existing else 'module(load="imfile")\n'
+ conf+='template(name="CentralAppFile" type="string" string="<%pri%>%timereported:::date-rfc3164% %hostname% filelog: FILE=%$!metadata!filename% %msg%\\n")\nruleset(name="central_app_files") { action(type="omfwd" target="@@IPV4_007@@" port="514" protocol="tcp" template="CentralAppFile" action.resumeRetryCount="-1" queue.type="LinkedList" queue.filename="central-app-files" queue.maxDiskSpace="1g" queue.saveOnShutdown="on") }\n'
+ for d in dirs:
+  conf+='input(type="imfile" File='+json.dumps(str(d/'*.log'))+' Tag="filelog:" Facility="local6" Severity="info" PersistStateInterval="100" addMetadata="on" Ruleset="central_app_files")\n'
+ for f in files:conf+='input(type="imfile" File='+json.dumps(str(f))+' Tag="filelog:" Facility="local6" Severity="info" PersistStateInterval="100" addMetadata="on" Ruleset="central_app_files")\n'
+ p.write_text(conf)
+ r=subprocess.run(['rsyslogd','-N1'],capture_output=True,text=True)
+ if r.returncode:p.unlink();raise SystemExit(r.stderr)
+ subprocess.run(['systemctl','restart','rsyslog'],check=True)
+print('Application log sources',host,'dirs',[str(p) for p in dirs],'files',[str(p) for p in files])
+# A dedicated audit file exercises each configured wildcard directory.
+for d in dirs:
+ with (d/'central-forwarding-audit.log').open('a') as f:f.write('CENTRAL-APPFILE-20261004 host='+host+' dir='+str(d)+'\n')

@@ -1,0 +1,9 @@
+sudo -n docker exec -i app_a0d7b954_nodered node - <<'JS'
+(async()=>{
+for(const p of ['/credentials/mqtt-broker/489094618c340eef','/diagnostics']) {
+const r=await fetch('http://127.0.0.1:46836'+p); console.log(p,r.status,await r.text());
+}
+})();
+JS
+sudo -n docker exec app_a0d7b954_nodered sed -n '420,610p' /opt/node_modules/@node-red/nodes/core/network/10-mqtt.js
+bash -lc 'ha apps list --raw-json'

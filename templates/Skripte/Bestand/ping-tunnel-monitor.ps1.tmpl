@@ -1,0 +1,39 @@
+# Engmaschige Überwachung der MQVPN-Tunnel-Gegenstelle.
+# Abbruch: Strg+C
+
+$ErrorActionPreference = 'SilentlyContinue'
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LogFile = Join-Path $ScriptDir ("ping-tunnel-{0}.log" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
+
+$TargetName = 'TunnelPeer'
+$TargetAddress = '@@IPV4_002@@'
+$TimeoutMs = 150
+$IntervalMs = 200
+
+"timestamp`tname`taddress`tstatus`trtt_ms" | Tee-Object -FilePath $LogFile
+Write-Host "Überwachung: $TargetName $TargetAddress"
+Write-Host "Intervall: ca. $IntervalMs ms, Timeout: $TimeoutMs ms"
+Write-Host "Logging nach: $LogFile"
+Write-Host 'Abbruch mit Strg+C.'
+
+try {
+    while ($true) {
+        $Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
+        $Pinger = New-Object System.Net.NetworkInformation.Ping
+        $Reply = $Pinger.Send($TargetAddress, $TimeoutMs)
+        $Pinger.Dispose()
+
+        if ($Reply.Status -eq [System.Net.NetworkInformation.IPStatus]::Success) {
+            $Line = "$Timestamp`t$TargetName`t$TargetAddress`tOK`t$([int]$Reply.RoundtripTime)"
+        } else {
+            $Line = "$Timestamp`t$TargetName`t$TargetAddress`tTIMEOUT`t-"
+        }
+
+        $Line | Tee-Object -FilePath $LogFile -Append
+        Start-Sleep -Milliseconds $IntervalMs
+    }
+}
+finally {
+    Add-Content -Path $LogFile -Value ("# beendet: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'))
+    Write-Host "Log gespeichert: $LogFile"
+}

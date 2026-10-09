@@ -1,0 +1,13 @@
+sudo -n sh -c '
+export SUPERVISOR_TOKEN="$(cat /run/s6/container_environment/SUPERVISOR_TOKEN)"
+ha core stats
+ha host info
+ha apps info a0d7b954_ssh | sed "/options:/,/^[^ ]/{ /options:/d; /^[^ ]/!d; }"
+docker ps --format "{{.Names}} {{.Status}}"
+docker inspect addon_a0d7b954_nodered --format "{{json .Mounts}}"
+docker inspect homeassistant --format "{{.State.StartedAt}} {{.HostConfig.LogConfig.Type}}"
+ls -la /home/@@PRIVATE_VALUE_009@@
+ls -la /addon_configs
+ha core logs | tail -n 65
+ha apps logs a0d7b954_nodered | tail -n 45
+'

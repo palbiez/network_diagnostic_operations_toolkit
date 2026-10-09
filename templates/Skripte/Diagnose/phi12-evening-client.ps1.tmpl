@@ -1,0 +1,8 @@
+$ErrorActionPreference='Stop'
+$end=[DateTimeOffset]::FromUnixTimeSeconds(@@EPOCH_010@@)
+$now=[DateTimeOffset]::UtcNow
+if ($now -lt [DateTimeOffset]::FromUnixTimeSeconds(@@EPOCH_011@@) -or $now -ge $end) { exit 0 }
+$root=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$folder=Join-Path $root ('Logs\Router-und-Client\PHI12-Abend-20261002\client-'+$now.ToString('yyyyMMddTHHmmssZ'))
+New-Item -ItemType Directory -Force -Path (Split-Path $folder -Parent) | Out-Null
+& (Join-Path $PSScriptRoot 'Start-PHI12-Citrix.ps1') -DurationSeconds ([int]($end-$now).TotalSeconds) -EndEpoch @@EPOCH_010@@ -OutputDirectory $folder

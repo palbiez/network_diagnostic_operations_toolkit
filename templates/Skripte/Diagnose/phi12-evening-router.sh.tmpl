@@ -1,0 +1,39 @@
+#!/bin/sh
+# One scheduled evening only; metadata diagnostics, no network config changes.
+set -eu
+umask 077
+start_epoch=@@EPOCH_011@@
+gaming_end=@@EPOCH_002@@
+end_epoch=@@EPOCH_010@@
+now=$(date +%s)
+[ "$now" -ge "$start_epoch" ] && [ "$now" -lt "$end_epoch" ] || exit 0
+base=/tmp/phi12-evening-20261002
+mkdir "$base.lock" 2>/dev/null || exit 0
+mkdir -p "$base"
+bin=/root/phi12-evening-20261002
+printf 'started_utc=%s\ngaming_end_epoch=%s\nchat_end_epoch=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$gaming_end" "$end_epoch" > "$base/schedule.txt"
+cp /etc/config/omr-bypass "$base/omr-bypass-before.conf"
+sysupgrade -k -b "$base/config-before.tar.gz" > "$base/backup-console.txt" 2>&1
+nft -a list ruleset > "$base/nft-before.txt"
+pids=''
+OUT_DIR="$base-network" DURATION="$((end_epoch-now))" MAX_KB=262144 SNAPSHOT_INTERVAL=120 CLIENT_IP=@@IPV4_023@@ CITRIX_IP=@@IPV4_031@@ CITRIX_ICMP=0 sh "$bin/phi12-router-monitor.sh" > "$base/network-console.txt" 2>&1 &
+pids="$pids $!"
+if [ "$now" -lt "$gaming_end" ]; then
+ SCOPE=@@IPV4_006@@/24 MODE=gaming LAN_DEV=@@INTERFACE_008@@ END_EPOCH="$gaming_end" OUT_DIR="$base-gaming" sh "$bin/phi12-scope-monitor.sh" > "$base/gaming-console.txt" 2>&1 &
+ pids="$pids $!"
+fi
+SCOPE=@@IPV4_026@@ MODE=application LAN_DEV=@@INTERFACE_009@@ END_EPOCH="$end_epoch" OUT_DIR="$base-chat" sh "$bin/phi12-scope-monitor.sh" > "$base/chat-console.txt" 2>&1 &
+pids="$pids $!"
+printf 'pids=%s\n' "$pids" >> "$base/schedule.txt"
+# The cron task owns only these diagnostic children.
+cleanup() {
+ trap - EXIT INT TERM HUP
+ for pid in $pids; do kill -TERM "$pid" 2>/dev/null || true; done
+ for pid in $pids; do wait "$pid" 2>/dev/null || true; done
+ printf 'stopped_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$base/schedule.txt"
+}
+trap cleanup EXIT
+trap 'exit 0' INT TERM HUP
+for pid in $pids; do wait "$pid" || printf 'Child %s exited with error\n' "$pid" >> "$base/child-errors.txt"; done
+tar -czf "$base.tar.gz" -C /tmp phi12-evening-20261002 phi12-evening-20261002-network phi12-evening-20261002-gaming phi12-evening-20261002-chat
+sha256sum "$base.tar.gz" > "$base.sha256"

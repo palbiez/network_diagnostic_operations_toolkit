@@ -1,0 +1,17 @@
+from pathlib import Path
+import json
+root=Path(__file__).resolve().parents[2]
+text=@@PYTHON_STRING_024@@
+for relative in ['Analyse/PHI-12/diagnoseplan-2026-10-02.md','Linear/issues/PHI-9.md','Linear/issues/PHI-6.md']:
+ path=root/relative
+ old=path.read_text(encoding='utf-8').split('\n\n## Ergänzung 22:02 Berlin: Warzone und Switchpfad')[0]
+ path.write_text(old.rstrip()+text,encoding='utf-8')
+path=root/'Linear/work-packages.json'
+packages=json.loads(path.read_text(encoding='utf-8'))
+for key,number in [('gaming',9),('measurement',6)]:
+ package=next(p for p in packages if p['key']==key)
+ package['description']=(root/f'Linear/issues/PHI-{number}.md').read_text(encoding='utf-8')
+ source='Analyse/PHI-12/warzone-multiplayer-switchpfad-2026-10-02.md'
+ if source not in package['sources']:package['sources'].append(source)
+path.write_text(json.dumps(packages,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print('LAN comparison and port evidence documented.')

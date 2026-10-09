@@ -1,0 +1,23 @@
+#!/bin/sh
+# End only the verified live diagnostic tree; never use stale probe PIDs.
+. /root/phi12-diag-20261003/settings
+root_pid=8262
+remaining=$((END_EPOCH-$(date +%s)-1))
+[ "$remaining" -le 0 ] || sleep "$remaining"
+[ -r "/proc/$root_pid/cmdline" ] || exit 0
+tr '\0' ' ' < "/proc/$root_pid/cmdline" | grep -Fq '/root/phi12-diag-20261003/run.sh' || exit 0
+kill -STOP "$root_pid" 2>/dev/null || exit 0
+stop_children() {
+ for ch in $(pgrep -P "$1" 2>/dev/null); do
+  [ "$(awk '/^PPid:/ {print $2}' "/proc/$ch/status" 2>/dev/null)" = "$1" ] || continue
+  stop_children "$ch"
+  [ "$(awk '/^PPid:/ {print $2}' "/proc/$ch/status" 2>/dev/null)" = "$1" ] || continue
+  kill -TERM "$ch" 2>/dev/null || true
+ done
+}
+stop_children "$root_pid"
+# The old live parent has a stale PID entry after the failed .158 probe.
+# Skip that legacy EXIT handler and perform the normal restore explicitly.
+kill -KILL "$root_pid" 2>/dev/null || true
+sh /root/phi12-diag-20261003/restore.sh >> /tmp/phi12-diag-20261003/restore.log 2>&1
+date -Is > /tmp/phi12-diag-20261003/finished.txt

@@ -1,0 +1,13 @@
+date -Is
+printf '\nSYSLOG-NG STATUS\n'
+systemctl is-active syslog-ng
+printf '\nCONFIG FILES\n'
+ls -l /etc/syslog-ng/ /etc/syslog-ng/conf.d/
+printf '\nNETWORK ARCHIVE CONFIG\n'
+grep -RInE 'network|514|keep.hostname|keep.timestamp|use.dns|template|filter|destination|source|log[[:space:]]*\{' /etc/syslog-ng/ 2>/dev/null
+printf '\nROTATION\n'
+cat /etc/logrotate.d/syslog-ng
+printf '\nARCHIVE EXAMPLES\n'
+ls -lh /var/log/network/@@IPV4_008@@/ | tail -8
+printf '\nMQTT CONNECTION\n'
+ss -ntp | grep -E '@@IPV4_008@@:.*mosquitto'

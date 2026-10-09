@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+sh -n /tmp/phi12-config-events.sh
+cp /tmp/phi12-config-events.sh /root/phi12-evening-20261002/phi12-config-events.sh
+chmod 700 /root/phi12-evening-20261002/phi12-config-events.sh
+nohup sh /root/phi12-evening-20261002/phi12-config-events.sh > /tmp/phi12-evening-20261002-network/config-events-console.txt 2>&1 < /dev/null &
+echo "config_listener_pid=$!"
+sleep 1
+head -4 /tmp/phi12-evening-20261002-network/config-events.csv
+cat /tmp/phi12-evening-20261002-network/config-events-status.txt

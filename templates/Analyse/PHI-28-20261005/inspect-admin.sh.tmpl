@@ -1,0 +1,13 @@
+sudo -n sh -c '
+ls /run/s6/container_environment
+ls /data
+ls -a /homeassistant
+command -v python3
+command -v docker
+if [ -f /run/s6/container_environment/SUPERVISOR_TOKEN ]; then
+  export SUPERVISOR_TOKEN="$(cat /run/s6/container_environment/SUPERVISOR_TOKEN)"
+  ha core info
+  ha supervisor info
+  ha apps list
+fi
+'

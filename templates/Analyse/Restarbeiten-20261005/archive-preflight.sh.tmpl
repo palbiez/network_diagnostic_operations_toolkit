@@ -1,0 +1,7 @@
+date -Iseconds
+systemctl cat network-archive-compress.service network-archive-compress.timer
+find /var/log -maxdepth 2 -type f -printf '%s %p\n' | sort -nr | head -25
+find /var/log/network -maxdepth 3 -type f -printf '%s %p\n' | sort -nr | head -15
+ls -ld /var/lib/prometheus/node-exporter /var/lib/node_exporter /var/lib/prometheus/node-exporter-textfile 2>/dev/null || true
+systemctl show prometheus-node-exporter -p ExecStart
+ls /usr/local/libexec

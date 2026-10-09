@@ -1,0 +1,169 @@
+#!/bin/sh
+# Cudy WR1300v3 auf reinen VLAN-WLAN-AP umstellen.
+# Als root direkt auf dem Cudy ausführen.
+
+set -eu
+PATH='/usr/sbin:/usr/bin:/sbin:/bin'
+export PATH
+
+BACKUP_DIR='/root/ap-umbau-backups'
+STAMP="$(date +%Y%m%d-%H%M%S)"
+BACKUP_FILE="${BACKUP_DIR}/cudy-244-before-ap-${STAMP}.tar.gz"
+
+die() {
+	echo "FEHLER: $*" >&2
+	exit 1
+}
+
+[ "$(id -u)" = 0 ] || die 'Das Skript muss als root ausgeführt werden.'
+command -v uci >/dev/null 2>&1 || die 'uci wurde nicht gefunden.'
+
+echo '=== Cudy AP-Umbau ==='
+echo 'WLAN-Zuordnungen und Passwörter werden nicht verändert.'
+echo 'Die Management-IP bleibt @@IPV4_084@@.'
+echo
+printf 'Umbau jetzt durchführen? [yes/NO] '
+read answer
+[ "$answer" = yes ] || die 'Abgebrochen. Es wurde nichts geändert.'
+
+# Diagnosemodus: alle folgenden Shell-Kommandos werden mit ausgegeben.
+PS4='+ '
+set -x
+
+mkdir -p "$BACKUP_DIR"
+tar -czf "$BACKUP_FILE" \
+	/etc/config/network \
+	/etc/config/wireless \
+	/etc/config/dhcp \
+	/etc/config/firewall \
+	/etc/config/mwan3 \
+	/etc/config/igmpproxy \
+	/etc/config/uhttpd \
+	/etc/config/system \
+	/etc/config/wireguard \
+	/etc/init.d \
+	/etc/hotplug.d 2>/dev/null || die 'Backup konnte nicht erstellt werden.'
+echo "Backup erstellt: $BACKUP_FILE"
+
+TEST_DEVICE=''
+for section in $(uci show network | sed -n "s/^network\.\(@device\[[0-9][0-9]*\]\)\.name='test'$/\1/p"); do
+	TEST_DEVICE="$section"
+done
+[ -n "$TEST_DEVICE" ] || die "Bridge-Device 'test' wurde nicht gefunden."
+
+echo '--- Routerdienste dauerhaft deaktivieren ---'
+for service in dnsmasq firewall mwan3 igmpproxy odhcpd ddns qosify sqm miniupnpd openvpn zerotier; do
+	if [ -x "/etc/init.d/$service" ]; then
+		/etc/init.d/$service stop >/dev/null 2>&1 || true
+		/etc/init.d/$service disable >/dev/null 2>&1 || true
+		echo "deaktiviert: $service"
+	fi
+done
+
+if uci -q get network.@@INTERFACE_017@@ >/dev/null 2>&1; then
+	uci set network.@@INTERFACE_017@@.disabled='1'
+fi
+
+echo '--- Bridge auf LAN1-4 erweitern ---'
+existing_ports="$(uci -q get "network.${TEST_DEVICE}.ports" || true)"
+case " $existing_ports " in
+	*' lan1 '*) ;;
+	*) uci -q add_list "network.${TEST_DEVICE}.ports=lan1" || true ;;
+esac
+
+echo '--- VLAN-Portzuordnung auf Referenz-AP angleichen ---'
+for section in $(uci show network | sed -n "s/^network\.\(@bridge-vlan\[[0-9][0-9]*\]\)\.device='test'$/\1/p"); do
+	vlan="$(uci -q get "network.${section}.vlan" || true)"
+	case "$vlan" in
+		@@VLAN_002@@)
+			uci -q delete "network.${section}.ports" || true
+			uci add_list "network.${section}.ports=lan1:u*"
+			uci add_list "network.${section}.ports=lan2:u*"
+			uci add_list "network.${section}.ports=lan3:u*"
+			uci add_list "network.${section}.ports=lan4:u*"
+			;;
+@@VLAN_003@@|@@VLAN_004@@|@@VLAN_006@@|@@VLAN_001@@)
+			uci -q delete "network.${section}.ports" || true
+			uci add_list "network.${section}.ports=lan1:t"
+			uci add_list "network.${section}.ports=lan2:t"
+			uci add_list "network.${section}.ports=lan3:t"
+			uci add_list "network.${section}.ports=lan4:t"
+			;;
+	esac
+done
+
+echo '--- Layer-3-Adressen auf AP-Netzen entfernen ---'
+for interface in @@SECTION_002@@ @@SECTION_008@@ @@SECTION_004@@ fail; do
+	if uci -q get "network.${interface}" >/dev/null 2>&1; then
+		uci set "network.${interface}.proto=none"
+		uci -q delete "network.${interface}.ipaddr" || true
+		uci -q delete "network.${interface}.netmask" || true
+		uci -q delete "network.${interface}.gateway" || true
+		uci -q delete "network.${interface}.dns" || true
+	fi
+done
+
+echo '--- Management-IP behalten ---'
+uci set network.@@SECTION_009@@.proto='static'
+uci set network.@@SECTION_009@@.ipaddr='@@IPV4_084@@'
+uci set network.@@SECTION_009@@.netmask='255.255.255.0'
+uci -q delete network.@@SECTION_009@@.gateway || true
+uci -q delete network.@@SECTION_009@@.dns || true
+
+echo '--- WAN/WAN2 und alte Default-Routen entfernen ---'
+for interface in wan wan2 wan6; do
+	echo "[TRACE] Bearbeite Interface: $interface"
+	if uci -q get "network.${interface}" >/dev/null 2>&1; then
+		echo "[TRACE] Interface vorhanden: network.${interface}"
+		uci set "network.${interface}.proto=none"
+		uci -q delete "network.${interface}.ipaddr" || true
+		uci -q delete "network.${interface}.netmask" || true
+		uci -q delete "network.${interface}.gateway" || true
+		uci -q delete "network.${interface}.dns" || true
+		uci -q delete "network.${interface}.metric" || true
+	fi
+done
+
+for section in $(uci show network | sed -n "s/^network\.\(@route\[[0-9][0-9]*\]\)\.interface=.*/\1/p"); do
+	uci -q delete "network.${section}" || true
+done
+
+uci commit network
+uci commit dhcp
+uci commit firewall
+uci commit mwan3
+# Die bestehende igmpproxy-Datei ist eine alte, bereits ungültige Routerdatei
+# und beginnt nicht mit einer gültigen UCI-Konfiguration. Der Dienst ist oben
+# dauerhaft deaktiviert; deshalb wird diese Altdatei nicht mehr committed.
+echo '[INFO] uci commit igmpproxy übersprungen: Dienst dauerhaft deaktiviert.'
+
+echo
+echo 'Konfiguration gespeichert.'
+echo "Rollback-Backup: $BACKUP_FILE"
+echo
+printf 'Netzwerk jetzt neu laden? [yes/NO] '
+read answer
+[ "$answer" = yes ] || {
+	echo 'Nicht neu geladen. Später ausführen: /etc/init.d/network reload'
+	exit 0
+}
+
+/etc/init.d/network reload
+
+echo
+echo '=== Prüfung ==='
+echo 'Aktive IPv4-Adressen:'
+ip -4 addr show | grep -E '192\.168\.(10|@@VLAN_003@@|@@VLAN_004@@|@@VLAN_006@@|@@VLAN_001@@)\.' || true
+echo 'Routen:'
+ip route || true
+echo 'Dienste:'
+for service in dnsmasq firewall mwan3 igmpproxy; do
+	/etc/init.d/$service enabled >/dev/null 2>&1 && state=enabled || state=disabled
+	/etc/init.d/$service running >/dev/null 2>&1 && run=running || run=stopped
+	echo "$service: $state/$run"
+done
+
+echo
+echo 'AP-Umbau abgeschlossen.'
+echo 'Erwartet: nur @@IPV4_084@@ als IPv4-Adresse.'
+echo 'Danach WLAN-Clients und OMR-DHCP testen.'

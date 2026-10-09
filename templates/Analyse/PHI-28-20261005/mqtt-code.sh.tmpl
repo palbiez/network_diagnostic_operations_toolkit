@@ -1,0 +1,2 @@
+sudo -n docker exec app_a0d7b954_nodered sh -c 'grep -n -E "credentials|username|password|mqtt.connect" /opt/node_modules/@node-red/nodes/core/network/10-mqtt.js | head -n 55; cat /etc/node-red/config.js' 
+bash -lc 'ha store add https://github.com/bertbaron/hassio-addons; ha store apps --help'

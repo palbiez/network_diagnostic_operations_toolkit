@@ -1,0 +1,8 @@
+date -Iseconds
+opkg list-installed | grep libnl-tiny
+ls -l /proc/8046/fd | grep socket
+cat /proc/net/netlink
+logread | grep -Ei 'no address range|Netlink receive failure|Unable to dump conntrack' || true
+ip -br link | grep -E '^lo |^@@INTERFACE_005@@ '
+uci -q show @@HOSTNAME_002@@
+uci -q show dhcp.vlan@@VLAN_002@@

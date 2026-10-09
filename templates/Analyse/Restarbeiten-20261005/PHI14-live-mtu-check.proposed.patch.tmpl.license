@@ -1,0 +1,6 @@
+SPDX-FileCopyrightText: 2026 mp0rta and mqvpn contributors
+SPDX-FileCopyrightText: 2026 palbiez
+SPDX-License-Identifier: GPL-3.0-only AND Apache-2.0
+
+Source: https://github.com/Ysurac/mqvpn/tree/ee78205d3db491ca7727b974bda0c91ae1523236
+Changes: Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained.

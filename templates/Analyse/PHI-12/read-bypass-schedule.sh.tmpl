@@ -1,0 +1,11 @@
+#!/bin/sh
+echo 'BYPASS SCHEDULE'
+cat /usr/share/omr/schedule.d/030-bypass
+echo 'VPN SCHEDULE'
+cat /usr/share/omr/schedule.d/020-vpn
+echo 'OMR SERVICE'
+cat /etc/init.d/omr
+echo 'RESTRICT TO LAN'
+uci -q get openmptcprouter.settings.restrict_to_lan || true
+echo 'LOCAL RELOAD CONFIG CALLS'
+grep -nE 'reload_config|service_triggers|reload_service|config.change|restart|reload' /etc/init.d/omr /etc/init.d/dnsmasq /etc/init.d/unbound /etc/init.d/firewall | tail -50

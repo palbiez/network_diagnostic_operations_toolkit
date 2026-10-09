@@ -1,0 +1,35 @@
+"""Bounded scheduled archive download and automatic local event comparison."""
+from pathlib import Path
+from datetime import datetime,timezone
+import subprocess,os,hashlib,json,tarfile
+from compare import compare
+ROOT=Path(__file__).resolve().parents[3]
+OUT=ROOT/'Logs/Router-und-Client/PHI12-20261003'
+OUT.mkdir(parents=True,exist_ok=True)
+now=datetime.now(timezone.utc)
+if now.timestamp()>@@EPOCH_003@@:raise SystemExit(0)
+lock=OUT/'offload.lock'
+try:fd=os.open(lock,os.O_CREAT|os.O_EXCL|os.O_WRONLY)
+except FileExistsError:raise SystemExit(0)
+os.close(fd)
+try:
+ stamp=now.strftime('%Y%m%dT%H%M%SZ')
+ archive=OUT/(stamp+'.tar.gz');part=OUT/(stamp+'.tar.gz.partial')
+ args=[r'C:\Program Files\PuTTY\plink.exe','-batch','-i',str(ROOT/'Zugangsdaten/openwrt.ppk'),'root@@@IPV4_008@@','tar -czf - -C /tmp phi12-diag-20261003']
+ with part.open('wb') as out:
+  p=subprocess.run(args,stdout=out,stderr=subprocess.PIPE,timeout=120)
+ # tar can return1 for a file that changed during live collection.
+ with tarfile.open(part) as t:
+  members=t.getmembers()
+  if not members:raise RuntimeError('Empty collection')
+ if p.returncode not in [0,1]:raise RuntimeError('SSH/archive collection failed')
+ os.replace(part,archive)
+ digest=hashlib.sha256(archive.read_bytes()).hexdigest()
+ archive.with_suffix('.sha256').write_text(digest+'\n',encoding='ascii')
+ r=compare(archive,OUT/(stamp+'-comparison.json'))
+ status={'utc':now.isoformat(),'archive':archive.name,'sha256':digest,'tar_exit':p.returncode,'archive_stderr':p.stderr.decode(errors='replace'),'events':len(r['events']),'probes':len(r['probes']),'comparison':stamp+'-comparison.json'}
+ (OUT/'latest.json').write_text(json.dumps(status,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+except Exception as e:
+ with (OUT/'offload-errors.log').open('a',encoding='utf-8') as f:f.write(now.isoformat()+' '+type(e).__name__+' '+str(e)+'\n')
+ raise
+finally:lock.unlink(missing_ok=True)

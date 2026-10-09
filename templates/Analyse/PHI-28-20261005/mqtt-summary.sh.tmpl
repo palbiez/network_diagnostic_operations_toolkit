@@ -1,0 +1,17 @@
+sudo -n python3 - <<'PY'
+import json
+from pathlib import Path
+p=Path('/addon_configs/a0d7b954_nodered')
+flows=json.loads((p/'flows.json').read_text())
+for n in flows:
+    if n.get('type')=='mqtt-broker':
+        print({k:n.get(k) for k in ['id','name','broker','port','clientid','usetls','protocolVersion']})
+cred=json.loads((p/'flows_cred.json').read_text())
+print('credential file keys',list(cred))
+runtime=json.loads((p/'.config.runtime.json').read_text())
+print('runtime keys',list(runtime))
+entries=json.loads(Path('/homeassistant/.storage/core.config_entries').read_text())['data']['entries']
+for e in entries:
+    if e.get('domain')=='mqtt':
+        print('HA MQTT', {k:v for k,v in e.get('data',{}).items() if k not in ['password','secret','token']})
+PY

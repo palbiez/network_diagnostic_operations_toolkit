@@ -1,0 +1,14 @@
+set -e
+sudo -n python3 - <<'PY'
+from pathlib import Path
+import re,shutil
+p=Path('/homeassistant/configuration.yaml')
+backup=Path('/share/phi28-backup-20261005/configuration.yaml')
+if not backup.exists():shutil.copy2(p,backup);backup.chmod(0o600)
+text=p.read_text()
+assert len(re.findall(r'^debugpy:\s*$',text,re.M))==1
+updated=re.sub(r'^debugpy:[ \t]*$', 'debugpy:\n  start: false',text,count=1,flags=re.M)
+p.write_text(updated)
+print('debugpy automatic start disabled; original backed up')
+PY
+bash -lc 'ha core check'

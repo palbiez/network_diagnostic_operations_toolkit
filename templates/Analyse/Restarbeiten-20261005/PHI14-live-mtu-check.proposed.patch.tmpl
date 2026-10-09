@@ -1,0 +1,21 @@
+--- a/src/platform/linux/netlink_mon.c
++++ b/src/platform/linux/netlink_mon.c
+@@ -109,6 +109,18 @@
+     int mtu = nlmsg_get_mtu(nh);
+     int want = p->tun.mtu;
+     if (mtu <= 0 || want <= 0 || mtu == want) return;
++
++    /* RTM_NEWLINK may have been queued before TUN negotiation completed.
++     * Verify the live kernel MTU before treating an old snapshot as a setter. */
++    int probe_fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
++    if (probe_fd >= 0) {
++        struct ifreq ifr;
++        memset(&ifr, 0, sizeof(ifr));
++        strncpy(ifr.ifr_name, p->tun.name, IFNAMSIZ - 1);
++        if (ioctl(probe_fd, SIOCGIFMTU, &ifr) == 0) mtu = ifr.ifr_mtu;
++        close(probe_fd);
++        if (mtu == want) return;
++    }
+ 
+     time_t now = time(NULL);
+     if (now - p->tun_mtu_restore_window >= TUN_MTU_RESTORE_WINDOW_SEC) {

@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+testdir=/tmp/phi12-application-egress-control-20261002
+mkdir "$testdir"
+# An existing device connection, solely to validate the tuple filter; not a application claim.
+echo @@IPV4_032@@ > "$testdir/known-targets.txt"
+JOY_DIR="$testdir" DURATION=10 sh /tmp/phi12-application-egress.sh
+echo 'PATH HINTS:'
+head -5 "$testdir/egress/path-hints.csv"
+echo 'FILTER/CAPTURE STATUS:'
+cat "$testdir/egress/"*-status.txt 2>/dev/null || true
+echo 'PHYSICAL PACKET EXAMPLE:'
+head -3 "$testdir/egress/"wire-*.log 2>/dev/null || true

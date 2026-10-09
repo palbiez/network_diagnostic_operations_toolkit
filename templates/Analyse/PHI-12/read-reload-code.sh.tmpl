@@ -1,0 +1,11 @@
+#!/bin/sh
+echo 'SCHEDULE BYPASS CHECK'
+sed -n '620,755p' /usr/share/omr/schedule.d/010-services
+echo 'BYPASS HEAVY RELOAD'
+sed -n '2050,2175p' /etc/init.d/omr-bypass
+echo 'TRACKER RULE CHECK LOCATION'
+grep -n -A 22 -B 15 'Reload Shadowsocks Rust rules' /bin/omr-tracker-ss /usr/bin/omr-tracker-ss 2>/dev/null || true
+echo 'BYPASS SCHEDULER'
+cat /bin/omr-schedule
+echo 'SCRIPT SERVICE FILE TIMES'
+ls -l /etc/init.d/omr-bypass /usr/share/omr/schedule.d/010-services

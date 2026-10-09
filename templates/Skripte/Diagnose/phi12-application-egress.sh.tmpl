@@ -1,0 +1,71 @@
+#!/bin/sh
+# Match current device conntrack tuples on real egress, without unrelated device traffic.
+set -eu
+umask 077
+DEVICE_IP=${DEVICE_IP:-@@IPV4_026@@}
+DEVICE_MAC=${DEVICE_MAC:-@@MAC_005@@}
+JOY_DIR=${JOY_DIR:?Set JOY_DIR to active application metadata directory}
+DURATION=${DURATION:-2700}
+case "$JOY_DIR" in /tmp/phi12-application-*) ;; *) exit 2;; esac
+case "${JOY_DIR#/tmp/}" in */*) exit 2;; esac
+case "$DEVICE_IP" in ''|*[!0-9.]*) exit 2;; esac
+case "$DURATION" in ''|*[!0-9]*) exit 2;; esac
+[ "$DURATION" -ge 5 ] && [ "$DURATION" -le 86400 ] || exit 2
+wan1=$(ip -o -4 addr show @@INTERFACE_002@@ | awk '{split($4,a,"/");print a[1];exit}')
+wan2=$(ip -o -4 addr show @@INTERFACE_003@@ | awk '{split($4,a,"/");print a[1];exit}')
+out="$JOY_DIR/egress"
+[ ! -e "$out" ] || exit 2
+mkdir -p "$out"
+printf 'utc,target,proto,source_port,destination_port,reply_destination,nat_port,path_hint\n' > "$out/path-hints.csv"
+printf 'Physical interface labels in wire logs are packet evidence. NAT path hints alone are not a packet observation.\n' > "$out/README.txt"
+child=''
+cleanup() { trap - EXIT INT TERM HUP; [ -z "$child" ] || kill -TERM "$child" 2>/dev/null || true; [ -z "$child" ] || wait "$child" 2>/dev/null || true; }
+trap cleanup EXIT
+trap 'exit 0' INT TERM HUP
+start=$(date +%s)
+while [ "$(date +%s)" -lt "$((start+DURATION))" ]; do
+ [ ! -e "$JOY_DIR/stop" ] && [ ! -e "$out/stop" ] || break
+ [ "$(du -sk "$out" | awk '{print $1}')" -lt 32768 ] || break
+ current_mac=$(ip neigh show "$DEVICE_IP" | awk '{for(i=1;i<=NF;i++) if($i=="lladdr") {print $(i+1);exit}}')
+ [ "$current_mac" = "$DEVICE_MAC" ] || { echo 'Device MAC no longer verified'; break; }
+ stamp=$(date -u +%Y%m%dT%H%M%SZ)
+ : > "$out/current-tuples.txt"
+ if [ -f "$JOY_DIR/known-targets.txt" ]; then
+  while IFS= read -r target; do
+   conntrack -L -s "$DEVICE_IP" -d "$target" -o extended >> "$out/current-tuples.txt" 2>> "$out/conntrack-status.txt" || true
+  done < "$JOY_DIR/known-targets.txt"
+ fi
+ awk -v utc="$stamp" -v w1="$wan1" -v w2="$wan2" '
+ {
+  proto=$3; ns=0; nd=0; nsp=0; ndp=0; target=""; nat=""; sport=""; dport=""; natport="";
+  for(i=1;i<=NF;i++) {
+   split($i,a,"=");
+   if(a[1]=="src") {ns++;if(ns==2) replysrc=a[2]}
+   if(a[1]=="dst") {nd++;if(nd==1) target=a[2];else if(nd==2) nat=a[2]}
+   if(a[1]=="sport") {nsp++;if(nsp==1) sport=a[2]}
+   if(a[1]=="dport") {ndp++;if(ndp==1) dport=a[2];else if(ndp==2) natport=a[2]}
+  }
+  hint="other";
+  if(nat==w1) hint="WAN1";else if(nat==w2) hint="WAN2";else if(nat=="@@IPV4_001@@") hint="TUNNEL";else if(replysrc!=target) hint="LOCAL_PROXY_OR_REDIRECT";
+  if(target!="") print utc "," target "," proto "," sport "," dport "," nat "," natport "," hint;
+ }' "$out/current-tuples.txt" >> "$out/path-hints.csv"
+ # Exact translated IP/port tuples; packet labels reveal @@INTERFACE_002@@, @@INTERFACE_003@@ or @@INTERFACE_001@@.
+ awk -v w1="$wan1" -v w2="$wan2" '
+ BEGIN{sep=""}
+ {
+  nd=0;ndp=0;nsp=0;ns=0;target="";nat="";natport="";port="";replysrc="";proto=$3;
+  for(i=1;i<=NF;i++) {split($i,a,"=");if(a[1]=="dst") {nd++;if(nd==1)target=a[2];else nat=a[2]};if(a[1]=="src") {ns++;if(ns==2)replysrc=a[2]};if(a[1]=="dport") {ndp++;if(ndp==1)port=a[2];else natport=a[2]}}
+  if((proto=="tcp" || proto=="udp") && replysrc==target && (nat==w1 || nat==w2 || nat=="@@IPV4_001@@")) {
+   printf "%s(%s and ((src host %s and dst host %s and src port %s and dst port %s) or (src host %s and dst host %s and src port %s and dst port %s)))",sep,proto,nat,target,natport,port,target,nat,port,natport;sep=" or ";
+  }
+ }END{print ""}' "$out/current-tuples.txt" > "$out/filter-$stamp.txt"
+ filter=$(cat "$out/filter-$stamp.txt")
+ if [ -n "$filter" ]; then
+  tcpdump -i any -n -tt -l -q -s 80 "$filter" > "$out/wire-$stamp.log" 2> "$out/wire-$stamp-status.txt" &
+  child=$!
+  sleep 10
+  kill -TERM "$child" 2>/dev/null || true
+  wait "$child" 2>/dev/null || true
+  child=''
+ else sleep 5; fi
+done

@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+for pid in 20055 20052 20049; do
+ [ -r "/proc/$pid/cmdline" ] || continue
+ command=$(tr '\000' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
+ case "$command" in *'ubus listen config.change'*|*'/phi12-config-events.sh'*) kill -TERM "$pid" 2>/dev/null || true;; esac
+done
+sh -n /tmp/phi12-config-events.sh
+cp /tmp/phi12-config-events.sh /root/phi12-evening-20261002/phi12-config-events.sh
+nohup sh /root/phi12-evening-20261002/phi12-config-events.sh > /tmp/phi12-evening-20261002-network/config-events-console.txt 2>&1 < /dev/null &
+echo "config_file_observer_pid=$!"
+sleep 2
+cat /tmp/phi12-evening-20261002-network/config-file-changes.csv
+cat /tmp/phi12-evening-20261002-network/config-events-console.txt

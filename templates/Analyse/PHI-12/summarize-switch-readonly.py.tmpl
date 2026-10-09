@@ -1,0 +1,39 @@
+from pathlib import Path
+import re, html, json
+
+ROOT=Path(__file__).resolve().parents[2]
+D=ROOT/'Analyse/PHI-12/switch-management-20261003'
+def read(ip,name):return (D/(ip+'-'+name)).read_text(encoding='utf-8')
+def rows(t):
+    result=[]
+    for tr in re.findall(r'<tr[^>]*>(.*?)</tr>',t,re.S|re.I):
+        cells=[html.unescape(re.sub('<[^>]+>',' ',c)).strip() for c in re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>',tr,re.S|re.I)]
+        if cells:result.append(cells)
+    return result
+def array(t,key):
+    return [int(x.strip(),0) for x in re.search(r'\b'+key+r':\[(.*?)\]',t,re.S).group(1).split(',') if x.strip()]
+def stats(ip,second=False):
+    rs=rows(read(ip,('second-' if second else '')+'port.cgi_page_stats'))
+    result=[]
+    for c in rs:
+        if len(c)==7 and re.fullmatch('Port [0-9]+',c[0]):
+            ns=[int(v.split('-')[0])*4294967296+int(v.split('-')[1]) for v in c[3:]]
+            result.append(dict(zip(['port','state','link','tx_good','rx_good','tx_bytes','rx_bytes'],[int(c[0].split()[1]),c[1],c[2],*ns])))
+    return result
+
+tp1=read('@@IPV4_019@@','PortStatisticsRpm.htm');tp2=read('@@IPV4_019@@','second-PortStatisticsRpm.htm')
+a,b=array(tp1,'pkts'),array(tp2,'pkts');links=array(tp1,'link_status')
+result={'date':'2026-10-03','collection_utc':json.loads((D/'read-only-collection.json').read_text()),'operation':'Authenticated login; read-only status/config views and MAC-table search; no counter reset or configuration write','tplink':{'ports':[]},'sodola':{}}
+for i in range(5):
+    result['tplink']['ports'].append({'port':i+1,'link_code':links[i],'speed_mbps':{0:0,2:10,3:10,4:100,5:100,6:1000}.get(links[i]),'first':dict(zip(['tx_good','tx_bad','rx_good','rx_bad'],a[4*i:4*i+4])),'second':dict(zip(['tx_good','tx_bad','rx_good','rx_bad'],b[4*i:4*i+4])),'delta':dict(zip(['tx_good','tx_bad','rx_good','rx_bad'],[b[k]-a[k] for k in range(4*i,4*i+4)]))})
+result['tplink']['pvids']=array(read('@@IPV4_019@@','Vlan8021QPvidRpm.htm'),'pvids')
+result['tplink']['vlan@@VLAN_005@@']={'tagged_ports':[1],'untagged_ports':[3],'pvid_port3':160}
+for ip in ['@@IPV4_020@@','@@IPV4_021@@']:
+    s1,s2=stats(ip),stats(ip,True)
+    result['sodola'][ip]={'stats_first':s1,'stats_second':s2,'deltas':[{ 'port':p['port'], **{k:q[k]-p[k] for k in ['tx_good','rx_good','tx_bytes','rx_bytes']}} for p,q in zip(s1,s2)],'port_settings':[c for c in rows(read(ip,'port.cgi')) if len(c)==8 and re.fullmatch('Port [0-9]+',c[0])],'vlan_ports':[c for c in rows(read(ip,'vlan.cgi_page_port_based')) if len(c)==5 and re.fullmatch('Port [0-9]+',c[0])],'mac_observations':[],'crc_fcs_drop_counters':'Not exposed by collected status views'}
+    for path in [D/(ip+'-mac.cgi_page_fwd_tbl'),*D.glob(ip+'-search*')]:
+        for c in rows(path.read_text(encoding='utf-8')):
+            if len(c)==4 and re.fullmatch(r'(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}',c[0]):
+                if c not in result['sodola'][ip]['mac_observations']:result['sodola'][ip]['mac_observations'].append(c)
+(D/'switch-summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print(json.dumps({'tp_bad_deltas':[p['delta']['rx_bad'] for p in result['tplink']['ports']],'router_mac_on_218AS':[c for c in result['sodola']['@@IPV4_020@@']['mac_observations'] if c[0]=='@@MAC_004@@']}))

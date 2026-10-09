@@ -1,0 +1,26 @@
+from pathlib import Path
+import re,shutil,subprocess
+b=Path('/root/central-telemetry-backup-20261004');b.mkdir(mode=0o700,exist_ok=True)
+p=Path('/etc/prometheus/prometheus.yml')
+if not (b/'prometheus.yml').exists():shutil.copy2(p,b/'prometheus.yml')
+s=p.read_text()
+s=re.sub(r'(?m)^  - job_name: OpenMPTCP\n.*?(?=^  - job_name:|\Z)','',s,flags=re.S)
+if 'job_name: webserver_node' not in s:
+ s+='''
+  - job_name: webserver_node
+    static_configs:
+      - targets: ['@@IPV4_087@@:9100']
+  - job_name: n8n_node
+    static_configs:
+      - targets: ['@@IPV4_088@@:9100']
+  - job_name: omr_vps_node
+    static_configs:
+      - targets: ['127.0.0.1:19100']
+        labels:
+          instance: 'omr-vps-01'
+'''
+p.write_text(s)
+r=subprocess.run(['promtool','check','config',str(p)],capture_output=True,text=True)
+if r.returncode:shutil.copy2(b/'prometheus.yml',p);raise SystemExit(r.stdout+r.stderr)
+subprocess.run(['systemctl','reload','prometheus'],check=True)
+print(r.stdout)

@@ -1,0 +1,17 @@
+from pathlib import Path
+import urllib.request,json
+out=Path(__file__).resolve().parent
+repo='Ysurac/mqvpn'
+req=urllib.request.Request('https://@@HOSTNAME_012@@/repos/'+repo+'/git/trees/ee78205d3db491ca7727b974bda0c91ae1523236?recursive=1',headers={'User-Agent':'Network-diagnosis'})
+tree=json.load(urllib.request.urlopen(req,timeout=20))
+paths=[x['path'] for x in tree.get('tree',[]) if x['path'].endswith('.c') and not x['path'].startswith(('tests/','fuzz/','bench'))]
+print('Candidates:',paths)
+for path in paths:
+    url='https://raw.githubusercontent.com/'+repo+'/'+tree['sha']+'/'+path
+    data=urllib.request.urlopen(url,timeout=20).read().decode()
+    if 'MTU changed externally' in data or ('RTM_NEWLINK' in data and 'mtu' in data):
+        file=out/('mqvpn-'+path.replace('/','-'));file.write_text(data,encoding='utf-8')
+        print('Source:',url,'saved',file.name)
+        lines=data.splitlines()
+        for i,line in enumerate(lines):
+            if 'MTU changed externally' in line:print('\n'.join(lines[max(0,i-18):i+12]))

@@ -1,0 +1,27 @@
+sudo -n python3 - <<'PY'
+import subprocess
+code=r'''
+const fs=require('fs');
+const sockets=fs.readFileSync('/proc/net/tcp','utf8').split('\n').filter(l=>l.includes(':075B')).map(l=>l.trim().split(/\s+/));
+const names=new Map(sockets.map(l=>[l[9],l.slice(1,4)]));
+for(const pid of fs.readdirSync('/proc').filter(x=>/^\d+$/.test(x))){
+try{for(const fd of fs.readdirSync('/proc/'+pid+'/fd')){try{const link=fs.readlinkSync('/proc/'+pid+'/fd/'+fd);const id=link.match(/^socket:\[(\d+)\]$/);if(id&&names.has(id[1]))console.log(pid,fs.readFileSync('/proc/'+pid+'/comm','utf8').trim(),names.get(id[1]));}catch(e){}}}catch(e){}
+}
+'''
+for name in ['app_a0d7b954_nodered','app_df2164f9_ps5_mqtt']:
+    print(name,flush=True)
+    subprocess.run(['docker','exec','-i',name,'node','-'],input=code.encode())
+PY
+sudo -n docker exec -i homeassistant python3 - <<'PY'
+from pathlib import Path
+sockets={l.split()[9]:l.split()[1:4] for l in Path('/proc/net/tcp').read_text().splitlines() if ':075B' in l}
+for p in Path('/proc').iterdir():
+    if not p.name.isdigit():continue
+    try:
+        for fd in (p/'fd').iterdir():
+            try:
+                link=str(fd.readlink()); inode=link.removeprefix('socket:[').removesuffix(']')
+                if inode in sockets:print('core',p.name,(p/'comm').read_text().strip(),sockets[inode])
+            except OSError:pass
+    except OSError:pass
+PY

@@ -1,0 +1,48 @@
+"""Summarize diagnostics without declaring ICMP/TCP checks to be Citrix health."""
+import argparse
+from collections import Counter
+from pathlib import Path
+import json
+import re
+import tarfile
+
+p = argparse.ArgumentParser()
+p.add_argument("input", type=Path, help="Router .tar.gz, router directory or client directory")
+p.add_argument("--output", type=Path, required=True)
+args = p.parse_args()
+result = {"input": str(args.input), "icmp": {}, "client": {}, "limitations": [
+    "ICMP rejection/rate limiting does not establish link failure.",
+    "Outstanding sequence notices can be late replies; use final ping statistics.",
+    "TCP connect only checks a new connection, not the existing ICA/EDT session.",
+    "TCP completion polling time is not a precise network RTT.",
+]}
+if args.input.is_file():
+    with tarfile.open(args.input, "r:gz") as tar:
+        texts = {Path(m.name).name: tar.extractfile(m).read().decode(errors="replace")
+                 for m in tar.getmembers() if m.isfile() and "/snapshots/" not in m.name}
+else:
+    texts = {f.name: f.read_text(encoding="utf-8-sig", errors="replace") for f in args.input.iterdir() if f.is_file()}
+for name, text in texts.items():
+    if name.startswith("ping-") and name.endswith(".log"):
+        rtts = [float(x) for x in re.findall(r"time[=<]([0-9.]+) ms", text)]
+        summary = re.search(r"(\d+) packets transmitted, (\d+) received", text)
+        result["icmp"][name] = {
+            "sent": int(summary[1]) if summary else None,
+            "received": int(summary[2]) if summary else None,
+            "reply_lines": len(rtts),
+            "rtt_max_ms": max(rtts) if rtts else None,
+            "rtt_over_200ms": sum(x > 200 for x in rtts),
+            "outstanding_notices": text.count("no answer yet"),
+            "errors": [line for line in text.splitlines() if re.search(r"[Uu]nreachable|[Pp]ermission denied|[Nn]etwork is unreachable|[Uu]nknown|[Ii]nvalid", line)],
+        }
+if "measurements.jsonl" in texts:
+    counts = {}
+    rows = [json.loads(x) for x in texts["measurements.jsonl"].splitlines() if x.strip()]
+    for row in rows:
+        key = row.get("label", row.get("kind", "unknown"))
+        counts.setdefault(key, Counter())[row["status"]] += 1
+    result["client"] = {key: dict(value) for key, value in counts.items()}
+    result["client_samples"] = len(rows)
+args.output.parent.mkdir(parents=True, exist_ok=True)
+args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+print(json.dumps(result, ensure_ascii=False, indent=2))

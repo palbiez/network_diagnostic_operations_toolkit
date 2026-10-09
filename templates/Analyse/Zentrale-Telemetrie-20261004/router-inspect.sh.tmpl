@@ -1,0 +1,7 @@
+cat /tmp/dhcp.leases
+ip neigh show
+grep -E 'mqtt|Publish|Host|Port|Prefix|StoreRates|User|Password' /tmp/collectd.conf
+ls /etc/config | grep -E 'stat|collect|prom'
+uci show openmptcprouter | grep -E '\.(ip|port|server|ssh_port|username)='
+cat /etc/init.d/collectd
+uci show luci_statistics | grep -E 'collectd|mqtt|enable|Host|Port|Prefix|StoreRates'

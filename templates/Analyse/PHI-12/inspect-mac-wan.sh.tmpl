@@ -1,0 +1,17 @@
+#!/bin/sh
+date -Is
+echo 'DEVICE:'
+ip neigh show @@IPV4_026@@
+echo 'BYPASS RULE MATCHES WITH CONTEXT:'
+uci show omr-bypass | grep -i -e '@@IPV4_026@@' -e '@@MAC_005@@'
+echo 'LIVE NFT RELEVANT RULES:'
+nft -a list ruleset | grep -i -e '@@MAC_005@@' -e '@@IPV4_026@@'
+echo 'POLICY ROUTING:'
+ip rule show
+ip route show table 2
+ip route show table 3
+echo 'DEVICE CONNECTIONS:'
+conntrack -L -s @@IPV4_026@@ -o extended 2>&1 | head -45
+echo 'WAN ADDRESSES:'
+ip -brief addr show @@INTERFACE_002@@
+ip -brief addr show @@INTERFACE_003@@

@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+base=/tmp/phi12-network-$stamp
+joy=/tmp/phi12-application-$stamp
+CLIENT_IP=@@IPV4_023@@ CITRIX_IP=@@IPV4_031@@ CITRIX_ICMP=0 DURATION=3600 OUT_DIR="$base" nohup sh /tmp/phi12-router-monitor.sh > "$base-console.txt" 2>&1 < /dev/null &
+base_pid=$!
+DEVICE_IP=@@IPV4_026@@ DEVICE_MAC=@@MAC_005@@ DURATION=3600 OUT_DIR="$joy" nohup sh /tmp/phi12-application-monitor.sh > "$joy-console.txt" 2>&1 < /dev/null &
+joy_pid=$!
+sleep 2
+kill -0 "$base_pid"
+kill -0 "$joy_pid"
+printf 'started_utc=%s\nnetwork_pid=%s\nnetwork_dir=%s\napplication_pid=%s\napplication_dir=%s\n' "$stamp" "$base_pid" "$base" "$joy_pid" "$joy"
+cat "$base-console.txt" "$joy-console.txt"

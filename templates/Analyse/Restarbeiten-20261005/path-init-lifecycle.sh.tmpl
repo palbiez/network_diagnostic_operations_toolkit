@@ -1,0 +1,7 @@
+sed -n '145,205p' /etc/init.d/mqvpn
+sed -n '265,305p' /etc/init.d/mqvpn
+sed -n '1,95p' /usr/bin/mqvpn-path
+cat /etc/hotplug.d/iface/*mqvpn* 2>/dev/null | head -95
+mqvpn-path list
+logread | grep -E 'MTU changed externally' | wc -l
+fw4 check >/tmp/phi-reboot-final-check.log 2>&1; echo fw4_exit=$?

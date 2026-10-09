@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+# Discard only the old, stalled syslog TCP socket created before NAT was installed.
+ss -K dst @@IPV4_007@@ dport = :514
+logger -p user.notice -t PHI-16 'PHI-16-VPS-TUNNEL-SYSLOG-20261002T194740Z source=omr-vps-01 destination=@@IPV4_007@@:514 transport=MQVPN retry=after-socket-reset'
+ss -ntp dst @@IPV4_007@@:514

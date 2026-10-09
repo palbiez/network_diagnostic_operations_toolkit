@@ -1,0 +1,6 @@
+#!/bin/sh
+date -Iseconds
+hostname
+ss -lntup | grep -E ':514 |:6514 '
+grep -nE 'source |destination |log |tcp\(|udp\(|syslog\(|port\(|file\(' /etc/syslog-ng/syslog-ng.conf
+ip -4 route get @@IPV4_002@@

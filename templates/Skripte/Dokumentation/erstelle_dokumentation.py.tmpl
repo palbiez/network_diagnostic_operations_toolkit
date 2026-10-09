@@ -1,0 +1,104 @@
+"""Erzeugt die Bloggrundlagen als inhaltlich gleiche Markdown-/JSON-Paare."""
+import hashlib
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / 'Dokumentation'
+STAND = '2026-10-03'
+docs = []
+
+
+def add(slug, title, summary, sections, sources, issues=()):
+    docs.append(dict(dateiname=slug, titel=title, zusammenfassung=summary,
+                     abschnitte=[dict(ueberschrift=h, markdown=t.strip()) for h, t in sections],
+                     quellen=list(sources), issues=list(issues)))
+
+
+add('01-discovery-der-umgebung', 'Discovery: Aus einem gewachsenen Heimnetz ein nachvollziehbares Inventar machen',
+    @@PYTHON_STRING_057@@, [
+    ('Ausgangspunkt und Ziel', @@PYTHON_STRING_058@@),
+    ('Was wir erfasst und abgeglichen haben', @@PYTHON_STRING_059@@),
+    ('Discovery wurde während der Fehlersuche fortgesetzt', @@PYTHON_STRING_060@@),
+    ('Ergebnis und Rolle von Codex', @@PYTHON_STRING_061@@),
+    ('Ansatz für einen Blogartikel', @@PYTHON_STRING_062@@)],
+    ['Inventar/netzwerkuebersicht.json', 'Inventar/zusammenfassung.json', 'Analyse/PHI-12/switchpfad-live-2026-10-03.md', 'Inventar/topologie_minecraft_192_168_130_147_2026_10_03.json'], ['PHI-12', 'PHI-18', 'PHI-19'])
+
+add('02-umstellung-openwrt-openmptcprouter', 'Migration: Vom OpenWrt-Allroundrouter zur getrennten OpenMPTCProuter-Architektur',
+    @@PYTHON_STRING_063@@, [
+    ('Warum die Architektur geändert wurde', @@PYTHON_STRING_064@@),
+    ('Zielaufbau', @@PYTHON_STRING_065@@),
+    ('Schrittweise Vorbereitung statt Gesamtrestore', @@PYTHON_STRING_066@@),
+    ('Produktiver Stand und verbleibende Grenzen', @@PYTHON_STRING_067@@),
+    ('Was die Zusammenarbeit mit Codex sichtbar macht', @@PYTHON_STRING_068@@),
+    ('Ansatz für einen Blogartikel', @@PYTHON_STRING_069@@)],
+    ['Inventar/zusammenfassung.json', 'Inventar/netzwerkuebersicht.json', 'Skripte/Bestand/cudy-244-ap-umbau.sh', 'Linear/issues/PHI-26.md', 'Analyse/config-pruefung-2026-10-02.txt'], ['PHI-18', 'PHI-19', 'PHI-21', 'PHI-26'])
+
+add('03-issues-erzeugen-bearbeiten-tracken', 'Issueverwaltung: Aus Analysebefunden nachvollziehbare Linear-Arbeitspakete machen',
+    @@PYTHON_STRING_070@@, [
+    ('Vom Chat zum Arbeitspaket', @@PYTHON_STRING_071@@),
+    ('Stand am 03.10.2026', @@PYTHON_STRING_072@@),
+    ('Wie die lokale Synchronisation funktioniert', @@PYTHON_STRING_073@@),
+    ('Fortschritt und Ergebnisse festhalten', @@PYTHON_STRING_074@@),
+    ('Sicherung des Zugriffs und Nachweise', @@PYTHON_STRING_075@@),
+    ('Ansatz für einen Blogartikel', @@PYTHON_STRING_076@@)],
+    ['Linear/INDEX.md', 'Linear/conflicts.json', 'Linear/README.md', 'Linear/issue-map.json', 'Linear/dependency-map.json', 'Linear/document-attachments.json', 'Skripte/Linear/linear_sync.py', 'AGENTS.md', 'Linear/issues/PHI-12.md'], ['PHI-5', 'PHI-6', 'PHI-11', 'PHI-12', 'PHI-16', 'PHI-24', 'PHI-25', 'PHI-26'])
+
+add('04-openwrt-patch-iphone', 'iPhone-WLAN: Einen Fast-Transition-Patch für den OpenWrt-Bestand vorbereiten',
+    @@PYTHON_STRING_077@@, [
+    ('Problem und technischer Hintergrund', @@PYTHON_STRING_078@@),
+    ('Was im Arbeitsordner umgesetzt wurde', @@PYTHON_STRING_079@@),
+    ('Wie die Korrektur arbeitet', @@PYTHON_STRING_080@@),
+    ('Autorschaft und belegter Abschluss', @@PYTHON_STRING_081@@),
+    ('Ansatz für einen Blogartikel', @@PYTHON_STRING_082@@)],
+    ['openwrt_patch/400-wifi-mac80211-defer-ap-side-ft-key-upload.patch', @@PYTHON_STRING_083@@, 'openwrt_patch/openwrt-25.12.5-ft/.config', 'Inventar/Router-Migration/wr1300_244.txt', 'Inventar/Router-Migration/wr1300_254.txt'])
+
+add('05-fehlersuche-openmptcprouter', 'Fehlersuche: Von kurzen Verbindungsabbrüchen zu einem reproduzierbaren OpenMPTCProuter-Fix',
+    @@PYTHON_STRING_084@@, [
+    ('Mehrere Symptome statt einer einzigen Ursache', @@PYTHON_STRING_085@@),
+    ('Bereits behoben: MQVPN-Konfigurationsabgleich', @@PYTHON_STRING_086@@),
+    ('Messungen und Fehler in der Diagnose selbst', @@PYTHON_STRING_087@@),
+    ('Der neue Befund am 03.10.2026', @@PYTHON_STRING_088@@),
+    ('Gezielte Korrektur und Verifikation', @@PYTHON_STRING_089@@),
+    ('Nach dem manuellen Neustart: Erfolg mit klarer Grenze', @@PYTHON_STRING_090@@),
+    ('Ansatz für einen Blogartikel', @@PYTHON_STRING_091@@)],
+    ['Chats/mqvpn-fehleranalyse-vorher.json', 'Analyse/messplan-und-stabilisierung.txt', 'Analyse/PHI-12/servertracker-neustartursache-2026-10-03.md', 'Analyse/PHI-12/github-servertracker-20261003/umsetzung.md', 'Analyse/PHI-12/github-servertracker-20261003/live-verification.json', 'Analyse/PHI-12/loglevel-und-scheduler-nach-reboot-2026-10-03.md', 'Analyse/PHI-12/github-servertracker-20261003/github-issue-publication.md', 'Linear/issues/PHI-12.md', 'Linear/issues/PHI-25.md'], ['PHI-6', 'PHI-12', 'PHI-14', 'PHI-15', 'PHI-25'])
+
+add('06-weitere-arbeiten', 'Weitere Arbeiten: Backups, Logging, Gaming, Monitoring und eine belastbare Projektablage',
+    @@PYTHON_STRING_092@@, [
+    ('Backups vervollständigen und offline prüfen', @@PYTHON_STRING_093@@),
+    ('Syslog: Ziel prüfen, Sender abschalten, VPS anbinden', @@PYTHON_STRING_094@@),
+    ('Monitoring und zeitlich begrenzte Messwerkzeuge', @@PYTHON_STRING_095@@),
+    ('Gaming und gezieltes Routing', @@PYTHON_STRING_096@@),
+    ('Arbeitsordner und Wissen für Folgechats ordnen', @@PYTHON_STRING_097@@),
+    ('Weitere mögliche Blogartikel', @@PYTHON_STRING_098@@)],
+    ['Analyse/PHI-11/ergebnis-2026-10-02.md', 'Backups/PHI-11-2026-10-02/manifest.json', 'Analyse/PHI-16/ergebnis-2026-10-02.md', 'Analyse/PHI-16/tunnel-syslog-ergebnis-2026-10-02.md', 'Analyse/PHI-12/tagesauswertung-und-abendmessung-2026-10-02.md', 'Analyse/datei-verschiebungen.json', 'README.md', 'Chats/01-tunnel.json', 'Chats/02-config.json', 'Chats/03-wan-intel.json', 'Linear/issues/PHI-9.md', 'Linear/issues/PHI-10.md'], ['PHI-9', 'PHI-10', 'PHI-11', 'PHI-16', 'PHI-22', 'PHI-23', 'PHI-24'])
+
+
+def render(d):
+    parts = [f"# {d['titel']}", f"Stand: {STAND} · Zeitzone: Europe/Berlin · Grundlage: lokale Projektunterlagen", d['zusammenfassung']]
+    for section in d['abschnitte']:
+        parts.extend([f"## {section['ueberschrift']}", section['markdown']])
+    parts += ['## Lokale Quellen und Nachweise', '\n'.join(f"- [{p}](../{p})" for p in d['quellen'])]
+    if d['issues']:
+        parts += ['Zugeordnete Arbeitspakete: ' + ', '.join(f'[{i}](../Linear/issues/{i}.md)' for i in d['issues']) + '.']
+    parts += [@@PYTHON_STRING_099@@]
+    return '\n\n'.join(parts) + '\n'
+
+
+OUT.mkdir(exist_ok=True)
+for d in docs:
+    body = render(d)
+    obj = dict(schema_version='1.0', stand=STAND, zeitzone='Europe/Berlin',
+               dokumenttyp='Bloggrundlage aus lokalen Nachweisen', **d,
+               quellen_sha256={p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in d['quellen']},
+               markdown=body)
+    (OUT / (d['dateiname'] + '.md')).write_text(body, encoding='utf-8')
+    (OUT / (d['dateiname'] + '.json')).write_text(json.dumps(obj, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+index = @@PYTHON_STRING_100@@
+index += '\n'.join(f"{n}. [{d['titel']}]({d['dateiname']}.md) · [JSON]({d['dateiname']}.json)" for n, d in enumerate(docs, 1))
+index += @@PYTHON_STRING_101@@
+(OUT / 'README.md').write_text(index, encoding='utf-8')
+(OUT / 'README.json').write_text(json.dumps(dict(schema_version='1.0', stand=STAND, titel='Dokumentation der Netzwerkarbeiten mit Codex', dokumente=[dict(titel=d['titel'], markdown_datei=d['dateiname']+'.md', json_datei=d['dateiname']+'.json') for d in docs], markdown=index), ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+print(f'{len(docs)} Themenpaare und README-Paar erstellt: {OUT}')

@@ -1,0 +1,12 @@
+sudo -n docker exec -i app_a0d7b954_nodered node - <<'JS'
+const fs=require('fs');
+const lines=fs.readFileSync('/proc/net/tcp','utf8').split('\n').filter(l=>l.includes(':075B'));
+console.log('MQTT TCP sockets',lines.length);
+for(const l of lines)console.log(l.trim().split(/\s+/).slice(1,4));
+const c=JSON.parse(fs.readFileSync('/config/flows_cred.json'));const crypto=require('crypto');
+const secret=JSON.parse(fs.readFileSync('/config/.config.runtime.json'))._credentialSecret;
+const d=crypto.createDecipheriv('aes-256-ctr',crypto.createHash('sha256').update(secret).digest(),Buffer.from(c.$.slice(0,32),'hex'));
+const creds=JSON.parse(d.update(c.$.slice(32),'base64','utf8')+d.final('utf8'));
+console.log('saved broker password chars',creds['489094618c340eef'].password.length);
+JS
+bash -lc 'ha host logs -b -1 -n 300' | grep -E 'homeassistant|oom|Out of memory|Killed|Stopping|Shutdown|shut down|reboot' | tail -n 40

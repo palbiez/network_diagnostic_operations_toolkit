@@ -1,0 +1,4 @@
+sudo -n docker cp homeassistant:/usr/src/homeassistant/homeassistant/components/debugpy/__init__.py /tmp/phi28-debugpy.py
+sudo -n cat /tmp/phi28-debugpy.py
+sudo -n docker logs --since 2026-10-05T08:21:00Z homeassistant 2>&1 | tail -n 30
+sudo -n docker inspect homeassistant --format '{{json .State}}'

@@ -1,0 +1,10 @@
+bash -lc 'ha store reload'
+sudo -n python3 - <<'PY'
+import urllib.request,json
+from pathlib import Path
+token=Path('/run/s6/container_environment/SUPERVISOR_TOKEN').read_text().strip()
+req=urllib.request.Request('http://supervisor/store',headers={'Authorization':'Bearer '+token})
+data=json.load(urllib.request.urlopen(req))['data']
+for a in data['addons']:
+    if 'logspout' in a['slug']: print(a['slug'],a['version'])
+PY

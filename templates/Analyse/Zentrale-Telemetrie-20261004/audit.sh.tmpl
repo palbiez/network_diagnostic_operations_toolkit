@@ -1,0 +1,16 @@
+hostname
+date -Iseconds
+uptime
+cat /etc/os-release
+if command -v uci >/dev/null; then
+ uci show system | grep -E 'hostname|log_'
+ uci show prometheus-node-exporter-lua 2>/dev/null
+ grep -E 'LoadPlugin|<Plugin|<Publish|Host |Port |Prefix |StoreRates|User |Password|Retain|Qos' /etc/collectd.conf /etc/collectd/*.conf 2>/dev/null
+ ps w | grep -E 'collectd|prometheus|logread|syslog|mqtt'
+ ip -4 addr show | grep -E 'inet |^[0-9]'
+else
+ systemctl --no-pager --type=service --state=running | grep -E 'syslog|rsyslog|collectd|mqtt|exporter|prometheus|telegraf|loki|grafana|docker|alloy'
+ grep -R -E '@@IPV4_007@@|@@|target\(|destination|network\(|tcp\(|udp\(' /etc/rsyslog.conf /etc/rsyslog.d /etc/syslog-ng 2>/dev/null
+ ss -lntup | grep -E ':(22|514|1883|9100|9090|8000|8125|25826) '
+ ip -4 addr show | grep -E 'inet |^[0-9]'
+fi

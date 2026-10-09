@@ -1,0 +1,40 @@
+from pathlib import Path
+import sys,json,base64
+ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+import central_observability as obs
+folder=Path(__file__).resolve().parent
+payload={name:base64.b64encode((folder/name).read_bytes()).decode() for name in ['storage-pressure.py','storage-pressure-test.py']}
+script='python3 - <<\'PHI29_DEPLOY\'\n'+'''from pathlib import Path
+import base64,subprocess,shutil,json
+files='''+repr(payload)+'''
+testdir=Path('/tmp/phi29-tests-20261005');testdir.mkdir(exist_ok=True)
+for name,blob in files.items():(testdir/name).write_bytes(base64.b64decode(blob))
+subprocess.run(['python3',str(testdir/'storage-pressure-test.py')],check=True)
+backup=Path('/root/phi29-backup-20261005');backup.mkdir(mode=0o700,exist_ok=True)
+paths=['/etc/loki/config.yml','/etc/systemd/system/network-archive-compress.service','/etc/systemd/system/network-archive-compress.timer']
+for file in paths:
+    source=Path(file);target=backup/source.name
+    if target.exists():raise RuntimeError('Backup exists; inspect before rerun')
+    shutil.copy2(source,target)
+config=Path('/etc/loki/config.yml');content=config.read_text()
+assert '\\ncompactor:' not in content
+content=content.replace('limits_config:\\n','limits_config:\\n  retention_period: 0s\\n  deletion_mode: filter-and-delete\\n')
+content+='\\ncompactor:\\n  working_directory: /var/lib/loki/compactor\\n  retention_enabled: true\\n  delete_request_store: filesystem\\n  delete_request_cancel_period: 10m\\n  retention_delete_delay: 10m\\n'
+candidate=backup/'loki-candidate.yml';candidate.write_text(content)
+check=subprocess.run(['/usr/bin/loki','-config.file',str(candidate),'-verify-config=true'],capture_output=True,text=True)
+if check.returncode:raise RuntimeError('Loki validation failed: '+check.stderr[-1500:])
+subprocess.run(['install','-d','-o','loki','-g','loki','-m','750','/var/lib/loki/compactor'],check=True)
+config.write_text(content)
+subprocess.run(['systemctl','restart','loki'],check=True)
+target=Path('/usr/local/libexec/network-storage-pressure.py');target.write_bytes(base64.b64decode(files['storage-pressure.py']));target.chmod(0o750)
+subprocess.run(['python3','-m','py_compile',str(target)],check=True)
+Path('/etc/systemd/system/network-archive-compress.service').write_text('[Unit]\\nDescription=Maintain local telemetry archives with 10GB/20GB pressure cleanup\\nAfter=loki.service influxdb.service\\n[Service]\\nType=oneshot\\nExecStart=/usr/bin/python3 /usr/local/libexec/network-storage-pressure.py\\nExecStart=/usr/bin/flock -n /run/network-archive-maintenance.lock /usr/bin/python3 /usr/local/libexec/network-archive-compress.py\\nNice=10\\nIOSchedulingClass=idle\\nUMask=0027\\nTimeoutStartSec=15min\\n')
+Path('/etc/systemd/system/network-archive-compress.timer').write_text('[Unit]\\nDescription=Hourly local archive pressure check and closed-file compression\\n[Timer]\\nOnCalendar=hourly\\nPersistent=true\\nRandomizedDelaySec=5m\\n[Install]\\nWantedBy=timers.target\\n')
+subprocess.run(['systemctl','daemon-reload'],check=True)
+subprocess.run(['systemctl','restart','network-archive-compress.timer'],check=True)
+subprocess.run(['python3',str(target),'--dry-run'],check=True)
+subprocess.run(['systemctl','start','network-archive-compress.service'],check=True)
+print('Installed pressure policy and integrated hourly timer; Loki request deletion enabled without age retention')
+'''+'\nPHI29_DEPLOY\n'
+r=obs.run('@@IPV4_007@@',script,90)
+(folder/'storage-deploy-result.json').write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

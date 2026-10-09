@@ -1,0 +1,18 @@
+date -Iseconds
+printf '\n--- bypass ---\n'
+uci -q show omr-bypass
+printf '\n--- devices ---\n'
+awk 'tolower($0) ~ /@@MAC_007@@|@@MAC_008@@|@@IPV4_054@@|@@IPV4_024@@/' /tmp/dhcp.leases
+ip neigh show | grep -Ei '@@IPV4_054@@|@@IPV4_024@@|@@MAC_007@@|@@MAC_008@@'
+printf '\n--- routing ---\n'
+ip -4 rule show
+ip -4 route show table all
+printf '\n--- device connections ---\n'
+grep -E 'src=192\.168\.(140\.106|150\.@@VLAN_001@@) ' /proc/net/nf_conntrack
+printf '\n--- tools ---\n'
+command -v tcpdump
+command -v conntrack
+printf '\n--- ipv6 ---\n'
+ip -6 addr show scope global
+printf '\n--- relevant active rules ---\n'
+nft list ruleset | grep -Ei 'rtl|application|superrtl|140\.106|150\.@@VLAN_001@@|@@MAC_007@@|@@MAC_008@@'

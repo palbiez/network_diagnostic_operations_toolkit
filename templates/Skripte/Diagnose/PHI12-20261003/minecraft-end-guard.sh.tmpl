@@ -1,0 +1,21 @@
+#!/bin/sh
+# Retire the verified legacy logger before its stale ping PID cleanup runs.
+. /root/phi12-diag-20261003/settings
+root_pid=6306
+remaining=$((END_EPOCH-$(date +%s)-2))
+[ "$remaining" -le 0 ] || sleep "$remaining"
+[ -r "/proc/$root_pid/cmdline" ] || exit 0
+tr '\0' ' ' < "/proc/$root_pid/cmdline" | grep -Fq '/root/phi12-diag-20261003/minecraft.sh' || exit 0
+kill -STOP "$root_pid" 2>/dev/null || exit 0
+stop_children() {
+ for ch in $(pgrep -P "$1" 2>/dev/null); do
+  [ "$(awk '/^PPid:/ {print $2}' "/proc/$ch/status" 2>/dev/null)" = "$1" ] || continue
+  kill -STOP "$ch" 2>/dev/null || continue
+  stop_children "$ch"
+  [ "$(awk '/^PPid:/ {print $2}' "/proc/$ch/status" 2>/dev/null)" = "$1" ] || continue
+  kill -KILL "$ch" 2>/dev/null || true
+ done
+}
+stop_children "$root_pid"
+kill -KILL "$root_pid" 2>/dev/null || true
+date -Is > /tmp/phi12-diag-20261003/minecraft-@@IPV4_018@@/finished.txt

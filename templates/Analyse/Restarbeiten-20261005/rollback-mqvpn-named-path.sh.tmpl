@@ -1,0 +1,8 @@
+#!/bin/sh
+# Restore source only, without restarting the running tunnel.
+set -eu
+test "$(sha256sum /etc/init.d/mqvpn | cut -d' ' -f1)" = 26e96208f99b5c6ba7e338737bbda6d6bc01ce03a6e7e34356697890a693a718
+test -s /root/phi13-backup-20261005/mqvpn
+cp -p /root/phi13-backup-20261005/mqvpn /etc/init.d/mqvpn
+sh -n /etc/init.d/mqvpn
+echo 'Previous startup source restored; running tunnel untouched'

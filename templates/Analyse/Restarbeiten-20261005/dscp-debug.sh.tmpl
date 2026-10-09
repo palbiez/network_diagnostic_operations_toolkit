@@ -1,0 +1,11 @@
+date -Iseconds
+sed -n '155,270p' /etc/init.d/omr-dscp
+ls -l /usr/share/nftables.d/table-post/49-gaming-direct-wan.nft /usr/share/nftables.d/table-pre/49-gaming-direct-wan.nft 2>/dev/null || true
+find /etc /usr/share/nftables.d -name '49-gaming-direct-wan.nft' 2>/dev/null
+uci changes firewall
+ubus call service list '{"name":"omr-dscp"}'
+command -v mqvpn
+mqvpn --help 2>&1 | grep -E 'status|socket|ctl' | head -10
+ls -l /var/run | grep mqvpn
+cat /etc/init.d/mqvpn | grep -E 'ctl|status|socket|unix' | tail -15
+logread | grep -E 'omr-dscp|uci:|Parse error|syntax error' | tail -15

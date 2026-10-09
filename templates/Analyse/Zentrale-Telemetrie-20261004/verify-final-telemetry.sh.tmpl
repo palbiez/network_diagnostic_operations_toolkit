@@ -1,0 +1,35 @@
+set -eu
+chown root:root /var/log/postgresql/central-forwarding-audit.log
+chmod 644 /var/log/postgresql/central-forwarding-audit.log
+proof="/var/log/postgresql/.central-read-proof-$(date +%s)"
+printf '%s\n' 'CENTRAL-APPFILE-20261004-ADM-VERIFIED dir=/var/log/postgresql' > "$proof"
+chown postgres:adm "$proof"
+chmod 640 "$proof"
+mv "$proof" "${proof%.tmp}.log"
+sleep 2
+python3 - <<'PY'
+from pathlib import Path
+from collections import deque
+from datetime import datetime
+import json,urllib.request,urllib.parse
+op=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+for query in ['up','network_switch_up','node_textfile_scrape_error']:
+ d=json.load(op.open('http://127.0.0.1:9090/api/v1/query?query='+urllib.parse.quote(query),timeout=8))
+ print('PROM',query,[(r['metric'],r['value'][1]) for r in d['data']['result']])
+for host in ['OpenMPTCProuter','WR1300v3','wr1300ap']:
+ rows=deque(maxlen=180)
+ with (Path('/var/log/network/mqtt')/host/'2026-10-04.jsonl').open() as f:
+  for line in f:
+   r=json.loads(line)
+   if not r['retained']:rows.append(r)
+ ages=[datetime.fromisoformat(r['received_at']).timestamp()-float(r['payload'].split(':')[0]) for r in rows]
+ print('MQTT_FINAL',host,'qos',rows[-1]['qos'],'latency_seconds_min_max',min(ages),max(ages),'last_received',rows[-1]['received_at'])
+with Path('/var/log/network/logserver2/2026-10-04-syslog.log').open() as f:
+ found=[line.strip() for line in f if 'CENTRAL-APPFILE-20261004-ADM-VERIFIED' in line]
+print('PROTECTED_FILE_READ',found)
+assert found
+PY
+systemctl is-active syslog-ng prometheus node_exporter mqtt-archive omr-node-exporter-tunnel telegraf mosquitto
+systemctl list-timers --all --no-pager | grep -E 'switch-monitor|network-archive'
+journalctl -u telegraf -u mqtt-archive --since '5 min ago' --no-pager | tail -8
+df -h /var/log

@@ -1,0 +1,8 @@
+#!/bin/sh
+date -Iseconds
+ip -4 route get @@IPV4_033@@
+systemctl show mqvpn -p MainPID -p ActiveEnterTimestamp
+sed -n '1,200p' /etc/syslog-ng/syslog-ng.conf
+cat /etc/network/interfaces
+ls -l /etc/network/interfaces.d
+systemctl cat syslog-ng

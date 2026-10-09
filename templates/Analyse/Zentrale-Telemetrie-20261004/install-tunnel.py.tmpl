@@ -1,0 +1,50 @@
+import sys,json
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+from central_observability import connect,run,OUT
+ip='@@IPV4_012@@:65222'
+c=connect(ip)
+try:hostkey=c.get_transport().get_remote_server_key();known='[@@IPV4_012@@]:65222 '+hostkey.get_name()+' '+hostkey.get_base64()+'\n'
+finally:c.close()
+r=run('@@IPV4_007@@',"install -d -m 700 /etc/prometheus/omr-ssh\n[ -f /etc/prometheus/omr-ssh/id_ed25519 ] || ssh-keygen -q -t ed25519 -N '' -C central-omr-node-exporter -f /etc/prometheus/omr-ssh/id_ed25519\ncat /etc/prometheus/omr-ssh/id_ed25519.pub")
+assert r['exit']==0
+pub=r['output'].strip();assert pub.startswith('ssh-ed25519 ')
+c=connect(ip)
+try:
+ s=c.open_sftp();path='/root/.ssh/authorized_keys'
+ with s.file(path) as f:old=f.read().decode()
+ backup='/root/central-telemetry-backup-20261004/authorized_keys'
+ try:s.stat(backup)
+ except IOError:
+  with s.file(backup,'w') as f:f.write(old)
+  s.chmod(backup,0o600)
+ if 'central-omr-node-exporter' not in old:
+  with s.file(path,'a') as f:f.write('\nrestrict,port-forwarding,permitopen="127.0.0.1:9100",command="/bin/false" '+pub+'\n')
+ s.chmod(path,0o600);s.close()
+finally:c.close()
+c=connect('@@IPV4_007@@')
+try:
+ s=c.open_sftp()
+ with s.file('/etc/prometheus/omr-ssh/known_hosts','w') as f:f.write(known)
+ s.chmod('/etc/prometheus/omr-ssh/known_hosts',0o600)
+ unit='''[Unit]
+Description=Private SSH forward for OMR VPS Node Exporter
+After=network-online.target
+Wants=network-online.target
+[Service]
+ExecStart=/usr/bin/ssh -N -T -p 65222 -i /etc/prometheus/omr-ssh/id_ed25519 -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/etc/prometheus/omr-ssh/known_hosts -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -L 127.0.0.1:19100:127.0.0.1:9100 root@@@IPV4_012@@
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target
+'''
+ with s.file('/etc/systemd/system/omr-node-exporter-tunnel.service','w') as f:f.write(unit)
+ s.close()
+finally:c.close()
+r=run('@@IPV4_007@@',"systemd-analyze verify /etc/systemd/system/omr-node-exporter-tunnel.service\nsystemctl daemon-reload\nsystemctl enable --now omr-node-exporter-tunnel\nsleep 2\ncurl --noproxy '*' --max-time 8 -s http://127.0.0.1:19100/metrics | grep node_uname_info\nsystemctl is-active omr-node-exporter-tunnel")
+(OUT/'tunnel-install-result.json').write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

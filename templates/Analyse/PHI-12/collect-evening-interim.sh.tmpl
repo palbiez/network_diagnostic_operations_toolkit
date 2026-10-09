@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+date -Is
+echo 'MEASUREMENT STATUS'
+cat /tmp/phi12-evening-20261002/schedule.txt
+for d in /tmp/phi12-evening-20261002-network /tmp/phi12-evening-20261002-gaming /tmp/phi12-evening-20261002-chat; do
+ du -sk "$d"
+ tail -4 "$d/events.csv"
+done
+echo 'DEVICE ASSIGNMENTS'
+grep -i -e '@@MAC_002@@' -e '@@MAC_001@@' /tmp/dhcp.leases
+ip neigh show dev @@INTERFACE_008@@
+echo 'CURRENT LINKS'
+ip -br link
+echo 'INTERIM ARCHIVE'
+tar -czf /tmp/phi12-evening-interim-2149.tar.gz -C /tmp phi12-evening-20261002 phi12-evening-20261002-network phi12-evening-20261002-gaming phi12-evening-20261002-chat 2>/tmp/phi12-evening-interim-tar-status.txt || true
+cat /tmp/phi12-evening-interim-tar-status.txt
+sha256sum /tmp/phi12-evening-interim-2149.tar.gz

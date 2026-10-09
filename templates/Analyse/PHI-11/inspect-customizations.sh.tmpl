@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+echo 'APK AUDIT HELP:'
+apk audit --help 2>&1 || true
+echo 'APK AUDIT FULL SYSTEM (paths only):'
+apk audit --full --recursive /etc /usr /sbin /bin /lib 2>&1 || true
+echo 'OWNERS AND ROM COMPARISON:'
+for file in /etc/firewall.* /etc/nftables.d/* /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft /etc/hotplug.d/iface/99-gaming-policy /etc/init.d/mqvpn-debuglog /etc/@@HOSTNAME_003@@ /etc/crontabs/root /etc/collectd.conf /etc/config/collectd_conf.d/mqtt.conf /etc/telegraf.conf; do
+ [ -f "$file" ] || continue
+ echo "FILE $file"
+ apk info --who-owns "$file" 2>&1 || true
+ if [ -f "/rom$file" ]; then
+  if cmp -s "$file" "/rom$file"; then echo 'ROM identical'; else echo 'ROM differs'; fi
+ else echo 'ROM absent'; fi
+done
+echo 'CUSTOM SCRIPTS FOR DEPENDENCY REVIEW:'
+for file in /etc/hotplug.d/iface/99-gaming-policy /etc/init.d/mqvpn-debuglog /etc/nftables.d/10-custom-filter-chains.nft /etc/nftables.d/90-proxy-ssr-rules.nft /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft /etc/@@HOSTNAME_003@@ /etc/crontabs/root; do
+ echo "FILE $file"; cat "$file"
+done
+echo 'SYSUPGRADE LOGIC:'
+sed -n '1,240p' /sbin/sysupgrade

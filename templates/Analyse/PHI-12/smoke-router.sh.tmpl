@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+sh -n /tmp/phi12-router-monitor.sh
+out=/tmp/phi12-smoke-20261002
+DURATION=20 SNAPSHOT_INTERVAL=10 OUT_DIR="$out" sh /tmp/phi12-router-monitor.sh > /tmp/phi12-smoke-console.txt 2>&1 &
+monitor=$!
+sleep 6
+touch "$out/trigger"
+sleep 6
+touch "$out/stop"
+wait "$monitor"
+cat /tmp/phi12-smoke-console.txt
+echo 'EVENTS:'
+cat "$out/events.csv"
+echo 'PROBES:'
+cat "$out/probes.csv"
+echo 'NO PROBE CHILDREN LEFT (monitor processes only):'
+ps w | grep -e 'ping -n -D -O' -e 'ip monitor link address route' | grep -v grep || true
+tar -czf /tmp/phi12-smoke-20261002.tar.gz -C /tmp phi12-smoke-20261002

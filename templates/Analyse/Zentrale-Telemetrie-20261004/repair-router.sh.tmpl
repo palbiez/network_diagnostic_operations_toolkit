@@ -1,0 +1,12 @@
+set -eu
+mkdir -p /root/central-telemetry-backup-20261004
+chmod 700 /root/central-telemetry-backup-20261004
+[ -f /root/central-telemetry-backup-20261004/system ] || cp -p /etc/config/system /root/central-telemetry-backup-20261004/system
+uci set 'system.@system[0].log_remote=1'
+uci set 'system.@system[0].log_ip=@@IPV4_007@@'
+uci set 'system.@system[0].log_proto=tcp'
+uci set 'system.@system[0].log_port=514'
+uci commit system
+/etc/init.d/log reload
+logger -t CENTRAL-AUDIT 'CENTRAL-AUDIT-20261004-repaired-syslog host=OpenMPTCProuter'
+uptime

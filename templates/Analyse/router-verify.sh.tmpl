@@ -1,0 +1,20 @@
+date -Is
+printf '\nFW4 CHECK\n'
+fw4 check > /tmp/codex-fw4-check.txt 2>&1
+printf 'exit=%s\n' "$?"
+tail -20 /tmp/codex-fw4-check.txt
+printf '\nDSCP RULES\n'
+uci show dscp | head -50
+nft list chain inet fw4 mangle_forward | tail -30
+printf '\nTUNNEL PING\n'
+ping -I @@INTERFACE_001@@ -c 5 -W 1 @@IPV4_002@@
+printf '\nCHIP\n'
+for nic in @@INTERFACE_002@@ @@INTERFACE_005@@ @@INTERFACE_003@@; do echo "$nic"; cat /sys/class/net/$nic/device/vendor /sys/class/net/$nic/device/device; done
+printf '\nLOGGER DISABLED\n'
+/etc/init.d/mqvpn-debuglog enabled; echo "enabled_exit=$?"
+ubus call service list '{"name":"mqvpn-debuglog"}'
+/bin/busybox ps | grep logread
+printf '\nMQVPN VERSION\n'
+mqvpn --version
+printf '\nLATEST LOG\n'
+/sbin/logread | tail -25

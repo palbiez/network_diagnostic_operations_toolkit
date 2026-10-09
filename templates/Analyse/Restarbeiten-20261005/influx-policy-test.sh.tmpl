@@ -1,0 +1,34 @@
+python3 - <<'PY'
+from pathlib import Path
+from datetime import datetime,timezone,timedelta
+import urllib.request,urllib.parse,json,tomllib,uuid
+op=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+creds=[Path('/root/superuser_influx').read_text().strip()]+[v.get('token','') for v in tomllib.loads(Path('/root/.influxdbv2/configs').read_text()).values()]
+def req(path,body=None,method=None,content='application/json'):
+    data=body.encode() if isinstance(body,str) else (json.dumps(body).encode() if body is not None else None)
+    r=urllib.request.Request('http://127.0.0.1:8086/api/v2/'+path,headers={'Authorization':'Token '+credential,'Content-Type':content,'Accept':'application/csv'},data=data,method=method)
+    with op.open(r,timeout=20) as response:return response.read()
+for credential in creds:
+    try:buckets=json.loads(req('buckets'))['buckets'];break
+    except Exception:continue
+else:raise RuntimeError('No API credential')
+org=buckets[0]['orgID'];name='phi29-retention-test-'+uuid.uuid4().hex[:12]
+bucket=json.loads(req('buckets',{'name':name,'orgID':org,'retentionRules':[]}));bid=bucket['id']
+assert bucket['name']==name and name.startswith('phi29-retention-test-')
+now=datetime.now(timezone.utc)
+try:
+    points='\n'.join('phi29_test,age='+str(age)+' value=1 '+str(int((now-timedelta(days=age)).timestamp()*1e9)) for age in [100,70,30])
+    req('write?'+urllib.parse.urlencode({'org':org,'bucket':bid,'precision':'ns'}),points,content='text/plain')
+    for days,expected in [(90,['70','30']),(60,['30'])]:
+        req('delete?'+urllib.parse.urlencode({'orgID':org,'bucket':bid}),{'start':'1970-01-01T00:00:00Z','stop':(now-timedelta(days=days)).isoformat().replace('+00:00','Z')})
+        flux='from(bucket: "'+name+'") |> range(start: 0) |> filter(fn: (r) => r._measurement == "phi29_test")'
+        csv=req('query?org='+org,{'query':flux,'type':'flux'}).decode()
+        import csv as parser,io
+        rows=list(parser.DictReader(io.StringIO('\n'.join(l for l in csv.splitlines() if l and not l.startswith('#')))))
+        ages=sorted(r['age'] for r in rows if r.get('age'))
+        assert ages==sorted(expected),(days,ages)
+        print('Influx isolated test: '+str(days)+'-day deletion boundary passed; retained ages '+','.join(ages))
+finally:
+    req('buckets/'+bid,method='DELETE')
+    print('Temporary Influx test bucket removed; production buckets unchanged')
+PY

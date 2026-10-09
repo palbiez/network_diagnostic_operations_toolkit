@@ -1,0 +1,22 @@
+#!/bin/sh
+date -Iseconds
+ip -4 route show table all
+nft list ruleset | grep -E '@@IPV4_007@@|@@NETWORK_PREFIX_001@@|@@NETWORK_PREFIX_002@@|hook output|hook prerouting|dnat|snat'
+python3 - <<'PY'
+import json
+c=json.load(open('/etc/mqvpn/server.json'))
+def scan(x, p=''):
+    if isinstance(x,dict):
+        for k,v in x.items():
+            if any(w in k.lower() for w in ('key','pass','token','secret','cert')): continue
+            if isinstance(v,(dict,list)): scan(v,p+k+'.')
+            else: print(p+k, v)
+    elif isinstance(x,list):
+        for i,v in enumerate(x): scan(v,p+str(i)+'.')
+scan(c)
+PY
+timeout 8 tcpdump -ni @@INTERFACE_004@@ -c 10 'host @@IPV4_007@@ and tcp port 514' &
+capture=$!
+sleep 1
+nc -vz -w 3 @@IPV4_007@@ 514 || true
+wait "$capture" || true

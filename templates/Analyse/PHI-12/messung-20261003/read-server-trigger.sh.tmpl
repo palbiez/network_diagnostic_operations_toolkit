@@ -1,0 +1,10 @@
+date -Is
+for p in shadowsocks-libev shadowsocks-rust openvpn; do
+ echo "SAFE_OPTIONS_$p"
+ uci -q show "$p" | grep -E '\.(disabled|enabled|server|remote)='
+done
+uci -q get openmptcprouter.settings.proxy
+uci -q get openmptcprouter.settings.vpn
+uci -q get openmptcprouter.vps.ip
+uci -q changes shadowsocks-rust | grep -E '\.(disabled|server)='
+logread -l 15000 | grep -i 'OMR-Tracker-Server'

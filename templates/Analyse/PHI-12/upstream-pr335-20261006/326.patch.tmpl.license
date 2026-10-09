@@ -1,0 +1,7 @@
+SPDX-FileCopyrightText: Ycarus (Yannick Chabanois)
+SPDX-FileCopyrightText: pylaterreur (upstream pull-request author)
+SPDX-FileCopyrightText: 2026 palbiez
+SPDX-License-Identifier: GPL-2.0-only
+
+Source: https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-schedule
+Changes: Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained.

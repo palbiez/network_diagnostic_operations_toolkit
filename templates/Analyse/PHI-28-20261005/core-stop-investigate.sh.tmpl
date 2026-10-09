@@ -1,0 +1,5 @@
+sudo -n docker ps -a --format '{{.Names}} {{.Status}}'
+sudo -n docker inspect homeassistant --format '{{json .State}}'
+bash -lc 'ha core info; ha core stats; ha supervisor logs' | tail -n 55
+bash -lc 'ha host logs -n 300' | grep -E 'oom|Out of memory|Killed|homeassistant.*(Stopping|Started|exited)' | tail -n 25
+sudo -n docker logs --tail 12 app_a0d7b954_nodered 2>&1

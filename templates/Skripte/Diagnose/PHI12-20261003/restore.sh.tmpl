@@ -1,0 +1,19 @@
+#!/bin/sh
+# Restore only instrumentation; the requested WAN threshold remains six.
+B=/root/phi12-diag-20261003
+mkdir "$B/restore.lock" 2>/dev/null || exit 0
+rm -f "$B/active"
+while read -r expected file; do
+ [ -f "$file" ] || continue
+ actual=$(sha256sum "$file" | awk '{print $1}')
+ if [ "$actual" = "$expected" ]; then
+  cp -p "$B/original/$(basename "$file")" "$file"
+  printf 'restored %s\n' "$file"
+ else
+  printf 'not_restored_changed_since_install %s\n' "$file"
+ fi
+done < "$B/instrumented.sha256"
+# Remove only this dated measurement's cron lines, preserving other jobs.
+grep -v ' # PHI12-DIAG-20261003' /etc/crontabs/root > "$B/crontab.cleaned"
+cp "$B/crontab.cleaned" /etc/crontabs/root
+crontab /etc/crontabs/root

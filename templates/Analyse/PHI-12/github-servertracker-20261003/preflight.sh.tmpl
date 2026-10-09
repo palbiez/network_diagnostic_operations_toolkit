@@ -1,0 +1,8 @@
+date -Is
+ubus call service list '{"name":"omr-tracker"}' | jsonfilter -e '@["omr-tracker"].instances.*.pid'
+echo 'before service pids'
+pidof dnsmasq unbound mqvpn sslocal
+ps ww | grep -E 'omr-schedule|omr-tracker-server' | grep -v grep
+echo 'pending proxy edit count'
+for c in shadowsocks-libev shadowsocks-rust openvpn; do uci -q changes "$c" | wc -l; done
+sha256sum /bin/omr-tracker-server /usr/share/omr/schedule.d/010-services

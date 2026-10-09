@@ -1,0 +1,20 @@
+from pathlib import Path
+import re,subprocess,shutil,socket
+b=Path('/root/central-telemetry-backup-20261004');b.mkdir(mode=0o700,exist_ok=True)
+p=Path('/etc/syslog-ng/syslog-ng.conf')
+if not (b/'syslog-ng.conf').exists():shutil.copy2(p,b/'syslog-ng.conf')
+s=p.read_text()
+if socket.gethostname()=='logserver2':
+ if 'source(s_src); destination(d_network);' not in s:s+='\nlog { source(s_src); destination(d_network); };\n'
+else:
+ s=re.sub(r'destination d_net \{.*?\};', 'destination d_net { network("@@IPV4_007@@" port(514) transport("tcp") disk-buffer(reliable(yes) disk-buf-size(67108864) mem-buf-size(1048576))); };',s,flags=re.S)
+p.write_text(s)
+check=subprocess.run(['syslog-ng','--syntax-only'],capture_output=True,text=True)
+if check.returncode:
+ shutil.copy2(b/'syslog-ng.conf',p);raise SystemExit(check.stderr)
+subprocess.run(['systemctl','enable','syslog-ng'],check=True)
+if subprocess.run(['systemctl','is-active','--quiet','syslog-ng']).returncode:
+ subprocess.run(['systemctl','start','syslog-ng'],check=True)
+else:subprocess.run(['systemctl','reload','syslog-ng'],check=True)
+subprocess.run(['logger','-t','CENTRAL-AUDIT','CENTRAL-AUDIT-20261004-repaired-syslog host='+socket.gethostname()],check=True)
+print('Syslog validated and active on',socket.gethostname(),'backup',b)

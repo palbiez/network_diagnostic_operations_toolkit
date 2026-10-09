@@ -1,0 +1,12 @@
+sudo -n python3 - <<'PY'
+from pathlib import Path
+import re
+p=Path('/homeassistant/configuration.yaml');lines=p.read_text().splitlines()
+for i,l in enumerate(lines):
+    if re.match(r'^(debugpy|profiler|logger):',l):
+        print('line',i+1,l)
+        for sub in lines[i+1:]:
+            if sub and not sub.startswith((' ','#')):break
+            if 'password' not in sub and 'token' not in sub:print(sub)
+print('top-level keys',[l.split(':')[0] for l in lines if re.match(r'^\w[^:]*:',l)])
+PY

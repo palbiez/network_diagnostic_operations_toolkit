@@ -1,0 +1,13 @@
+#!/bin/sh
+date -Is
+echo 'DEVICE NEIGHBOUR:'
+ip neigh show @@IPV4_026@@
+echo 'DEVICE ROUTE:'
+ip route get @@IPV4_026@@
+echo 'DNS BASELINE:'
+nslookup @@HOSTNAME_008@@ 2>&1
+nslookup @@HOSTNAME_009@@ 2>&1
+echo 'CONNTRACK OPTIONS:'
+conntrack -h 2>&1 | head -65
+echo 'EXISTING DIAGNOSTIC PROCESSES:'
+ps w | grep phi12 | grep -v grep || true

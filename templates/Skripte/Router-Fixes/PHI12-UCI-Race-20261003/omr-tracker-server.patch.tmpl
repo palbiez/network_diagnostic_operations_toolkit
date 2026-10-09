@@ -1,0 +1,93 @@
+--- /bin/omr-tracker-server.before
++++ /bin/omr-tracker-server
+@@ -138,13 +138,24 @@
+ 	uci -q set openmptcprouter."${serv}".current=0
+ }
+ 
++# Only this tracker's actual writes may request a service restart.
++# UCI deltas are shared with the scheduler and LuCI; their presence is not
++# evidence that this process changed a server or a proxy instance.
++_tracker_set_option() {
++	local option="$1" value="$2" current
++	current=$(uci -q get "$option")
++	[ "$current" != "$value" ] || return 0
++	uci -q set "$option=$value" || return 1
++	changes="1"
++}
++
+ _disable_redir() {
+ 	local redir="$1"
+ 	local serverdisable="$2"
+ 	local shadowsocks="$3"
+ 	config_get serverss "$redir" server
+ 	if [ "$serverss" = "$serverdisable" ]; then
+-		uci -q set "${shadowsocks}"."${redir}".disabled=1
++		_tracker_set_option "${shadowsocks}.${redir}.disabled" 1
+ 	fi
+ }
+ 
+@@ -153,7 +164,7 @@
+ 	local shadowsocks="$2"
+ 	config_get serverss "$redir" server
+ 	if [ "$serverss" = "sss${count}" ]; then
+-		uci -q set "${shadowsocks}"."${redir}".disabled=0
++		_tracker_set_option "${shadowsocks}.${redir}.disabled" 0
+ 	fi
+ }
+ 
+@@ -355,9 +366,9 @@
+ 				if [ "${_srv_prev_up[$state_key]}" != "1" ] || [ "$changes" = "1" ]; then
+ 					_proxy=$(uci -q get openmptcprouter.settings.proxy)
+ 					_vpn=$(uci -q get openmptcprouter.settings.vpn)
+-					[ "$_proxy" = "shadowsocks-rust" ] && uci -q set shadowsocks-rust.sss${count}.disabled=0
+-					[ "$_proxy" = "shadowsocks" ]      && uci -q set shadowsocks-libev.sss${count}.disabled=0
+-					[ "$_vpn"   = "openvpn" ]          && uci -q set openvpn.omr.enabled=1
++					[ "$_proxy" = "shadowsocks-rust" ] && _tracker_set_option "shadowsocks-rust.sss${count}.disabled" 0
++					[ "$_proxy" = "shadowsocks" ]      && _tracker_set_option "shadowsocks-libev.sss${count}.disabled" 0
++					[ "$_vpn"   = "openvpn" ]          && _tracker_set_option openvpn.omr.enabled 1
+ 					_enable_ss_redirs
+ 					[ -n "$ip" ] && [ -n "$(uci -q get openmptcprouter.${name}.ip_down | grep -w "$ip")" ] && \
+ 						uci -q del_list openmptcprouter.${name}.ip_down="$ip"
+@@ -390,11 +401,11 @@
+ 		config_list_foreach "$1" ip _do_check_ip
+ 		[ "$oneserverup" = "0" ] && uci -q set openmptcprouter.${name}.current='0'
+ 		[ -n "$(uci -q changes openmptcprouter)" ] && uci -q commit openmptcprouter
+-		# Commit only what actually changed: a no-op `uci commit` still forks
+-		# and rewrites nothing but costs file locking and IO every cycle
+-		[ -n "$(uci -q changes shadowsocks-libev)" ] && { changes="1"; uci -q commit shadowsocks-libev; }
+-		[ -n "$(uci -q changes shadowsocks-rust)" ]  && { changes="1"; uci -q commit shadowsocks-rust; }
+-		[ -n "$(uci -q changes openvpn)" ]           && { changes="1"; uci -q commit openvpn; }
++		# Commit proxy packages only after this tracker changed a value.
++		# Do not commit or restart for another process's pending edits.
++		[ "$changes" = "1" ] && [ -n "$(uci -q changes shadowsocks-libev)" ] && uci -q commit shadowsocks-libev
++		[ "$changes" = "1" ] && [ -n "$(uci -q changes shadowsocks-rust)" ] && uci -q commit shadowsocks-rust
++		[ "$changes" = "1" ] && [ -n "$(uci -q changes openvpn)" ] && uci -q commit openvpn
+ 		[ "$changes" = "1" ] && _restart_proxy_services
+ 		return
+ 	}
+@@ -445,8 +456,8 @@
+ 				# transition or a config fix needs the redir/ip_down/alert work
+ 				if [ "${_srv_prev_up[$state_key]}" != "1" ] || [ "$changes" = "1" ]; then
+ 					_proxy=$(uci -q get openmptcprouter.settings.proxy)
+-					[ "$_proxy" = "shadowsocks-rust" ] && uci -q set shadowsocks-rust.sss${count}.disabled=0
+-					[ "$_proxy" = "shadowsocks" ]      && uci -q set shadowsocks-libev.sss${count}.disabled=0
++					[ "$_proxy" = "shadowsocks-rust" ] && _tracker_set_option "shadowsocks-rust.sss${count}.disabled" 0
++					[ "$_proxy" = "shadowsocks" ]      && _tracker_set_option "shadowsocks-libev.sss${count}.disabled" 0
+ 					_enable_ss_redirs
+ 					[ -n "$ip" ] && [ -n "$(uci -q get openmptcprouter.${name}.ip_down | grep -w "$ip")" ] && \
+ 						uci -q del_list openmptcprouter.${name}.ip_down="$ip"
+@@ -482,10 +493,10 @@
+ 		config_list_foreach "$1" ip _do_check_ip
+ 		[ "$oneserverup" = "0" ] && uci -q set openmptcprouter.${name}.current='0'
+ 		[ -n "$(uci -q changes openmptcprouter)" ] && uci -q commit openmptcprouter
+-		# Commit only what actually changed (see _check_master)
+-		[ -n "$(uci -q changes shadowsocks-libev)" ] && { changes="1"; uci -q commit shadowsocks-libev; }
+-		[ -n "$(uci -q changes shadowsocks-rust)" ]  && { changes="1"; uci -q commit shadowsocks-rust; }
+-		[ -n "$(uci -q changes openvpn)" ]           && { changes="1"; uci -q commit openvpn; }
++		# Same ownership guard as _check_master: ignore foreign pending edits.
++		[ "$changes" = "1" ] && [ -n "$(uci -q changes shadowsocks-libev)" ] && uci -q commit shadowsocks-libev
++		[ "$changes" = "1" ] && [ -n "$(uci -q changes shadowsocks-rust)" ] && uci -q commit shadowsocks-rust
++		[ "$changes" = "1" ] && [ -n "$(uci -q changes openvpn)" ] && uci -q commit openvpn
+ 		[ "$changes" = "1" ] && _restart_proxy_services
+ 		[ "$server_ping" = true ] && return
+ 	}

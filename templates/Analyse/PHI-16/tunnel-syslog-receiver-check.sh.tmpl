@@ -1,0 +1,7 @@
+#!/bin/sh
+date -Iseconds
+hostname
+ss -lntp '( sport = :514 )'
+ip -4 route get @@IPV4_002@@
+systemctl is-active syslog-ng
+timeout 10 tcpdump -ni any -c 8 'host @@IPV4_002@@ and tcp port 514'

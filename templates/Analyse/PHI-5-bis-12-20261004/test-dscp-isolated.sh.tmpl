@@ -1,0 +1,248 @@
+probe_dir=$(mktemp -d /tmp/phi10-compile.XXXXXX)
+printf 'PROBE_DIR=%s\n' "$probe_dir"
+mkdir "$probe_dir/state" "$probe_dir/config" "$probe_dir/module"
+cp /etc/config/* "$probe_dir/config/"
+cp "$probe_dir/config/firewall" "$probe_dir/probe_firewall"
+. /lib/functions.sh
+_resolve_auto_dest_port() {
+	case "$1" in
+		proxy)
+			proxy="$(uci -q get openmptcprouter.settings.proxy)"
+			case "$proxy" in
+				shadowsocks)
+					uci -q get shadowsocks-libev.sss0.server_port
+					;;
+				shadowsocks-rust)
+					uci -q get shadowsocks-rust.sss0.server_port
+					;;
+				*v2ray*)
+					v2ray_protocol="$(uci -q get v2ray.omrout.protocol)"
+					[ -n "$v2ray_protocol" ] && uci -q get v2ray.omrout.s_${v2ray_protocol}_port
+					;;
+				*xray*)
+					xray_protocol="$(uci -q get xray.omrout.protocol)"
+					[ -n "$xray_protocol" ] && uci -q get xray.omrout.s_${xray_protocol}_port
+					;;
+			esac
+			;;
+	esac
+}
+
+_add_dscp_domain() {
+	domain=""; config_get domain "$1" name ""
+	class=""; config_get class "$1" class ""
+	[ -n "$domain" ] && [ -n "$class" ] && [ -z "$(uci -q get dhcp.omr_dscp_$class.domain | grep $domain)" ] && [ "$(uci -q get dhcp.dnsmasq1.filter_aaaa)" != "1" ]&& {
+		uci -q batch <<-EOF
+			add_list dhcp.omr_dscp_$class.domain="$domain"
+			commit dhcp
+		EOF
+	}
+}
+
+_add_dscp_domains_rules() {
+	for class in cs0 cs1 cs2 cs3 cs4 cs5 cs6 cs7 ef; do
+		uci -q batch <<-EOF
+			set dhcp.omr_dscp_${class}=ipset
+			add_list dhcp.omr_dscp_${class}.name="omr_dscp_${class}_4"
+			commit dhcp
+		EOF
+		if [ "$disableipv6" = "0" ]; then
+			uci -q batch <<-EOF
+				add_list dhcp.omr_dscp_${class}.name="omr_dscp_${class}_6"
+				commit dhcp
+			EOF
+		fi
+		uci batch <<-EOF
+			set firewall.omr_dscp_${class}_4=ipset
+			set firewall.omr_dscp_${class}_4.name="omr_dscp_${class}_4"
+			set firewall.omr_dscp_${class}_4.match='dest_ip'
+		EOF
+		if [ "$disableipv6" = "0" ]; then
+			uci -q batch <<-EOF
+				set firewall.omr_dscp_${class}_6=ipset
+				set firewall.omr_dscp_${class}_6.name="omr_dscp_${class}_6"
+				set firewall.omr_dscp_${class}_6.match='dest_ip'
+			EOF
+		fi
+		uci -q batch <<-EOF
+			set firewall.omr_dscp_rule_${class}_4=rule
+			set firewall.omr_dscp_rule_${class}_4.name="omr_dscp_${class}_4"
+			set firewall.omr_dscp_rule_${class}_4.ipset="omr_dscp_${class}_4"
+			set firewall.omr_dscp_rule_${class}_4.set_dscp="$(echo ${class} | tr '[a-z'] '[A-Z]')"
+			set firewall.omr_dscp_rule_${class}_4.target='DSCP'
+			set firewall.omr_dscp_rule_${class}_4.enabled='1'
+			set firewall.omr_dscp_rule_${class}_4.src='*'
+			set firewall.omr_dscp_rule_${class}_4.dest='*'
+		EOF
+		if [ "$(uci -q get openmptcprouter.settings.debug)" = "true" ]; then
+			uci -q set firewall.omr_dscp_rule_${class}_4.counter='1'
+		else
+			uci -q set firewall.omr_dscp_rule_${class}_4.counter='0'
+		fi
+		uci -q commit firewall
+		if [ "$disableipv6" = "0" ]; then
+			uci -q batch <<-EOF
+				set firewall.omr_dscp_rule_${class}_6=rule
+				set firewall.omr_dscp_rule_${class}_6.name="omr6_dscp_${class}_6"
+				set firewall.omr_dscp_rule_${class}_6.ipset="omr_dscp_${class}_6"
+				set firewall.omr_dscp_rule_${class}_6.target='DSCP'
+				set firewall.omr_dscp_rule_${class}_6.set_dscp="$(echo ${class} | tr '[a-z'] '[A-Z]')"
+				set firewall.omr_dscp_rule_${class}_6.enabled='1'
+				set firewall.omr_dscp_rule_${class}_6.src='*'
+				set firewall.omr_dscp_rule_${class}_6.dest='*'
+			EOF
+			if [ "$(uci -q get openmptcprouter.settings.debug)" = "true" ]; then
+				uci -q set firewall.omr_dscp_rule_${class}_6.counter='1'
+			else
+				uci -q set firewall.omr_dscp_rule_${class}_6.counter='0'
+			fi
+			uci -q commit firewall
+		fi
+	done
+}
+
+# Writes one firewall 'DSCP' rule section from the caller's current
+# $class/$proto/$src_ip/$dest_ip/$src_port/$dest_port. $2 is the src zone
+# to use, or EMPTY to omit the src option entirely (not set it to "",
+# which is a different thing to fw4 -- see the "both" case below for why
+# that distinction matters). $3 is the dest zone.
+_apply_dscp_rule_fields() {
+	local rulename rsrc rdst rule_src_ports rule_dest_ports port
+	rulename="$1"
+	rsrc="$2"
+	rdst="$3"
+	uci -q batch <<-EOF
+		set firewall.${rulename}=rule
+		set firewall.${rulename}.name="${rulename}"
+		set firewall.${rulename}.target="DSCP"
+		set firewall.${rulename}.set_dscp="$(echo ${class} | tr '[a-z'] '[A-Z]')"
+		set firewall.${rulename}.dest="$rdst"
+		set firewall.${rulename}.src_ip="$src_ip"
+		set firewall.${rulename}.dest_ip="$dest_ip"
+		set firewall.${rulename}.proto="$proto"
+		set firewall.${rulename}.enabled='1'
+	EOF
+	if [ -n "$rsrc" ]; then
+		uci -q set firewall.${rulename}.src="$rsrc"
+	else
+		# Must be genuinely absent, not set to "" -- fw4 only emits an
+		# OUTPUT-hook (mangle_output) nftables rule, matching the
+		# router's OWN locally-generated traffic, when the section has
+		# no src option at all. Confirmed live on the bench.
+		uci -q delete firewall.${rulename}.src 2>/dev/null
+	fi
+	if [ "$(uci -q get openmptcprouter.settings.debug)" = "true" ]; then
+		uci -q set firewall.${rulename}.counter='1'
+	else
+		uci -q set firewall.${rulename}.counter='0'
+	fi
+	# Replace port lists when regenerating: repeated calls must not append duplicates.
+	uci -q delete firewall.${rulename}.src_port 2>/dev/null
+	uci -q delete firewall.${rulename}.dest_port 2>/dev/null
+	rule_src_ports="$(printf '%s' "$src_port" | sed 's/,/ /g')"
+	rule_dest_ports="$(printf '%s' "$dest_port" | sed 's/,/ /g')"
+	case "$proto" in
+		tcp|udp|"tcp udp") ;;
+		*) rule_src_ports=''; rule_dest_ports='' ;;
+	esac
+	for port in $rule_src_ports; do
+		uci -q add_list firewall.${rulename}.src_port="$port"
+	done
+	for port in $rule_dest_ports; do
+		uci -q add_list firewall.${rulename}.dest_port="$port"
+	done
+}
+
+_add_dscp_rules() {
+	proto=""     ; config_get proto "$1" proto all
+	src_ip=""    ; config_get src_ip "$1" src_ip 0.0.0.0/0
+	src_port=""  ; config_get src_port "$1" src_port 0:65535
+	dest_ip=""   ; config_get dest_ip "$1" dest_ip 0.0.0.0/0
+	dest_port="" ; config_get dest_port "$1" dest_port 0:65535
+	auto_dest_port=""; config_get auto_dest_port "$1" auto_dest_port ""
+	class=""     ; config_get class "$1" class
+	direction="" ; config_get direction "$1" direction "upload"
+	comment=""   ; config_get comment "$1" comment "-"
+
+	if [ -n "$auto_dest_port" ]; then
+		dest_port="$(_resolve_auto_dest_port "$auto_dest_port")"
+		if [ -z "$dest_port" ]; then
+			# Nothing currently matches (e.g. 'proxy' but no proxy is
+			# active right now) -- skip this rule entirely rather than
+			# falling back to config_get's 0:65535 default, which would
+			# silently mark ALL tcp traffic instead of none.
+			return
+		fi
+	fi
+
+	src_port="$(echo $src_port | sed 's/:/-/g')"
+	dest_port="$(echo $dest_port | sed 's/:/-/g')"
+	count=$((count + 1))
+	[ "$proto" = "all" ] && proto="tcp udp"
+	src=""
+	dst=""
+	add_output_rule=0
+	case "$direction" in
+		upload)
+				src="lan"
+			;;
+		download)
+				dst="lan"
+			;;
+		both)
+				src="*"
+				dst="*"
+				# "both" is also the direction every shipped
+				# router-tunnel rule uses ("OMR proxy"/"OMR vpn":
+				# marking the router's OWN outbound proxy/VPN
+				# connection, not LAN-forwarded traffic) -- but a
+				# plain src=*/dest=* rule only ever lands in
+				# fw4's mangle_forward chain (routed/forwarded
+				# traffic), which never sees packets the router
+				# itself originates. Confirmed live: a proxy's
+				# own outbound tunnel connection showed tos 0x0
+				# on the wire despite this exact rule existing
+				# and being correctly compiled into
+				# mangle_forward, and only started carrying the
+				# configured DSCP class once the companion
+				# mangle_output rule below was added alongside
+				# it.
+				add_output_rule=1
+			;;
+	esac
+	_apply_dscp_rule_fields "omr_dscp_rule$count" "$src" "$dst"
+	[ "$add_output_rule" = "1" ] && _apply_dscp_rule_fields "omr_dscp_rule${count}_output" "" "wan"
+	uci -q commit firewall
+
+}
+
+
+
+uci() {
+ case "$*" in
+  *batch*) sed 's/firewall\./probe_firewall./g' | /sbin/uci -c "$probe_dir" -t "$probe_dir/state" -p "$probe_dir/state" "$@";;
+  *firewall*)
+   local mapped="$(printf '%s' "$*" | sed 's/firewall/probe_firewall/g')"
+   set -f
+   /sbin/uci -c "$probe_dir" -t "$probe_dir/state" -p "$probe_dir/state" $mapped;;
+  *) /sbin/uci "$@";;
+ esac
+}
+config_load dscp
+count=0
+config_foreach _add_dscp_rules classify
+/sbin/uci -c "$probe_dir" -t "$probe_dir/state" -p "$probe_dir/state" export probe_firewall > "$probe_dir/config/firewall"
+# Repeat generation and assert no repeated port list entries.
+count=0
+config_foreach _add_dscp_rules classify
+ports=$(/sbin/uci -c "$probe_dir" -t "$probe_dir/state" -p "$probe_dir/state" get probe_firewall.omr_dscp_rule2.src_port)
+[ "$ports" = "53 123 5353" ] || { echo BAD_PORTS="$ports"; exit 1; }
+/sbin/uci -c "$probe_dir" -t "$probe_dir/state" -p "$probe_dir/state" export probe_firewall > "$probe_dir/config/firewall"
+sed "s|this.cursor = uci.cursor();|this.cursor = uci.cursor(\"$probe_dir/config\", \"$probe_dir/state\");|" /usr/share/ucode/fw4.uc > "$probe_dir/module/fw4.uc"
+ACTION=print utpl -L "$probe_dir/module" -S /usr/share/firewall4/main.uc > "$probe_dir/candidate.nft" 2> "$probe_dir/fw4-errors.log"
+rc=$?; echo FW4_PRINT=$rc
+[ "$rc" = 0 ] || { cat "$probe_dir/fw4-errors.log"; exit 1; }
+nft -c -f "$probe_dir/candidate.nft" > "$probe_dir/nft-check.log" 2>&1
+rc=$?; echo NFT_CHECK=$rc
+[ "$rc" = 0 ] || { cat "$probe_dir/nft-check.log"; exit 1; }
+grep 'omr_dscp_rule[234567]' "$probe_dir/candidate.nft"

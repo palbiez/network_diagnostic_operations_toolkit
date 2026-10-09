@@ -1,0 +1,40 @@
+#!/bin/sh
+set -eu
+umask 077
+B=/root/phi12-diag-20261003
+mkdir -p "$B/original"
+chmod 700 "$B"
+test ! -e "$B/installed"
+sha256sum -c "$B/original.sha256"
+for f in "$B/"*.sh "$B/"*.instrumented; do
+ case "$f" in */omr-tracker.instrumented) bash -n "$f";; *) sh -n "$f";; esac
+done
+test -z "$(uci -q changes omr-tracker)" || { echo 'Pending tracker changes: aborting'; exit 1; }
+cp -p /etc/config/omr-tracker "$B/omr-tracker-config.before"
+cp -p /etc/crontabs/root "$B/crontab.before"
+DIAG_DIR=/tmp/phi12-diag-20261003-prechange sh "$B/snapshot.sh" prechange
+while read -r hash file; do
+ cp -p "$file" "$B/original/$(basename "$file")"
+ cp "$B/$(basename "$file").instrumented" "$file"
+ chmod 755 "$file"
+done < "$B/original.sha256"
+chmod 700 "$B/"*.sh
+# Per-WAN overrides; defaults/proxy/server/tunnel thresholds remain unchanged.
+uci set omr-tracker.wan1=interface
+uci set omr-tracker.wan1.tries=6
+uci set omr-tracker.wan2=interface
+uci set omr-tracker.wan2.tries=6
+uci commit omr-tracker
+/etc/init.d/omr-tracker reload wan1
+/etc/init.d/omr-tracker reload wan2
+cp -p /etc/config/omr-tracker "$B/omr-tracker-config.after"
+grep -Fq 'PHI12-DIAG-20261003' /etc/crontabs/root || {
+ printf '\n@@SCHEDULE_002@@ /root/phi12-diag-20261003/run.sh >> /tmp/phi12-diag-20261003-launch.log 2>&1 # PHI12-DIAG-20261003\n' >> /etc/crontabs/root
+ printf '@@SCHEDULE_003@@ /root/phi12-diag-20261003/restore.sh >> /tmp/phi12-diag-20261003-restore.log 2>&1 # PHI12-DIAG-20261003-RESTORE\n' >> /etc/crontabs/root
+}
+crontab /etc/crontabs/root
+touch "$B/installed"
+date -Is
+uci -q get omr-tracker.wan1.tries
+uci -q get omr-tracker.wan2.tries
+sha256sum -c "$B/instrumented.sha256"

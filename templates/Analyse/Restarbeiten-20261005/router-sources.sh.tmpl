@@ -1,0 +1,10 @@
+opkg list-installed | grep -E 'mqvpn|netifd|nlbwmon'
+ls /lib/netifd/proto/*vpn* /etc/init.d/*vpn* /etc/hotplug.d/iface/* 2>/dev/null
+grep -n -E 'mtu|@@INTERFACE_001@@|ip link|tuntap' /etc/init.d/mqvpn /etc/init.d/openmptcprouter-vps /lib/netifd/proto/mqvpn.sh /lib/netifd/proto/tun.sh /etc/init.d/omr-tracker 2>/dev/null
+grep -n -E 'ifmap_|config.*ifmap|interface.*lower|to_lower' /etc/init.d/omr-bypass /etc/hotplug.d/iface/* /etc/init.d/openmptcprouter-vps 2>/dev/null | head -n 35
+grep -R -n -E '90001|90003|iif lo|iif.*lo|from 127\.0\.0\.1' /etc/hotplug.d /lib/netifd /etc/init.d/omr-bypass /etc/init.d/openmptcprouter-vps 2>/dev/null | head -n 35
+nlbw -h 2>&1 | head -n 35
+cat /proc/sys/net/netfilter/nf_conntrack_count
+head -n 4 /proc/meminfo
+cat /proc/net/netlink
+ubus call service list '{"name":"nlbwmon"}'

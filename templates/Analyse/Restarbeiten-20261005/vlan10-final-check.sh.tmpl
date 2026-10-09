@@ -1,0 +1,11 @@
+date -Iseconds
+fw4 check >/tmp/phi21-vlan@@VLAN_002@@-fw4-final.log 2>&1; echo fw4_exit=$?
+ip netns list
+nft list chain inet fw4 phi21_vlan10_input
+nft list chain inet fw4 phi21_vlan10_forward
+nft list chain inet fw4 forward
+nft list chain inet fw4 omr_dscp_rules 2>/dev/null | head -12 || true
+grep -E 'dhcp-range=set:vlan@@VLAN_002@@|dhcp-option=vlan@@VLAN_002@@' /tmp/etc/dnsmasq.conf.*
+grep -F '@@NETWORK_PREFIX_004@@' /tmp/dhcp.leases || true
+logread | grep -Ei 'dnsmasq.*(failed|error|no address range)' | tail -8 || true
+ip link show @@INTERFACE_001@@ | head -1

@@ -1,0 +1,13 @@
+cat /etc/os-release
+systemctl status syslog-ng --no-pager
+systemctl list-units --all --no-pager | grep -E 'syslog|route|prometheus|exporter'
+grep -n -E 's_src|d_net|@@IPV4_007@@|include|log \{' /etc/syslog-ng/syslog-ng.conf /etc/syslog-ng/conf.d/*.conf 2>/dev/null
+ip -4 addr show @@INTERFACE_004@@
+ip route get @@IPV4_007@@
+nft list table ip omr_syslog_route
+systemctl cat omr-syslog-route.service omr-syslog-route.timer
+ls -l /usr/local/sbin/*syslog*
+command -v prometheus-node-exporter
+command -v prometheus-node-exporter-lua
+ls /usr/local/bin/*export* /usr/bin/*export* 2>/dev/null
+journalctl -u syslog-ng --since '2 days ago' --no-pager | tail -25

@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+B=/root/phi12-uci-race-fix-20261003
+hash() { sha256sum "$1" | awk '{print $1}'; }
+[ "$(hash /bin/omr-tracker-server)" = 882e89c1db1f341da6105e1de69ec7541f37de33fd8fbd9f2016d333a0cbc968 ]
+[ "$(hash /usr/share/omr/schedule.d/010-services)" = a23c29958c2148df89538837d6bbb89acaca10eb9ceb21e7c9853052cc66d910 ]
+cp -p "$B/omr-tracker-server.before" /bin/omr-tracker-server.phi12-restore
+mv /bin/omr-tracker-server.phi12-restore /bin/omr-tracker-server
+cp -p "$B/010-services.before" /usr/share/omr/schedule.d/010-services.phi12-restore
+mv /usr/share/omr/schedule.d/010-services.phi12-restore /usr/share/omr/schedule.d/010-services
+echo 'Original files restored; no daemon signalled. Activate by manual router reboot.'
+date -Is > "$B/rolled-back.txt"

@@ -1,0 +1,15 @@
+from pathlib import Path
+import json
+
+root=Path(__file__).resolve().parents[2]
+heading='\n\n## Switch-Zugangstest 02.10.2026\n\n'
+text=@@PYTHON_STRING_037@@
+for rel in ['Analyse/PHI-12/diagnoseplan-2026-10-02.md','Linear/issues/PHI-6.md','Linear/issues/PHI-9.md']:
+ path=root/rel;old=path.read_text(encoding='utf-8').split(heading)[0]
+ path.write_text(old.rstrip()+heading+text,encoding='utf-8')
+path=root/'Linear/work-packages.json';packages=json.loads(path.read_text(encoding='utf-8'))
+for key,n in [('measurement',6),('gaming',9)]:
+ item=next(x for x in packages if x['key']==key)
+ item['description']=(root/f'Linear/issues/PHI-{n}.md').read_text(encoding='utf-8')
+path.write_text(json.dumps(packages,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print('Passworttest dokumentiert, keine Zugangswerte enthalten.')

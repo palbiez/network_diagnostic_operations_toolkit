@@ -1,0 +1,23 @@
+from pathlib import Path
+import sys,base64,json
+ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+import central_observability as obs
+folder=Path(__file__).resolve().parent
+blob=base64.b64encode((folder/'archive-alerts.yml').read_bytes()).decode()
+code='''from pathlib import Path
+import base64,shutil,subprocess
+rules=Path('/etc/prometheus/rules/network-archive.yml');rules.parent.mkdir(exist_ok=True)
+assert not rules.exists()
+rules.write_bytes(base64.b64decode('''+repr(blob)+'''))
+subprocess.run(['promtool','check','rules',str(rules)],check=True)
+p=Path('/etc/prometheus/prometheus.yml');backup=Path('/root/phi29-backup-20261005/prometheus.yml')
+assert not backup.exists();shutil.copy2(p,backup)
+s=p.read_text();assert 'rule_files:\\n' in s
+p.write_text(s.replace('rule_files:\\n','rule_files:\\n  - /etc/prometheus/rules/network-archive.yml\\n',1))
+check=subprocess.run(['promtool','check','config',str(p)],capture_output=True,text=True)
+if check.returncode:shutil.copy2(backup,p);raise RuntimeError('Prometheus config validation failed')
+subprocess.run(['systemctl','kill','--kill-who=main','-s','HUP','prometheus'],check=True)
+print('Three archive alerts installed and validated; Prometheus configuration reloaded')
+'''
+r=obs.run('@@IPV4_007@@',"python3 - <<'PHI29_ALERTS'\n"+code+"\nPHI29_ALERTS\n",90)
+(folder/'archive-alerts-result.json').write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

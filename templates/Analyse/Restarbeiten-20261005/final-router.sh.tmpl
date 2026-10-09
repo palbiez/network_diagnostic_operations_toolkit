@@ -1,0 +1,12 @@
+date -Iseconds
+logread | grep -E 'Removing static MTU|MTU changed externally|Netlink receive failure|Unable to dump conntrack' || true
+ip link show @@INTERFACE_001@@
+ubus call network.device status '{"name":"@@INTERFACE_001@@"}'
+uci changes
+uci show sqm.wan1
+uci show omr-bypass | grep -E 'ifmap_(@@SECTION_002@@|@@SECTION_003@@|@@SECTION_004@@|@@SECTION_005@@)'
+ip -4 rule show
+grep -F '@@MAC_006@@' /tmp/dhcp.leases || true
+command -v ss && ss -f netlink -a -m -p || true
+fw4 check >/tmp/phi21-fw4-final.out 2>&1; echo fw4_exit=$?
+sha256sum /etc/config/sqm /etc/config/omr-bypass

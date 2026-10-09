@@ -1,0 +1,21 @@
+from pathlib import Path
+from html.parser import HTMLParser
+import re,urllib.request,json
+class Parser(HTMLParser):
+ def __init__(self):super().__init__();self.forms=[];self.active=None
+ def handle_starttag(self,tag,attrs):
+  attrs=dict(attrs)
+  if tag.lower()=='form':self.active={'action':attrs.get('action'),'method':attrs.get('method'),'fields':[]};self.forms.append(self.active)
+  elif tag.lower() in ['input','button'] and self.active:self.active['fields'].append({'tag':tag.lower(),'type':attrs.get('type'),'name':attrs.get('name'),'value_present':bool(attrs.get('value'))})
+ def handle_endtag(self,tag):
+  if tag.lower()=='form':self.active=None
+root=Path(__file__).resolve().parents[2];folder=root/'Analyse/PHI-12/switch-management-20261002';result=[]
+for ip in ['@@IPV4_019@@','@@IPV4_020@@','@@IPV4_021@@']:
+ try:
+  with urllib.request.urlopen('http://'+ip+'/login.cgi',timeout=5) as response:body=response.read(400000).decode(errors='replace');code=response.status;url=response.geturl()
+  parser=Parser();parser.feed(body)
+  (folder/(ip+'-login-page.html')).write_text(body,encoding='utf-8')
+  result.append({'ip':ip,'status':code,'final_path':url.split(ip,1)[-1],'forms':parser.forms,'mentions_logon_error':bool(re.search('t_error1|wrong password',body,re.I)),'embedded_password_check':bool(re.search(r'password.{0,200}(?:match|length|validate)',body,re.I)),'cgi_paths':sorted(set(re.findall(r'/[A-Za-z0-9_./-]+\.cgi',body)))[:15]})
+ except Exception as e:result.append({'ip':ip,'error':type(e).__name__})
+(folder/'login-page-analysis.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print(json.dumps(result,ensure_ascii=False,indent=2))

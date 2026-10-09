@@ -1,0 +1,12 @@
+#!/bin/sh
+date -Is
+echo 'NEIGHBOUR:'
+ip neigh | grep -i '@@MAC_001@@' || true
+echo 'LEASE:'
+grep -i '@@MAC_001@@' /tmp/dhcp.leases || true
+echo 'UCI BYPASS BLOCK:'
+awk 'BEGIN{RS=""} /@@MAC_001@@|@@MAC_001@@/ {print}' /etc/config/omr-bypass
+echo 'LIVE RULE:'
+nft -a list ruleset | grep -i -e '@@MAC_001@@' -e 'gaming-ps-' || true
+echo 'CUSTOM GAMING RULE:'
+cat /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft

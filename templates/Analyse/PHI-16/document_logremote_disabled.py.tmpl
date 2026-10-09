@@ -1,0 +1,80 @@
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+note = """## Aktueller Stand: logread-Weiterleitung deaktiviert (02.10.2026, 10:41 Berlin)
+
+Auf ausdrücklichen Nutzerauftrag ist die reguläre Remote-Syslog-Weiterleitung jetzt dauerhaft deaktiviert:
+
+```sh
+uci set 'system.@system[0].log_remote=0'
+uci commit system
+/etc/init.d/log reload
+```
+
+Die procd-Instanz `logremote` und ihr `logread`-Prozess sind beendet. `logd` läuft weiterhin mit unverändertem PID 4058; lokale Logs können mit `logread` gelesen werden. Das gespeicherte Ziel `@@IPV4_007@@:514/TCP` bleibt für eine spätere Wiederaktivierung erhalten. Kein Tunnel- oder Netzwerkneustart wurde ausgeführt.
+
+Verifikation: Testmarker `PHI-16-LOGREMOTE-DISABLED-20261002T084200Z` erscheint lokal um 10:41:39, fehlt aber im Tageslog auf logserver2. Der Zeitanteil im Markernamen ist eine Kennung; die tatsächlichen Prüfzeiten stehen in den Nachweisen. Keine Syslog-TCP-Verbindung mehr vorhanden; syslog-ng bleibt aktiv. Die MQTT-Verbindung zu Port 1883 besteht weiterhin. MQTT-Nachrichteninhalt und vollständiger Ersatz der bisherigen Syslog-Sammlung wurden nicht geprüft.
+
+**Folge für die Diagnose:** Das Tageslog auf logserver2 erhält seit dieser Änderung keine neuen Einträge über diesen Router-Syslog-Sender. Der zuvor erfolgreiche Empfangstest bleibt ein historischer Nachweis.
+
+Rückweg bei Bedarf:
+
+```sh
+uci delete 'system.@system[0].log_remote'
+uci commit system
+/etc/init.d/log reload
+```
+
+Damit gilt wieder der vorherige Standard `log_remote=1`; vorher war die Option nicht explizit gesetzt. Nach Wiederaktivierung den Empfang mit einer frischen Testmeldung prüfen.
+
+Nachweise: `logremote-disabled-router.txt`, `logremote-disabled-server.txt`; ausgeführte Skripte `disable-logremote.sh`, `check-logremote-disabled-server.sh`.
+
+"""
+
+for relative in ["Analyse/PHI-16/ergebnis-2026-10-02.md", "Linear/issues/PHI-16.md"]:
+    p = ROOT / relative
+    old = p.read_text(encoding="utf-8")
+    if "## Aktueller Stand: logread-Weiterleitung deaktiviert" not in old:
+        p.write_text("# PHI-16: Syslog-Weiterleitung deaktiviert und geprüft\n\n" + note + "---\n\n## Historischer Empfangstest vor der Deaktivierung\n\n" + old, encoding="utf-8")
+
+state = {
+    "zeit_router": "2026-10-02T10:41:39+02:00",
+    "log_remote": 0,
+    "logremote_instanz": "entfernt",
+    "logread_dauerprozess": "beendet",
+    "logd_pid_unveraendert": 4058,
+    "ziel_gespeichert": "@@IPV4_007@@:514/TCP",
+    "testmarker_lokal": True,
+    "testmarker_logserver": False,
+    "mqtt_tcp_1883": "weiterhin verbunden, Nutzdaten nicht geprüft",
+    "nachweise": ["Analyse/PHI-16/logremote-disabled-router.txt", "Analyse/PHI-16/logremote-disabled-server.txt"],
+}
+(ROOT / "Analyse/PHI-16/logremote-deaktivierung.json").write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+for relative in ["Analyse/tunnel-erkenntnisse-2026-10-02.json", "Chats/02-config.json"]:
+    p = ROOT / relative
+    data = json.loads(p.read_text(encoding="utf-8"))
+    data["syslog_weiterleitung_aktueller_stand"] = state
+    p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+for relative in ["Analyse/config-pruefung-2026-10-02.txt", "Analyse/mqvpn-syslog-loesungsvorschlaege.txt"]:
+    p = ROOT / relative
+    old = p.read_text(encoding="utf-8")
+    addition = @@PYTHON_STRING_038@@
+    if not old.startswith(addition):
+        p.write_text(addition + old, encoding="utf-8")
+
+p = ROOT / "Linear/work-packages.json"
+data = json.loads(p.read_text(encoding="utf-8"))
+def update(value):
+    if isinstance(value, dict):
+        if value.get("key") == "syslog-target":
+            value["description"] = (ROOT / "Linear/issues/PHI-16.md").read_text(encoding="utf-8")
+        for child in value.values():
+            update(child)
+    elif isinstance(value, list):
+        for child in value:
+            update(child)
+update(data)
+p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+print("PHI-16 und aktuelle Befunde abgeglichen.")

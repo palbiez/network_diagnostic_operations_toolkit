@@ -1,0 +1,79 @@
+"""Verify archive hashes and contents without extracting credentials to disk."""
+from pathlib import Path, PurePosixPath
+import hashlib
+import json
+import tarfile
+import difflib
+
+ROOT = Path(__file__).resolve().parents[2]
+folder = ROOT / "Backups/PHI-11-2026-10-02"
+results = {"archives": {}, "checks": {}}
+for line in (folder / "archive-sha256.txt").read_text().splitlines():
+    digest, remote = line.split(maxsplit=1)
+    name = PurePosixPath(remote.strip()).name
+    file = folder / name
+    actual = hashlib.sha256(file.read_bytes()).hexdigest()
+    assert actual == digest, f"Archive hash mismatch: {name}"
+    with tarfile.open(file, "r:gz") as tar:
+        members = tar.getmembers()
+        names = [x.name.lstrip("/") for x in members]
+        for member in members:
+            assert ".." not in PurePosixPath(member.name).parts, "Unsafe member path"
+            if member.isfile():
+                tar.extractfile(member).read()
+    results["archives"][name] = {"sha256": actual, "bytes": file.stat().st_size, "members": len(members)}
+    (folder / (name + ".files.txt")).write_text("\n".join(names) + "\n", encoding="utf-8")
+
+with tarfile.open(folder / "PHI-11-support-2026-10-02.tar.gz") as support:
+    entries = {m.name.removeprefix("./"): m for m in support.getmembers()}
+    read = lambda name: support.extractfile(entries[name]).read()
+    checked = 0
+    for line in read("support/SHA256SUMS").decode().splitlines():
+        digest, relative = line.split(maxsplit=1)
+        name = "support/" + relative.strip().removeprefix("./")
+        assert hashlib.sha256(read(name)).hexdigest() == digest, f"Support hash mismatch: {name}"
+        checked += 1
+    results["checks"]["support_files_hash_verified"] = checked
+    added = read("support/inventory/sysupgrade-added-paths.txt").decode().splitlines()
+    pending = read("support/uci-pending-changes.txt")
+    results["checks"]["pending_uci_changes_at_snapshot"] = bool(pending.strip())
+    package_lines = read("support/inventory/packages-with-versions.txt").decode().splitlines()
+    assert package_lines, "Package inventory empty"
+    results["checks"]["package_inventory_entries"] = len(package_lines)
+    release = read("support/inventory/openwrt_release").decode()
+    results["versions"] = {
+        "openwrt_release": dict(line.split("=", 1) for line in release.splitlines() if "=" in line),
+        "kernel": read("support/inventory/kernel.txt").decode().strip(),
+        "mqvpn_packages": [line for line in package_lines if line.startswith("mqvpn-")],
+    }
+    (folder / "packages-with-versions.txt").write_bytes(read("support/inventory/packages-with-versions.txt"))
+    (folder / "sysupgrade.conf.before").write_bytes(read("support/baseline/sysupgrade.conf.before"))
+    for path in ["usr/share/ucode/fw4.uc", "usr/share/omr-bypass/omr-bypass-proto.lst"]:
+        before = read("support/package-patches/rom/" + path).decode().splitlines(True)
+        after = read("support/package-patches/live/" + path).decode().splitlines(True)
+        patch = "".join(difflib.unified_diff(before, after, fromfile="rom/" + path, tofile="live/" + path))
+        (ROOT / "Analyse/PHI-11" / (PurePosixPath(path).name + ".diff")).write_text(patch, encoding="utf-8")
+    results["checks"]["snapshot_time"] = read("support/inventory/snapshot-time.txt").decode().strip()
+    results["checks"]["selected_services"] = read("support/inventory/selected-service-state.txt").decode().splitlines()
+
+with tarfile.open(folder / "backup-OpenMPTCProuter-2026-10-02-PHI-11.tar.gz") as tar:
+    files = {m.name.lstrip("/"): m for m in tar.getmembers()}
+    for name in added:
+        assert name.lstrip("/") in files, f"Missing requested custom file: {name}"
+    results["checks"]["explicit_additions_present"] = added
+    disabled = tar.extractfile(files["etc/uci-defaults/10_disable_services"]).read()
+    assert b"/etc/init.d/mqvpn-debuglog disable" in disabled
+    system = tar.extractfile(files["etc/config/system"]).read()
+    assert b"log_remote '0'" in system or b'log_remote "0"' in system
+    assert "etc/backup/installed_packages.txt" in files
+    results["checks"]["debuglogger_restore_disabled"] = True
+    results["checks"]["remote_syslog_restore_disabled"] = True
+    for name in ["network", "firewall", "mqvpn", "omr-bypass", "dscp", "collectd", "luci_statistics"]:
+        assert f"etc/config/{name}" in files
+    results["checks"]["critical_uci_configs_present"] = True
+    (folder / "sysupgrade.conf.after").write_bytes(tar.extractfile(files["etc/sysupgrade.conf"]).read())
+
+results["status"] = "passed"
+(ROOT / "Analyse/PHI-11/verification.json").write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+(folder / "manifest.json").write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+print(json.dumps(results, ensure_ascii=False, indent=2))

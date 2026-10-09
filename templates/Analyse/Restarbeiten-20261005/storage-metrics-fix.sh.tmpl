@@ -1,0 +1,11 @@
+set -eu
+python3 - <<'PY'
+from pathlib import Path
+p=Path('/usr/local/libexec/network-storage-pressure.py')
+s=p.read_text();assert "'/var/lib/prometheus/node-exporter/network_archive.prom'" in s
+p.write_text(s.replace("'/var/lib/prometheus/node-exporter/network_archive.prom'","'/var/lib/node_exporter/textfile_collector/network_archive.prom'"))
+PY
+systemctl start network-archive-compress.service
+curl -fsS http://127.0.0.1:9100/metrics | grep '^network_archive_'
+grep -n -A 6 '^rule_files:' /etc/prometheus/prometheus.yml || true
+command -v promtool

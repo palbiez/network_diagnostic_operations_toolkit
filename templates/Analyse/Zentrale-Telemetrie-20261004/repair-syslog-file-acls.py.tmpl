@@ -1,0 +1,20 @@
+from pathlib import Path
+import subprocess,shutil,re,os
+p=Path('/etc/syslog-ng/conf.d/80-central-app-files.conf')
+if not p.exists():raise SystemExit('No app sources')
+if not shutil.which('setfacl'):
+ env=dict(os.environ,DEBIAN_FRONTEND='noninteractive',NEEDRESTART_MODE='l')
+ subprocess.run(['apt-get','install','-y','--no-install-recommends','acl'],env=env,check=True,capture_output=True)
+s=p.read_text();dirs=re.findall(r'base-dir\("([^"]+)"\)',s);files=re.findall(r'(?<!wildcard-)file\("([^"]+)"',s)
+b=Path('/root/central-telemetry-backup-20261004/syslog-app-file-acls.txt')
+if not b.exists():
+ with b.open('w') as out:subprocess.run(['getfacl','-R','--absolute-names',*dirs,*files],stdout=out,check=True)
+ b.chmod(0o600)
+for d in dirs:
+ subprocess.run(['setfacl','-R','-m','u:root:rX',d],check=True)
+ subprocess.run(['setfacl','-m','d:u:root:r-x',d],check=True)
+for f in files:subprocess.run(['setfacl','-m','u:root:r--',f],check=True)
+subprocess.run(['systemctl','reload','syslog-ng'],check=True)
+print('Read ACLs configured for syslog-ng root process; backup',b)
+for d in dirs:
+ with (Path(d)/'central-forwarding-audit.log').open('a') as f:f.write('CENTRAL-APPFILE-20261004-ACL-VERIFIED dir='+d+'\n')

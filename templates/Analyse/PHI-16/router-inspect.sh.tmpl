@@ -1,0 +1,15 @@
+date -Is
+printf '\nUCI LOG SETTINGS\n'
+uci show system | grep -e log_ip -e log_port -e log_proto -e log_size -e log_level
+printf '\nLOG SERVICE\n'
+ubus call service list '{"name":"log"}'
+printf '\nCOMPLETE LOGREAD ARGUMENTS\n'
+for proc in /proc/[0-9]*; do
+ [ -r "$proc/comm" ] || continue
+ [ "$(cat "$proc/comm")" = logread ] || continue
+ echo "$proc"; tr '\000' '\n' < "$proc/cmdline"
+done
+printf '\nLOG INIT\n'
+cat /etc/init.d/log
+printf '\nLOGREAD HELP\n'
+/sbin/logread -h 2>&1 | head -30

@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+date -Iseconds
+ip -4 addr show dev @@INTERFACE_004@@
+ip -4 route get @@IPV4_007@@
+ip -4 route show exact @@IPV4_007@@/32
+systemctl show mqvpn -p MainPID
+systemctl cat mqvpn
+ls -ld /etc/systemd/system/mqvpn.service.d /usr/local/sbin/omr-syslog-route /etc/systemd/system/omr-syslog-route.service 2>/dev/null || true
+syslog-ng --syntax-only
+grep -n 'destination d_net' /etc/syslog-ng/syslog-ng.conf
+command -v python3

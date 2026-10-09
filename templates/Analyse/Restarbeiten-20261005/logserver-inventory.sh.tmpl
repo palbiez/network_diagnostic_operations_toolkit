@@ -1,0 +1,9 @@
+date -Iseconds
+df -h / /var/log
+du -x -h -d 1 /var/log /var/lib/prometheus /var/lib/loki /var/lib/influxdb /var/lib/influxdb2 /tmp 2>/dev/null | sort -h | tail -n 35
+systemctl cat network-archive-compress.timer network-archive-compress.service prometheus.service loki.service
+journalctl --disk-usage
+systemctl list-timers --all --no-pager | grep -E 'archive|logrotate'
+find /etc/logrotate.d -maxdepth 1 -type f -printf '%f\n'
+grep -R -n -E 'retention|retention_enabled|compactor|delete_request|storage.tsdb|SystemMaxUse|MaxRetentionSec' /etc/prometheus /etc/loki /etc/systemd/journald.conf /etc/systemd/journald.conf.d /etc/default/prometheus 2>/dev/null
+ls -lh /tmp/metrics.out /var/log/mosquitto/mosquitto.log /var/log/telegraf/telegraf.log 2>/dev/null

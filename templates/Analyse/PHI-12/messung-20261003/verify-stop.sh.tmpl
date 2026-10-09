@@ -1,0 +1,16 @@
+date -Is
+cat /tmp/phi12-diag-20261003/finished.txt
+if [ ! -f /root/phi12-diag-20261003/active ]; then echo 'diagnostic hooks inactive'; fi
+ps w | grep '/root/phi12-diag-20261003/' | grep -v grep || true
+echo 'restoration hashes'
+while read -r expected file; do
+ original=/root/phi12-diag-20261003/original/$(basename "$file")
+ old=$(sha256sum "$original" | awk '{print $1}')
+ current=$(sha256sum "$file" | awk '{print $1}')
+ [ "$old" != "$current" ] || echo "original restored: $file"
+done < /root/phi12-diag-20261003/instrumented.sha256
+echo 'remaining measurement probes'
+ps w | grep -E 'ping .* -[iw].*(@@IPV4_025@@|@@IPV4_018@@|@@IPV4_023@@)' | grep -v grep || true
+echo 'retained WAN thresholds'
+uci -q get omr-tracker.wan1.tries
+uci -q get omr-tracker.wan2.tries

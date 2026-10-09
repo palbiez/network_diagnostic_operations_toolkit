@@ -1,0 +1,140 @@
+"""Local telemetry archive cleanup: 10 GB trigger, 20 GB target, 90/60 day stages."""
+from pathlib import Path
+from datetime import datetime,timezone,timedelta,date
+import os,stat,re,json,shutil,fcntl,subprocess,urllib.request,urllib.parse,tomllib,time
+
+TRIGGER=10_000_000_000
+TARGET=20_000_000_000
+STATE=Path('/var/lib/network-archive-maintenance/status.json')
+METRICS=Path('/var/lib/node_exporter/textfile_collector/network_archive.prom')
+OPENER=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+def stages(free,latched=False):
+    return [90,60] if free<TRIGGER or (latched and free<TARGET) else []
+
+def file_day(p,now):
+    # Named dates plus mtime: retain files modified recently even if their name is old.
+    dates=[]
+    for part in p.parts:
+        m=re.fullmatch(r'(\d{4})[-.](\d{2})[-.](\d{2})(?:-syslog\.log(?:\.gz)?|\.jsonl(?:\.gz)?)?',part)
+        if m:
+            try:dates.append(date(*map(int,m.groups())))
+            except ValueError:return None
+    modified=datetime.fromtimestamp(p.stat().st_mtime,timezone.utc).date()
+    return max(dates+[modified]) if dates else modified
+
+def open_inodes():
+    found=set()
+    for proc in Path('/proc').glob('[0-9]*/fd'):
+        try:fds=list(proc.iterdir())
+        except OSError:continue
+        for fd in fds:
+            try:s=fd.stat();found.add((s.st_dev,s.st_ino))
+            except OSError:pass
+    return found
+
+def candidates(now,days,root=Path('/var/log')):
+    cutoff=now.date()-timedelta(days=days);opened=open_inodes()
+    # All closed historical text archives under /var/log, including legacy layouts.
+    # Journal binary files are handled by journalctl, never by unlink.
+    for parent,dirs,files in os.walk(root,followlinks=False):
+        dirs[:]=[d for d in dirs if d!='journal' and not (Path(parent)/d).is_symlink()]
+        for name in files:
+            p=Path(parent)/name
+            try:
+                s=p.lstat()
+                if not stat.S_ISREG(s.st_mode) or s.st_dev!=root.stat().st_dev:continue
+                if (s.st_dev,s.st_ino) in opened:continue
+                day=file_day(p,now)
+                if day is not None and day<cutoff:yield p,s
+            except (OSError,ValueError):continue
+
+def api(url,body=None,headers=None,method=None):
+    req=urllib.request.Request(url,headers=headers or {},data=json.dumps(body).encode() if body is not None else None,method=method)
+    with OPENER.open(req,timeout=30) as response:
+        content=response.read()
+        return json.loads(content) if content else None
+
+def databases(cutoff,report):
+    # Use supported Influx APIs. Never print credentials or edit live database files.
+    configs=tomllib.loads(Path('/root/.influxdbv2/configs').read_text())
+    creds=[Path('/root/superuser_influx').read_text().strip()]+[v.get('token','') for v in configs.values()]
+    for credential in creds:
+        headers={'Authorization':'Token '+credential,'Content-Type':'application/json'}
+        try:buckets=api('http://127.0.0.1:8086/api/v2/buckets',headers=headers)['buckets'];break
+        except Exception:continue
+    else:raise RuntimeError('Influx retention API credential unavailable')
+    for bucket in buckets:
+        if bucket['name'].startswith('_'):continue
+        query=urllib.parse.urlencode({'orgID':bucket['orgID'],'bucket':bucket['id']})
+        api('http://127.0.0.1:8086/api/v2/delete?'+query,{'start':'1970-01-01T00:00:00Z','stop':cutoff.isoformat().replace('+00:00','Z')},headers)
+        report['influxBuckets'].append(bucket['name'])
+    # Loki deletion is asynchronous: requests target every non-empty stream label.
+    labels=api('http://127.0.0.1:3100/loki/api/v1/labels')['data']
+    prior=api('http://127.0.0.1:3100/loki/api/v1/delete') or []
+    end=str(int(cutoff.timestamp()))
+    def request_end(request):
+        value=float(request.get('end_time',0))
+        while value>100_000_000_000:value/=1000
+        return value
+    for label in labels:
+        if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*',label):continue
+        query='{'+label+'=~".+"}'
+        if any(r.get('query')==query and request_end(r)>=int(end) for r in prior):continue
+        params=urllib.parse.urlencode({'query':query,'start':'1','end':end})
+        api('http://127.0.0.1:3100/loki/api/v1/delete?'+params,method='POST')
+        report['lokiRequests']+=1
+
+def perform(now,days,report):
+    deleted=0
+    for p,old in candidates(now,days):
+        # Recheck immediately before deletion; opened or modified archives stay protected.
+        try:
+            new=p.lstat()
+            if (new.st_dev,new.st_ino,new.st_size,new.st_mtime_ns)!=(old.st_dev,old.st_ino,old.st_size,old.st_mtime_ns):continue
+            if (new.st_dev,new.st_ino) in open_inodes():continue
+            p.unlink();deleted+=new.st_size;report['deletedFiles']+=1
+        except FileNotFoundError:continue
+    report['deletedBytes']+=deleted
+    done=subprocess.run(['journalctl','--vacuum-time='+str(days)+'d'],capture_output=True,text=True)
+    if done.returncode:report['errors'].append('journal vacuum failed')
+    try:databases(now-timedelta(days=days),report)
+    except Exception as e:report['errors'].append('database cleanup: '+type(e).__name__)
+
+def save(report):
+    STATE.parent.mkdir(parents=True,exist_ok=True)
+    temporary=STATE.with_suffix('.tmp');temporary.write_text(json.dumps(report,indent=2)+'\n');temporary.replace(STATE)
+    METRICS.parent.mkdir(parents=True,exist_ok=True)
+    metrics={
+        'network_archive_last_run_timestamp_seconds':time.time(),
+        'network_archive_run_success':int(not report['errors']),
+        'network_archive_free_bytes':report['freeAfter'],
+        'network_archive_pressure_active':int(report['pressureActive']),
+        'network_archive_target_unmet':int(report['pressureActive'] and report['freeAfter']<TARGET),
+        'network_archive_deleted_bytes':report['deletedBytes'],
+        'network_archive_deleted_files':report['deletedFiles'],
+        'network_archive_loki_delete_requests':report['lokiRequests']}
+    temp=METRICS.with_suffix('.tmp');temp.write_text(''.join(k+' '+str(v)+'\n' for k,v in metrics.items()));temp.replace(METRICS)
+
+def main():
+    import argparse
+    parser=argparse.ArgumentParser();parser.add_argument('--dry-run',action='store_true');a=parser.parse_args()
+    lock=open('/run/network-archive-maintenance.lock','a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    now=datetime.now(timezone.utc);before=shutil.disk_usage('/var/log').free
+    previous=json.loads(STATE.read_text()) if STATE.exists() else {}
+    report={'time':now.isoformat(),'triggerBytes':TRIGGER,'targetBytes':TARGET,'freeBefore':before,'freeAfter':before,'stages':[],'deletedFiles':0,'deletedBytes':0,'influxBuckets':[],'lokiRequests':0,'errors':[],'pressureActive':False}
+    phases=stages(before,previous.get('pressureActive',False))
+    if a.dry_run:
+        report['mode']='DRY_RUN';report['wouldTrigger']=bool(phases)
+        report['candidates']={str(days):[{'path':str(p),'bytes':s.st_size} for p,s in candidates(now,days)] for days in phases}
+    else:
+        for days in phases:
+            if days==60 and shutil.disk_usage('/var/log').free>=TARGET:break
+            report['stages'].append(days);perform(now,days,report)
+        report['freeAfter']=shutil.disk_usage('/var/log').free
+        report['pressureActive']=bool(phases) and report['freeAfter']<TARGET
+        save(report)
+    print(json.dumps(report,indent=2))
+    if report['errors']:raise SystemExit(1)
+
+if __name__=='__main__':main()

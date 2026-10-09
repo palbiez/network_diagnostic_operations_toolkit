@@ -1,0 +1,7 @@
+hostname
+systemctl is-active syslog-ng rsyslog
+grep -n -E 's_src|d_net|@@IPV4_007@@|include' /etc/syslog-ng/syslog-ng.conf /etc/syslog-ng/conf.d/*.conf 2>/dev/null
+ls -l /var/log
+find /var/log -maxdepth 2 -type f -name '*.log' -printf '%s %p\n' | sort -nr | head -18
+systemctl cat node_exporter prometheus-node-exporter 2>/dev/null
+logger -t CENTRAL-AUDIT 'CENTRAL-AUDIT-20261004-initial-syslog'

@@ -1,0 +1,13 @@
+#!/bin/sh
+uci -q show omr-tracker.wan1
+uci -q show omr-tracker.wan2
+sed -n '1,98p' /etc/init.d/omr-tracker
+for pid in $(pgrep -f '/bin/omr-tracker wan'); do
+ echo "PID=$pid"
+ tr '\0' '\n' < /proc/$pid/environ | grep -E '^OMR_TRACKER_(TRIES|TRIES_UP|INTERFACE|DEVICE|TIMEOUT)='
+done
+ubus call service list '{"name":"omr-tracker"}' > /tmp/phi12-tracker-runtime.json
+cat /tmp/phi12-diag-20261003/init-calls.log
+ls -l /tmp/phi12-diag-20261003/logs
+head -3 /tmp/phi12-diag-20261003/logs/*
+pgrep -P 1 | head -5

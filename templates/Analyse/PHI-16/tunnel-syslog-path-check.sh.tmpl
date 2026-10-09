@@ -1,0 +1,3 @@
+#!/bin/sh
+date -Iseconds
+timeout 10 tcpdump -ni any -c 12 'host @@IPV4_007@@ and tcp port 514'

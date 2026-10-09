@@ -1,0 +1,22 @@
+from pathlib import Path
+import subprocess,socket,shutil
+host=socket.gethostname();paths=[]
+if host=='fileserver2':paths=[('/var/log/samba','log.*',False)]
+elif host=='pve':paths=[('/var/log/pve/tasks','UPID:*',True)]
+else:raise SystemExit('Host does not need extra logfile patterns')
+p=Path('/etc/syslog-ng/conf.d/81-central-extra-logs.conf');b=Path('/root/central-telemetry-backup-20261004')
+if p.exists() and not (b/p.name).exists():shutil.copy2(p,b/p.name)
+sources=[]
+for path,pattern,recursive in paths:
+ sources.append(f'wildcard-file(base-dir("{path}") filename-pattern("{pattern}") recursive({"yes" if recursive else "no"}) flags(no-parse) program-override("filelog") max-files(4096));')
+ backup=b/'extra-log-acls.txt'
+ if not backup.exists():
+  with backup.open('w') as out:subprocess.run(['getfacl','-R','--absolute-names',path],stdout=out,check=True)
+  backup.chmod(0o600)
+ subprocess.run(['setfacl','-R','-m','u:root:rX',path],check=True)
+ subprocess.run(['setfacl','-m','d:u:root:r-x',path],check=True)
+p.write_text('source s_central_extra_files {\n'+'\n'.join(sources)+'\n};\nlog { source(s_central_extra_files); rewrite(r_central_app_path); destination(d_net); flags(flow-control); };\n')
+r=subprocess.run(['syslog-ng','--syntax-only'],capture_output=True,text=True)
+if r.returncode:p.unlink();raise SystemExit(r.stderr)
+subprocess.run(['systemctl','reload','syslog-ng'],check=True)
+print('Additional log patterns enabled',host,paths)

@@ -1,0 +1,108 @@
+#!/bin/sh
+set -u
+umask 077
+B=/root/phi12-diag-20261003
+. "$B/settings"
+now=$(date +%s)
+if [ "${TEST_MODE:-0}" = 1 ]; then START_EPOCH=$now; END_EPOCH=$((now+30)); fi
+[ "$now" -ge "$START_EPOCH" ] && [ "$now" -lt "$END_EPOCH" ] || exit 0
+D=/tmp/phi12-diag-20261003
+mkdir "$B/run.lock" 2>/dev/null || exit 0
+mkdir -p "$D/queue" "$D/snapshots" "$D/logs"
+touch "$B/active"
+printf 'utc,event,details\n' > "$D/events.csv"
+printf 'utc,package,sha256\n' > "$D/config-hashes.csv"
+date -Is > "$D/started.txt"
+pids=''
+cleanup() {
+ trap - EXIT INT TERM HUP
+ kill_tree() {
+  for ch in $(pgrep -P "$1" 2>/dev/null); do kill_tree "$ch"; done
+  kill -TERM "$1" 2>/dev/null || true
+ }
+ for p in $pids; do
+  [ "$(awk '/^PPid:/ {print $2}' "/proc/$p/status" 2>/dev/null)" = "$$" ] || continue
+  kill_tree "$p"
+ done
+ for p in $pids; do wait "$p" 2>/dev/null || true; done
+ if [ "${TEST_MODE:-0}" = 1 ]; then
+  rm -f "$B/active"; rmdir "$B/run.lock"
+ else
+  sh "$B/restore.sh" >> "$D/restore.log" 2>&1
+ fi
+ date -Is > "$D/finished.txt"
+}
+trap cleanup EXIT
+trap 'exit 0' INT TERM HUP
+(
+ while [ "$(date +%s)" -lt "$END_EPOCH" ]; do
+  logread -f -l 1 2>> "$D/logread-errors.log" | awk -v d="$D/logs" '
+  /omr-tracker|post-tracking|omr-schedule|firewall.omr-server|omr-bypass|procd|dnsmasq|unbound|phi12-init/ {
+    stamp=strftime("%Y%m%d-%H"); file=d "/services-" stamp ".log";
+    if (file!=previous && previous!="") close(previous); print $0 >> file; fflush(file); previous=file;
+  }'
+  printf '%s,logread-reconnect,stream-ended\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$D/events.csv"
+  sleep 2
+ done
+) &
+pids="$pids $!"
+remaining=$((END_EPOCH-now))
+for spec in wan1:@@INTERFACE_002@@ wan2:@@INTERFACE_003@@ tunnel:@@INTERFACE_001@@; do
+ label=${spec%%:*}; dev=${spec#*:}
+ ip route get @@IPV4_025@@ oif "$dev" > "$D/route-$label.txt" 2>&1
+ ping -n -D -O -I "$dev" -i 1 -W 1 -w "$remaining" @@IPV4_025@@ > "$D/ping-$label.log" 2>&1 &
+ pids="$pids $!"
+done
+for target in @@IPV4_022@@ @@IPV4_023@@ @@IPV4_024@@; do
+ ping -n -D -O -i 1 -W 1 -w "$remaining" "$target" > "$D/ping-lan-$target.log" 2>&1 &
+ pids="$pids $!"
+done
+sh "$B/mobile-ping.sh" @@IPV4_017@@ "$END_EPOCH" "$D/ping-mobile-@@IPV4_017@@.log" &
+pids="$pids $!"
+# Gateways and actual tunnel peer distinguish access, Internet and tunnel loss.
+for spec in gw1:@@INTERFACE_002@@:@@IPV4_009@@ gw2:@@INTERFACE_003@@:@@IPV4_010@@ peer:@@INTERFACE_001@@:@@IPV4_002@@; do
+ label=${spec%%:*}; rest=${spec#*:}; dev=${rest%%:*}; target=${rest#*:}
+ ping -n -D -O -I "$dev" -i 1 -W 1 -w "$remaining" "$target" > "$D/ping-$label.log" 2>&1 &
+ pids="$pids $!"
+done
+sh "$B/snapshot.sh" baseline
+previous_pids=''; last_snapshot=$(date +%s); last_periodic=$last_snapshot; last_size=$last_snapshot
+while [ "$(date +%s)" -lt "$END_EPOCH" ] && [ ! -f "$D/stop" ]; do
+ now=$(date +%s); reason=''
+ for c in network firewall dhcp omr-tracker omr-bypass dscp openmptcprouter; do
+  hash=$(sha256sum "/etc/config/$c" 2>/dev/null | awk '{print $1}')
+  old=$(cat "$D/hash-$c" 2>/dev/null)
+  if [ "$hash" != "$old" ]; then
+   printf '%s,%s,%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$c" "$hash" >> "$D/config-hashes.csv"
+   printf '%s\n' "$hash" > "$D/hash-$c"
+   [ "$c" = openmptcprouter ] || reason="$reason config:$c"
+  fi
+ done
+ signature=$({ pidof dnsmasq unbound sslocal mqvpn 2>/dev/null; ubus call service list '{"name":"omr-tracker"}' 2>/dev/null | jsonfilter -e '@["omr-tracker"].instances.*.pid'; } | sort)
+ if [ "$signature" != "$previous_pids" ]; then reason="$reason pid-change"; previous_pids=$signature; fi
+ for f in "$D/queue"/event-*; do
+  [ -f "$f" ] || continue
+  case "$f" in *.tmp) continue;; esac
+  cat "$f" >> "$D/init-calls.log"; printf '\n' >> "$D/init-calls.log"
+  reason="$reason init-call"
+  rm -f "$f"
+ done
+ if [ -n "$reason" ]; then
+  printf '%s,event,%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$reason" >> "$D/events.csv"
+  touch "$D/snapshot-pending"
+ fi
+ if [ -f "$D/snapshot-pending" ] && [ $((now-last_snapshot)) -ge 10 ]; then
+  sh "$B/snapshot.sh" "event:$reason"; rm -f "$D/snapshot-pending"; last_snapshot=$(date +%s)
+ fi
+ if [ $((now-last_periodic)) -ge 300 ]; then
+  sh "$B/snapshot.sh" periodic; last_periodic=$(date +%s); last_snapshot=$last_periodic
+ fi
+ if [ $((now-last_size)) -ge 60 ]; then
+  size=$(du -sk "$D" | awk '{print $1}'); free=$(df -k /tmp | awk 'NR==2 {print $4}')
+  if [ "$size" -gt 1048576 ] || [ "$free" -lt 1048576 ]; then
+   printf '%s,storage-limit,%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$size" >> "$D/events.csv"; break
+  fi
+  last_size=$now
+ fi
+ sleep 2
+done

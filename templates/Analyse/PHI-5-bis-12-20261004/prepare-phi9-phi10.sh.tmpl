@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+backup=/root/phi9-phi10-20261004
+[ ! -e "$backup/installed" ] || { echo 'Already prepared'; exit 0; }
+[ "$(sha256sum /etc/init.d/omr-dscp | cut -d ' ' -f1)" = "371e15a51e84fa22ea00352a85a447888f1b5bee022403ade929bb5903ce4174" ]
+[ "$(sha256sum /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft | cut -d ' ' -f1)" = "16aee9c617f4b657ff5a1c31c383bb06a40839a9fee56fb9fe1fa21f6c713311" ]
+[ "$(sha256sum /etc/hotplug.d/iface/99-gaming-policy | cut -d ' ' -f1)" = "fe102745253693e17f369c764c0f8f49e5d6d1372cec0e582dc58abd81cf6632" ]
+sh -n /tmp/phi10-omr-dscp.proposed
+mkdir -p "$backup"; chmod 700 "$backup"
+cp -p /etc/init.d/omr-dscp "$backup/omr-dscp.before"
+cp -p /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft "$backup/gaming-nft.before"
+cp -p /etc/hotplug.d/iface/99-gaming-policy "$backup/gaming-hotplug.before"
+cp /tmp/phi10-omr-dscp.proposed /etc/init.d/omr-dscp.new
+chmod 755 /etc/init.d/omr-dscp.new
+mv /etc/init.d/omr-dscp.new /etc/init.d/omr-dscp
+printf '%s\n' '# Disabled 2026-10-04: OMR-Bypass UCI is the authoritative per-device policy.' '# Original saved in /root/phi9-phi10-20261004/gaming-nft.before.' > /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft
+printf '%s\n' '#!/bin/sh' '# Disabled 2026-10-04: standard OMR trackers own WAN routing tables.' 'exit 0' > /etc/hotplug.d/iface/99-gaming-policy
+printf '%s\n' 'Manual reboot required to regenerate DSCP rules and remove old active gaming rules.' > "$backup/installed"
+sha256sum /etc/init.d/omr-dscp /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft /etc/hotplug.d/iface/99-gaming-policy

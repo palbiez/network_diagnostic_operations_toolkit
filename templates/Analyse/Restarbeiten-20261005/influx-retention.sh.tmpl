@@ -1,0 +1,7 @@
+date -Iseconds
+influx version
+# No credentials or CLI configuration output; query only retention metadata.
+influx -execute 'SHOW DATABASES' -format json
+influx -execute 'SHOW RETENTION POLICIES ON telegraf' -format json
+systemctl show influxdb -p ExecStart
+journalctl -u prometheus --no-pager -n 100 | grep -Ei 'retention|storage|TSDB' || true

@@ -1,0 +1,32 @@
+from pathlib import Path
+import json
+root=Path(__file__).resolve().parents[2]
+heading='\n\n## Live-Zwischenbefund: Gaming-Ausfälle am 02.10.2026\n\n'
+summary='''Auswertung der laufenden Messungen bis 21:49 Uhr Berlin. Nutzer meldet Spiel-/Voiceprobleme um 20:44, 21:10, 21:14, 21:25, 21:41 und 21:44; bestätigt keine angewendeten Einstellungen zu diesen Zeiten.
+
+Fünf der sechs Minuten korrelieren mit Firewall-Neuladungen und DNS-Neustarts, gefolgt von nachgeladenen Shadowsocks-Regeln. In den ±90-Sekunden-Fenstern sind Gateway-/Internet-/VPS-/Tunnelproben unauffällig; WAN-Carrier und Fehlerzähler zeigen keine Linkunterbrechung. MQVPN bleibt PID 22654. Kausalität noch nicht bewiesen; genaue Reihenfolge wegen minutengenauer Nutzerzeiten offen. Für 21:44 keine entsprechende Neuladung genau in dieser Minute gefunden.
+
+DHCP-/Nachbartabelle: @@MAC_001@@ = @@IPV4_015@@, überwiegend WAN2; @@MAC_002@@ = @@IPV4_016@@, überwiegend WAN1 mit einzelnen WAN2-Verbindungen. Tatsächliche WAN-Pakete und UDP-Tupel bestätigen die verschiedenen Wege. Keine automatisch daraus abgeleitete Zuordnung zu einzelnen Voice-/Spielkanälen.
+
+Der automatische Auslöser der Neuladungen ist offen. Minutenweiser OMR-Scheduler mit Interface-Listenänderungen bei restrict_to_lan=1 ist ein Kandidat; Domain-Refresh ist bei fehlendem reload_rules_hour auf 02:00 voreingestellt und erklärt die Abendzeiten nicht pauschal. Ergänzter endlicher, lesender Konfigurationsdatei-Monitor speichert bei Prüfsummenänderung nur Zeit und Konfigurationspaketname bis 01:00; geprüftes ubus-Abonnement durch Dateivergleich ersetzt, weil procd die Änderungen intern erhält. Keine Firewall-/Routingänderung oder Dienstneustart vorgenommen.
+
+Gamingmessung läuft bis 00:00; application und Netzwerk-/Clientvergleich bis 01:00. Ausführlicher Befund als beigefügte Datei `abend-zwischenbefund-2026-10-02-2149.md`. Lokale Nachweise: `Analyse/PHI-12/evening-interim-summary.json` und `abend-zwischenbefund-2026-10-02-2149.md`; Roharchiv bleibt lokal. Nächster Schritt: verantwortlichen Aufrufer und konkrete Auswirkung auf Spielverbindungen nachweisen, danach gezielt korrigieren.
+'''
+for relative in ['Analyse/PHI-12/diagnoseplan-2026-10-02.md','Linear/issues/PHI-9.md','Linear/issues/PHI-6.md']:
+ path=root/relative
+ original=path.read_text(encoding='utf-8').split(heading)[0]
+ path.write_text(original.rstrip()+heading+summary,encoding='utf-8')
+path=root/'Linear/issues/PHI-6.json'
+fields=json.loads(path.read_text(encoding='utf-8'))
+fields['stateId']='@@IDENTIFIER_002@@'
+path.write_text(json.dumps(fields,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+path=root/'Linear/work-packages.json'
+packages=json.loads(path.read_text(encoding='utf-8'))
+for key,number in [('gaming',9),('measurement',6)]:
+ package=next(p for p in packages if p['key']==key)
+ package['description']=(root/f'Linear/issues/PHI-{number}.md').read_text(encoding='utf-8')
+ if key=='measurement':package['state']='In Progress'
+ source='Analyse/PHI-12/abend-zwischenbefund-2026-10-02-2149.md'
+ if source not in package['sources']:package['sources'].append(source)
+path.write_text(json.dumps(packages,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print('Interim findings documented in PHI-6, PHI-9 and PHI-12 plan.')

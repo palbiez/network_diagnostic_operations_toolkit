@@ -1,0 +1,11 @@
+sudo -n python3 - <<'PY'
+import json,re
+from pathlib import Path
+flows=json.loads(Path('/addon_configs/a0d7b954_nodered/flows.json').read_text())
+for n in flows:
+    func=n.get('func','')
+    if 'mqtt' in func.lower():
+        print({k:n.get(k) for k in ['id','type','name','z']},'mqtt.connect' in func,'password' in func,'@@IPV4_007@@' in func)
+        print('libraries',n.get('libs',[]))
+        print('connectLines',[(i+1,l.strip().split('(')[0]) for i,l in enumerate(func.splitlines()) if 'connect(' in l])
+PY

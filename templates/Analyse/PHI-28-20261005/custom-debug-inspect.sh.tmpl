@@ -1,0 +1,12 @@
+sudo -n python3 - <<'PY'
+from pathlib import Path
+import re,json
+root=Path('/homeassistant/custom_components')
+for p in root.rglob('*.py'):
+    for i,l in enumerate(p.read_text(errors='replace').splitlines(),1):
+        if re.search(r'set_debug\(|asyncio.*debug|PYTHONASYNCIODEBUG',l):print(str(p),i,l.strip())
+p=Path('/homeassistant/.storage/core.config')
+d=json.loads(p.read_text())['data'];print('core config debug',d.get('debug'))
+PY
+sudo -n docker stats --no-stream --format '{{.Name}} {{.MemUsage}}'
+sudo -n docker logs --tail 10 homeassistant 2>&1

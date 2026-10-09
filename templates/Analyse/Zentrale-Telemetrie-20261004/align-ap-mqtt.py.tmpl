@@ -1,0 +1,14 @@
+import sys,json,shlex
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+from central_observability import connect,run,OUT,SECRETS
+c=connect('@@IPV4_008@@')
+try:
+ _,o,e=c.exec_command("uci -q get 'luci_statistics.@collectd_mqtt_block[0].Password'")
+ secret=o.read().decode().strip();assert secret;SECRETS.append(secret)
+finally:c.close()
+for ip in ['@@IPV4_084@@','@@IPV4_085@@']:
+ cmd='uci set '+shlex.quote('luci_statistics.@collectd_mqtt_block[0].Password='+secret)+'\nuci commit luci_statistics\n/etc/init.d/luci_statistics restart\nsleep 2\n/etc/init.d/collectd status'
+ r=run(ip,cmd)
+ (OUT/(ip+'-mqtt-auth-repair.json')).write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

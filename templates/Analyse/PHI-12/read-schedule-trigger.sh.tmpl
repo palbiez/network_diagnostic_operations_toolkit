@@ -1,0 +1,7 @@
+#!/bin/sh
+echo 'SCHEDULE SERVICES FIRST HALF'
+sed -n '1,370p' /usr/share/omr/schedule.d/010-services
+echo 'GLOBAL BYPASS REFRESH VALUES'
+for key in reload_rules_hour reload_rules_lc reload_rules_lastday; do printf '%s=' "$key"; uci -q get "omr-bypass.global.$key" || true; done
+echo 'OTHER SCHEDULE FIREWALL CALLS'
+grep -nE 'firewall|dnsmasq|omr-bypass' /usr/share/omr/schedule.d/* /etc/hotplug.d/firewall/* 2>/dev/null || true

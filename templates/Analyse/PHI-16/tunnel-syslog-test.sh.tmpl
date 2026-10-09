@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+date -Iseconds
+logger -p user.notice -t PHI-16 'PHI-16-VPS-TUNNEL-SYSLOG-20261002T194740Z source=omr-vps-01 destination=@@IPV4_007@@:514 transport=MQVPN'
+ss -ntp dst @@IPV4_007@@:514
+systemctl is-enabled omr-syslog-route.timer
+systemctl is-active omr-syslog-route.timer
+systemctl show omr-syslog-route.service -p Result -p ExecMainStatus
+systemctl show mqvpn -p MainPID
+ip -4 route get @@IPV4_007@@

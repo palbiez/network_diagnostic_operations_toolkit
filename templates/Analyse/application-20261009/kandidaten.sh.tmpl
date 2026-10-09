@@ -1,0 +1,13 @@
+date -Iseconds
+printf '\n--- DNS configuration ---\n'
+grep -hEi 'application|rtl|streamabc|audalaxy' /var/etc/dnsmasq.conf.* 2>/dev/null
+printf '\n--- candidate membership ---\n'
+for addr in @@IPV4_056@@ @@IPV4_057@@ @@IPV4_058@@ @@IPV4_059@@ @@IPV4_060@@ @@IPV4_061@@ @@IPV4_062@@ @@IPV4_063@@ @@IPV4_064@@ @@IPV4_065@@ @@IPV4_066@@ @@IPV4_067@@ @@IPV4_068@@; do
+  echo "IP $addr"
+  for name in omr_dst_bypass_@@INTERFACE_015@@ omr_dst_bypass_@@INTERFACE_016@@; do
+    if nft get element inet fw4 "$name" "{ $addr }" >/dev/null 2>&1; then echo "MEMBER $name"; else echo "ABSENT $name"; fi
+  done
+done
+printf '\n--- client candidate connections ---\n'
+grep 'src=@@IPV4_054@@ ' /proc/net/nf_conntrack | grep -E 'dst=(18\.198\.30\.17|18\.197\.26\.6|3\.68\.14\.38|89\.163\.@@VLAN_003@@\.159|64\.226\.102\.62|157\.90\.217\.38|146\.75\.122\.208|18\.198\.86\.56|18\.67\.13\.@@VLAN_003@@|108\.138\.36\.113|18\.66\.192\.29|20\.31\.162\.72|51\.116\.145\.32) '
+true

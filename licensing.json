@@ -1,0 +1,2761 @@
+{
+  "default_license": "GPL-2.0-or-later",
+  "copyright_holder": "palbiez",
+  "files": {
+    ".gitattributes": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    ".gitignore": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "LICENSING.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "README.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "THIRD_PARTY_NOTICES.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/ACCESS-POINT-MIGRATION.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/BACKUP-AND-RECOVERY.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/CATALOG.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/DIAGNOSTICS.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/ISSUE-SYNC.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/PATCHES.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/PUBLICATION.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/TELEMETRY.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/TEMPLATES.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/TROUBLESHOOTING.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "docs/VERIFICATION.md": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "examples/parameters.example.json": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "licensing.json": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "manifest.json": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "scripts/diagnostics/client-monitor.ps1": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "scripts/diagnostics/compare.py": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "scripts/diagnostics/device-monitor.sh": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "scripts/diagnostics/router-monitor.sh": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "scripts/diagnostics/vps-probes.py": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-11/create-backup.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-11/document-result.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-11/inspect-additional.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-11/inspect-backup.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-11/inspect-customizations.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-11/verify-backups.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-11/verify-live-after.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/analyze-daytime.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/analyze-evening-interim.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/build-diag-instrumentation.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/change-minecraft-ip-20261003.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/check-playstation-lan.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/check-playstation-running.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/check-probe-processes-20261003.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/check-reload-sources.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/check-router-connectivity-20261003.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/check-rules-20261003.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/collect-daytime.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/collect-evening-interim.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/collect-switch-readonly.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/document-connectivity-check-20261003.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/document-evening-interim.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/document-lan-extension.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/document-measurement-20261003.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/document-minecraft-ip-correction.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/document-minecraft-switch-port.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/document-result.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/document-sodola-link.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/document-switch-live.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/document-switch-login-result.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/finalize-evening.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/github-servertracker-20261003/preflight.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/github-servertracker-20261003/router-backup/rollback.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/github-servertracker-20261003/servertracker-upstream.sh.tmpl": {
+      "license": "GPL-3.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "OVH and the OverTheBox contributors",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-tracker",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Analyse/PHI-12/github-servertracker-20261003/services-upstream.sh.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-schedule",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Analyse/PHI-12/inspect-application.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/inspect-capabilities.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/inspect-mac-wan.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/inspect-measurement-detail.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/inspect-playstation.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/inspect-switch-login.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/inspect-tracker-20261003.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/inspect-wan-rules.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/install-config-events.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/install-evening.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/messung-20261003/010-services-current.sh.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-schedule",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Analyse/PHI-12/messung-20261003/find-config-writers.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/messung-20261003/omr-tracker-server-current.sh.tmpl": {
+      "license": "GPL-3.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "OVH and the OverTheBox contributors",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-tracker",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Analyse/PHI-12/messung-20261003/omr-tracker-ss-current.sh.tmpl": {
+      "license": "GPL-3.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "OVH and the OverTheBox contributors",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-tracker",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Analyse/PHI-12/messung-20261003/read-ifnames-staging.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/messung-20261003/read-server-state.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/messung-20261003/read-server-trigger.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/messung-20261003/repair-minecraft-probe.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/messung-20261003/reproduce-server-restart.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/messung-20261003/status-source-read.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/messung-20261003/stop-measurement.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/messung-20261003/verify-stop.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/paired-router-test.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/read-bypass-schedule.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/read-reload-code.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/read-schedule-network.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/read-schedule-trigger.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/read-switch-authenticated.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/read-switch-management.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/replace-config-observer.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/smoke-router.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/start-application-egress.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/start-playstation-1h.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/start-playstation-lan-probes.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/start-router-with-application.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/summarize-diagnosis.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/summarize-switch-readonly.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/test-application.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/test-egress-filter.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/test-egress-fixture.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/test-evening.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/test-switch-credentials-v2.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/test-switch-credentials.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/test-tplink-old-router.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/upstream-pr335-20261006/326.patch.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "pylaterreur (upstream pull-request author)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-schedule",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Analyse/PHI-12/upstream-pr335-20261006/335.patch.tmpl": {
+      "license": "GPL-3.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "OVH and the OverTheBox contributors",
+        "pylaterreur (upstream pull-request author)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-tracker",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Analyse/PHI-12/verify-config-observer.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-12/verify-threshold-live.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/check-logremote-disabled-server.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/disable-logremote.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/document_logremote_disabled.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/document_result.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/logserver-archive.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/logserver-config-check.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/logserver-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/router-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/router-test.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-final-vps-check.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-install.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-path-check.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-receiver-check.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-receiver-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-reconnect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-router-debug.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-router-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-router-install.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-test.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-verify-receiver.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-vps-debug.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-vps-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-vps-nat-install.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-16/tunnel-syslog-vps-preflight.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/add-logspout.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/capture-mqtt-auth.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/change-verification.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/check-core-api.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/check-logspout.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/client-origin.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/configure-logspout.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/configure-ssh-key.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/connect-functions.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/core-load-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/core-recovery-help.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/core-stop-investigate.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/custom-debug-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/debug-config.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/debugpy-source-and-logs.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/disable-debugpy.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/final-config-and-logs.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/finalize-issue.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/flow-env-summary.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/flow-mqtt-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/frontend-check.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/inspect-admin.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/inspect-mqtt.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/inspect-services.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/install-logspout-app.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/logserver-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/logserver-logspout-verify.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/logspout-install.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/memory-and-restart-nodered.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/memory-snapshot.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/monitor-recovery.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/mosquitto-config.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/mqtt-code.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/mqtt-credentials-check.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/mqtt-runtime-api.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/mqtt-sockets.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/mqtt-summary.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/mqtt-test.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/nodered-runtime.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/oom-memory-evidence.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/other-mqtt-clients.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/prior-outage.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/progress.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/prometheus-final.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/refresh-mqtt-credentials.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/restart-normal-background.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/restart-normal.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/restart-ssh-background.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/runtime2.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/socket-owners.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/start-safe-mode.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/verify-logs-mqtt.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-28-20261005/verify-mqtt-refresh.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-5-bis-12-20261004/omr-dscp.patch.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-dscp",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Analyse/PHI-5-bis-12-20261004/prepare-phi9-phi10.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-5-bis-12-20261004/rollback-phi9-phi10.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/PHI-5-bis-12-20261004/test-dscp-isolated.sh.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-dscp",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Analyse/Restarbeiten-20261005/PHI14-live-mtu-check.proposed.patch.tmpl": {
+      "license": "GPL-3.0-only AND Apache-2.0",
+      "copyright": [
+        "2026 mp0rta and mqvpn contributors",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/mqvpn/tree/ee78205d3db491ca7727b974bda0c91ae1523236",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Analyse/Restarbeiten-20261005/apply-cleanup.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/archive-preflight.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/archive-roundtrip.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/bypass-dscp-owner.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/bypass-dscp-source.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/capabilities.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/cleanup-preflight.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/cleanup-small.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/close-after-reboot.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/deploy-alerts.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/deploy-storage.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/deploy-vlan10.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/dhcp150_test.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/dscp-context.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/dscp-debug.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/dscp-isolated-start.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/extra-check.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/final-router.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/finish-decisions.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/fix-dscp-owner.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/fix-mqvpn-empty-path.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/influx-buckets.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/influx-policy-test.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/influx-retention.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/inspect-mtu-cleanup.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/logserver-detail.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/logserver-final.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/logserver-inventory.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/loki-meta.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/mqvpn-named-path-guard.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/mqvpn-paths.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/mtu-setter-search.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/nlbw-mtu-check.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/path-empty-origin.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/path-init-lifecycle.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/post-reboot-detail.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/post-reboot.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/prepare-mtu-guard-patch.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/read-mqvpn-mtu.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/read-omr-mqvpn-patches.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/read-upstream.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/reboot-final.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/reboot-lan-check.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/reboot-router-last.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/reboot-services.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/retention-metadata.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/retention-plan.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/rollback-dscp-owner.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/rollback-mqvpn-named-path.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/rollback-small.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/rollback-vlan10.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/router-audit.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/router-sources.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/run-dhcp-test.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/run-retention-plan.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/run.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/storage-final.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/storage-metrics-fix.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/storage-pressure-test.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/storage-pressure.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/storage-verify.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/update-issues.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/vlan10-apply.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/vlan10-final-check.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/vlan10-guard.nft.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/vlan10-isolated-test.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/vlan10-isolated-trace.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/vlan10-post.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/vlan10-preflight.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Restarbeiten-20261005/vlan10-return-guard.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/align-ap-mqtt.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/ap-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/app-log-forwarding.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/audit.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/configure-archive-maintenance.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/create-ha-issue.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/create_issue.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/deploy.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/extra-app-log-patterns.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/final-check.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/fix-telegraf-influx.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/increase-log-message-limit.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/install-mqtt.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/install-switch-monitor.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/install-tools.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/install-tunnel.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/install-vps-exporter.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/logserver-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/logserver-tools.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/mqtt_archive.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/repair-collectd.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/repair-mqtt-generator.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/repair-prometheus.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/repair-receiver-capacity.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/repair-router.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/repair-syslog-file-acls.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/repair-syslog.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/repair-webshop-log-acls.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/router-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/server-detail.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/switch-inspect.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/switch5-basic.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/switch_monitor.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/verify-core.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/verify-final-telemetry.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/verify-storage.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/Zentrale-Telemetrie-20261004/vps-detail.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/application-20261009/bestand.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/application-20261009/dns-regeltest.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/application-20261009/kandidaten.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/application-20261009/regeln.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/application-20261009/regelpruefung.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/application-20261009/routerlogs-1504/livecheck.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/create_reports.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/mqvpn-logging-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/mqvpn-process-start.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/router-extra.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/router-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/router-verify.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Analyse/vps-inspect.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Bestand/cudy-244-ap-umbau.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Bestand/gaming-policy-hotplug.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Bestand/gaming-source-wan.nft.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Bestand/mqvpn-debuglog.init.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Bestand/ping-diagnose-client.ps1.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Bestand/ping-diagnose-logserver.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Bestand/ping-tunnel-monitor.ps1.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Bestand/vps-mqvpn-24h-monitor.service.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Bestand/vps-mqvpn-24h-monitor.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/010-services.instrumented.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-schedule",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/compare.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/deadline-guard.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/dnsmasq.instrumented.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "2007-2012 OpenWrt.org",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/openwrt/openwrt/blob/0ef832f34e309fd060b1eb6b9aa78e6b4c5d1c77/package/network/services/dnsmasq/files/dnsmasq.init",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/firewall.instrumented.tmpl": {
+      "license": "ISC",
+      "copyright": [
+        "2021 Jo-Philipp Wich",
+        "2026 palbiez"
+      ],
+      "origin": "https://git.openwrt.org/project/firewall4.git",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/install.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/instrumentation.json.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/instrumented.sha256.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/minecraft-end-guard.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/minecraft.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/mobile-ping.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/notify.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/offload.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/omr-bypass.instrumented.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-bypass",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/omr-tracker.instrumented.tmpl": {
+      "license": "GPL-3.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "OVH and the OverTheBox contributors",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-tracker",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/original.sha256.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/ping-supervised.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/restore.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/run.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/schedule-offload.ps1.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/settings.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/snapshot.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/PHI12-20261003/test-compare.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/Start-PHI12-Citrix.ps1.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/central_observability.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi12-application-egress.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi12-application-monitor.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi12-client-monitor.ps1.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi12-config-events.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi12-device-egress.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi12-device-monitor.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi12-evening-client.ps1.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi12-evening-router.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi12-router-monitor.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi12-scope-monitor.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi28_homeassistant.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi5-vps-monitor-wrapper.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Diagnose/phi5-vps-probes.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Dokumentation/erstelle_dokumentation.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Dokumentation/erstelle_telemetrie_discovery.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Linear/erstelle_logserver_retention_issue.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Linear/linear_api.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Linear/linear_sync.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Linear/prepare_work_packages.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Linear/run-sync.ps1.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Linear/tests/test_sync.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Linear/upload_documents.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/010-services.patch.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-schedule",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/010-services.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-schedule",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/build-fix.py.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-schedule",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/build-tests.py.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/install.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/manifest.json.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/omr-tracker-server.patch.tmpl": {
+      "license": "GPL-3.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "OVH and the OverTheBox contributors",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-tracker",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/omr-tracker-server.tmpl": {
+      "license": "GPL-3.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "OVH and the OverTheBox contributors",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-tracker",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/rollback.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/test-functions.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/test-scheduler.sh.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-schedule",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/test-server.sh.tmpl": {
+      "license": "GPL-3.0-only",
+      "copyright": [
+        "Ycarus (Yannick Chabanois)",
+        "OVH and the OverTheBox contributors",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/Ysurac/openmptcprouter-feeds/tree/e23b7e0243d90a47819d75a7b44edcc184d6486c/omr-tracker",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/Skripte/Router-Fixes/PHI12-UCI-Race-20261003/validate-live.sh.tmpl": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "templates/openwrt_patch/400-wifi-mac80211-defer-ap-side-ft-key-upload.patch.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Andrea Covelli",
+        "The Linux/mac80211 contributors",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/openwrt/openwrt/pull/23181",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "templates/openwrt_patch/openwrt-25.12.5-ft/package/kernel/mac80211/patches/subsys/400-wifi-mac80211-defer-ap-side-ft-key-upload-6.18.26.patch.tmpl": {
+      "license": "GPL-2.0-only",
+      "copyright": [
+        "Andrea Covelli",
+        "The Linux/mac80211 contributors",
+        "2026 palbiez"
+      ],
+      "origin": "https://github.com/openwrt/openwrt/pull/23181",
+      "modifications": "Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained."
+    },
+    "tests/test_runner.py": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "tools/prepare_licenses.py": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "tools/run.py": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    },
+    "tools/verify.py": {
+      "license": "GPL-2.0-or-later",
+      "copyright": [
+        "2026 palbiez"
+      ],
+      "origin": "Original toolkit source or documentation"
+    }
+  }
+}

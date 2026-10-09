@@ -1,0 +1,111 @@
+from pathlib import Path
+from datetime import datetime, timezone, timedelta
+from collections import Counter, defaultdict
+import tarfile, re, csv, io, json, hashlib
+
+ROOT=Path(__file__).resolve().parents[2]
+ARCHIVE=ROOT/'Analyse/PHI-12/evening-interim-2149.tar.gz'
+EVENTS=[
+ ('20:44','Kurzer Spielhänger ohne Spielabbruch; PlayStation-Party-Voicechat abgebrochen.'),
+ ('21:10','.@@VLAN_003@@ COD Multiplayer hängt; .139 Warzone aus Spiel geworfen; Voicechat weiter aktiv.'),
+ ('21:14','Nur .139 Warzone aus Spiel geworfen; .@@VLAN_003@@ unbeeinträchtigt.'),
+ ('21:25','Beide in Warzone: Zeitüberschreitung; PlayStation-Voicechat weiter aktiv.'),
+ ('21:41','Beide in Warzone wieder aus Spiel geworfen.'),
+ ('21:44','Nur .139 hängt.'),
+]
+def epoch(clock):
+ return datetime.fromisoformat('2026-10-02T'+clock+':00+02:00').timestamp()
+def utcepoch(stamp):
+ return datetime.fromisoformat(stamp.replace('Z','+00:00')).timestamp()
+def stats(samples):
+ if not samples:return {}
+ return {'responses':len(samples),'max_rtt_ms':max(s['rtt'] for s in samples),'max_response_gap_s':round(max([b['ts']-a['ts'] for a,b in zip(samples,samples[1:])]+[0]),3),
+ 'missing_sequences_between_responses':sum(max(0,b['seq']-a['seq']-1) for a,b in zip(samples,samples[1:])),
+ 'over_100ms':sum(s['rtt']>100 for s in samples)}
+files={}
+with tarfile.open(ARCHIVE) as tar:
+ for m in tar.getmembers():
+  if m.isfile() and not m.name.endswith('.tar.gz'):
+   files[m.name]=tar.extractfile(m).read().decode(errors='replace')
+network='phi12-evening-20261002-network/'
+gaming='phi12-evening-20261002-gaming/'
+chat='phi12-evening-20261002-chat/'
+pings={}
+for name,text in files.items():
+ if name.startswith(network+'ping-'):
+  values=[]
+  for line in text.splitlines():
+   m=re.search(r'^\[([\d.]+)\].*icmp_seq=(\d+).*time[=<]([\d.]+) ms',line)
+   if m:values.append({'ts':float(m[1]),'seq':int(m[2]),'rtt':float(m[3])})
+  pings[Path(name).stem]=values
+paths=list(csv.DictReader(io.StringIO(files[gaming+'paths.csv'])))
+for r in paths:r['epoch']=datetime.strptime(r['utc'],'%Y%m%dT%H%M%SZ').replace(tzinfo=timezone.utc).timestamp()
+nic=list(csv.DictReader(io.StringIO(files[network+'nic.csv'])))
+def nicdelta(start,end):
+ out={}
+ for dev in ['@@INTERFACE_002@@','@@INTERFACE_003@@']:
+  rows=[r for r in nic if r['interface']==dev and start<=utcepoch(r['utc'])<=end]
+  if rows:
+   out[dev]={k:int(rows[-1][k])-int(rows[0][k]) for k in ['carrier_changes','rx_errors','tx_errors','rx_dropped','tx_dropped']}
+   out[dev]['carrier_values']=sorted(set(r['carrier'] for r in rows))
+ return out
+events=[]
+flowtext='\n'.join(t for n,t in files.items() if n.startswith(gaming+'flow-events-') and n.endswith('.log'))
+flow=[]
+for line in flowtext.splitlines():
+ m=re.match(r'\[([\d.]+)\].*\[(NEW|DESTROY)\].*?src=(192\.168\.@@VLAN_005@@\.\d+)',line)
+ if m:flow.append((float(m[1]),m[2],m[3],line))
+for clock,symptom in EVENTS:
+ center=epoch(clock);start=center-90;end=center+90
+ event={'local_time':clock,'symptom_user_report':symptom,'window_seconds_each_side':90,'icmp':{label:stats([r for r in samples if start<=r['ts']<=end]) for label,samples in pings.items()},'nic':nicdelta(start,end),'devices':{}}
+ for dev in ['@@IPV4_015@@','@@IPV4_016@@']:
+  rows=[r for r in paths if r['device']==dev and start<=r['epoch']<=end]
+  tuples=Counter((r['proto'],r['target'],r['destination_port'],r['source_port'],r['path_hint']) for r in rows)
+  event['devices'][dev]={'path_observations':dict(Counter(r['path_hint'] for r in rows)), 'target_observations':dict(Counter(r['proto']+':'+r['target']+':'+r['destination_port'] for r in rows)), 'flow_events':dict(Counter(kind for ts,kind,d,ln in flow if d==dev and start<=ts<=end))}
+ events.append(event)
+services=[];logs=[]
+for name,text in files.items():
+ if name.startswith(network+'snapshots/'):
+  if name.endswith('mqvpn-service.json'):services.append({'name':name,'text':text})
+  if name.endswith('local-syslog.txt'):logs.append((name,text))
+unique_logs=sorted(set(line for name,text in logs for line in text.splitlines()))
+relevant_logs=[line for line in unique_logs if any(s in line.lower() for s in ['firewall reload','reload shadowsocks','started, version','exiting on receipt','dnsmasq[1]: started','network interface','link is down','link is up','conntrack','failed','error','path failed','timeout'])]
+mqvpn_pids=sorted(set(re.findall(r'"pid":\s*(\d+)', '\n'.join(s['text'] for s in services))))
+loss_values=sorted(set(map(int,re.findall(r'dgram_lost=(\d+)', '\n'.join(t for n,t in logs)))))
+result={'archive_sha256':hashlib.sha256(ARCHIVE.read_bytes()).hexdigest(),'collected_local_time':'2026-10-02T21:49:03+02:00','device_map':{'@@IPV4_015@@':'@@MAC_001@@','@@IPV4_016@@':'@@MAC_002@@'},'icmp_entire_interim':{label:stats(samples) for label,samples in pings.items()},'nic_entire_interim':nicdelta(epoch('20:00'),epoch('21:49')),'device_paths_entire_interim':{dev:dict(Counter(r['path_hint'] for r in paths if r['device']==dev)) for dev in ['@@IPV4_015@@','@@IPV4_016@@']},'events':events,'flow_event_count':len(flow),'ip_monitor':files.get(network+'ip-monitor.log',''),'service_snapshot_files':[s['name'] for s in services],'log_snapshot_files':[n for n,t in logs]}
+result['relevant_syslog_lines']=relevant_logs
+result['mqvpn_pids']=mqvpn_pids
+result['mqvpn_loss_counter_values']=loss_values
+wire=[]
+for name,text in files.items():
+ if name.startswith(gaming+'wire-') and name.endswith('.log'):
+  for line in text.splitlines():
+   m=re.match(r'([\d.]+) (\S+)\s+(Out|In)\s+IP ([\d.]+)\.(\d+) > ([\d.]+)\.(\d+): (UDP|tcp)',line)
+   if m:wire.append({'epoch':float(m[1]),'interface':m[2],'direction':m[3],'source':m[4],'sport':m[5],'destination':m[6],'dport':m[7],'proto':m[8].lower()})
+result['gaming_wire_interfaces']=dict(Counter(w['interface']+' '+w['direction'] for w in wire))
+for event in events:
+ center=epoch(event['local_time']);start=center-90;end=center+90
+ mapping=defaultdict(set)
+ for r in paths:
+  if start<=r['epoch']<=end:
+   mapping[(r['proto'],r['reply_destination'],r['nat_port'],r['target'],r['destination_port'])].add(r['device'])
+ counts=defaultdict(Counter)
+ for w in wire:
+  if not start<=w['epoch']<=end:continue
+  key=(w['proto'],w['source'],w['sport'],w['destination'],w['dport']) if w['direction']=='Out' else (w['proto'],w['destination'],w['dport'],w['source'],w['sport'])
+  if len(mapping.get(key,set()))==1:
+   device=next(iter(mapping[key]));counts[device][w['interface']+' '+w['direction']]+=1
+ for device,entry in event['devices'].items():entry['wire_packet_observations']=dict(counts[device])
+reloads=[]
+for line in relevant_logs:
+ if 'Firewall reload' in line:
+  match=re.search(r'Oct\s+2\s+(\d\d:\d\d:\d\d)',line)
+  if match:reloads.append(match[1])
+result['firewall_reload_times_local']=reloads
+result['user_clarification']='Nutzer bestätigt: Zu den gemeldeten Ausfällen keine Einstellungen angewendet.'
+(ROOT/'Analyse/PHI-12/evening-interim-summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print(json.dumps({k:v for k,v in result.items() if k not in ['events','ip_monitor']},ensure_ascii=False,indent=2))
+for e in events:
+ print(e['local_time'], 'PING:',{k:v for k,v in e['icmp'].items() if v.get('missing_sequences_between_responses',0) or v.get('max_response_gap_s',0)>1 or v.get('max_rtt_ms',0)>100},'PATHS:',{d:v['path_observations'] for d,v in e['devices'].items()},'NIC:',e['nic'])
+print('Sample snapshot filenames:',[n for n in files if '/snapshots/0053-' in n][-18:])
+print('Sample flow event:',flowtext[:700])

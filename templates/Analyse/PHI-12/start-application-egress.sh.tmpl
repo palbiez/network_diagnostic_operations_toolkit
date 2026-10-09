@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+sh -n /tmp/phi12-application-monitor.sh
+sh -n /tmp/phi12-application-egress.sh
+# Preserve old logs; only replace the diagnostic logger, not network services.
+touch /tmp/phi12-application-20261002T095306Z/stop
+sleep 3
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+joy=/tmp/phi12-application-wan-$stamp
+# End alongside the original network run, approximately 12:53 Berlin.
+end=@@EPOCH_001@@
+remaining=$((end-$(date +%s)))
+[ "$remaining" -ge 10 ] || { echo 'Original measurement period is over'; exit 1; }
+OUT_DIR="$joy" DURATION="$remaining" nohup sh /tmp/phi12-application-monitor.sh > "$joy-console.txt" 2>&1 < /dev/null &
+joy_pid=$!
+sleep 2
+kill -0 "$joy_pid"
+JOY_DIR="$joy" DURATION="$remaining" nohup sh /tmp/phi12-application-egress.sh > "$joy-egress-console.txt" 2>&1 < /dev/null &
+egress_pid=$!
+sleep 1
+kill -0 "$egress_pid"
+printf 'started_utc=%s\napplication_pid=%s\negress_pid=%s\napplication_dir=%s\nduration_seconds=%s\n' "$stamp" "$joy_pid" "$egress_pid" "$joy" "$remaining"
+cat "$joy/known-targets.txt"

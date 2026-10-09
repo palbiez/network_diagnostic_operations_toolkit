@@ -1,0 +1,60 @@
+date -Iseconds
+printf '\n--- bypass configuration ---\n'
+uci -q show omr-bypass
+printf '\n--- generated DNS ---\n'
+grep -h 'nftset=' /var/etc/dnsmasq.conf.*
+printf '\n--- set membership ---\n'
+echo IP @@IPV4_069@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_069@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_069@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_070@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_070@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_070@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_071@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_071@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_071@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_072@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_072@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_072@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_073@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_073@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_073@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_056@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_056@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_056@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_074@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_074@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_074@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_075@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_075@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_075@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_076@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_076@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_076@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_077@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_077@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_077@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_078@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_078@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_078@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_079@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_079@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_079@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_080@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_080@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_080@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_068@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_068@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_068@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_081@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_081@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_081@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_082@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_082@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_082@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+echo IP @@IPV4_083@@
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_015@@ "{ @@IPV4_083@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_015@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_015@@; fi
+if nft get element inet fw4 omr_dst_bypass_@@INTERFACE_016@@ "{ @@IPV4_083@@ }" >/dev/null 2>&1; then echo MEMBER omr_dst_bypass_@@INTERFACE_016@@; else echo ABSENT omr_dst_bypass_@@INTERFACE_016@@; fi
+printf '\n--- conntrack ---\n'
+grep 'src=@@IPV4_054@@ ' /proc/net/nf_conntrack
+true

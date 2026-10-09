@@ -1,0 +1,9 @@
+sudo -n docker logs --tail 18 app_df2164f9_ps5_mqtt 2>&1
+sudo -n docker exec app_df2164f9_ps5_mqtt sh -c 'grep -R -l nodered /app/ps5-mqtt/server/dist /data 2>/dev/null; cat /proc/net/tcp | grep :075B'
+sudo -n docker exec homeassistant sh -c 'cat /proc/net/tcp | grep :075B'
+sudo -n python3 - <<'PY'
+from pathlib import Path
+import json
+entries=json.loads(Path('/homeassistant/.storage/core.config_entries').read_text())['data']['entries']
+print('domains',sorted(set(e['domain'] for e in entries)))
+PY

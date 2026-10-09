@@ -1,0 +1,9 @@
+from pathlib import Path
+import json
+root=Path(__file__).resolve().parents[2]
+p=root/'Linear/issues/PHI-28.json'
+d=json.loads(p.read_text(encoding='utf-8')); d['stateId']='@@IDENTIFIER_002@@'
+p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+p=root/'Linear/issues/PHI-28.md'
+with p.open('a',encoding='utf-8') as f:
+    f.write(@@PYTHON_STRING_043@@)

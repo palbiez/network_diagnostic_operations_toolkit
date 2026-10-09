@@ -1,0 +1,17 @@
+hostname; date -Is
+printf '\nSERVICE\n'
+systemctl is-active rsyslog
+printf '\nLISTENER\n'
+ss -lntp | grep ':514 '
+printf '\nROUTER CONNECTION\n'
+ss -ntp | grep '@@IPV4_008@@:'
+printf '\nFILE\n'
+stat /var/log/network/@@IPV4_008@@/2026-10-02-syslog.log
+printf '\nPHI-16-SYSLOG-20261002T083000Z\n'
+grep -F 'PHI-16-SYSLOG-20261002T083000Z' /var/log/network/@@IPV4_008@@/2026-10-02-syslog.log
+printf '\nCONFIG FILES\n'
+ls -l /etc/rsyslog.d/ /etc/logrotate.d/
+printf '\nSYSLOG ROUTING\n'
+grep -RInE 'imtcp|imudp|port=.*514|network/|fromhost-ip|DynaFile|omfile|stop|template' /etc/rsyslog.conf /etc/rsyslog.d/ 2>/dev/null
+printf '\nLOG STORAGE\n'
+df -h /var/log/network

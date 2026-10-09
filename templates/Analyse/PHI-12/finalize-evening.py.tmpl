@@ -1,0 +1,42 @@
+from pathlib import Path
+import hashlib
+import json
+import shutil
+
+root = Path(__file__).resolve().parents[2]
+report_path = 'Analyse/PHI-12/tagesauswertung-und-abendmessung-2026-10-02.md'
+report = (root / report_path).read_text(encoding='utf-8')
+source = root / 'Skripte/Diagnose/phi12-client-20261002T093502Z'
+dest = root / 'Logs/Router-und-Client/PHI12-Tag-20261002' / source.name
+shutil.copytree(source, dest, dirs_exist_ok=True)
+hashes = {}
+for path in source.rglob('*'):
+    if path.is_file():
+        relative = path.relative_to(source)
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        assert hashlib.sha256((dest / relative).read_bytes()).hexdigest() == digest
+        hashes[str(relative)] = digest
+(dest.parent / 'sha256-manifest.json').write_text(json.dumps(hashes, indent=2) + '\n', encoding='utf-8')
+day = json.loads((root / 'Analyse/PHI-12/daytime-summary.json').read_text(encoding='utf-8'))
+client = json.loads((root / 'Analyse/PHI-12/citrix-daytime-summary.json').read_text(encoding='utf-8'))
+result = {
+    'date': '2026-10-02', 'timezone': 'Europe/Berlin', 'status': 'scheduled_not_started',
+    'report': report_path, 'router_daytime': day, 'windows_daytime': client,
+    'gaming_wire_1310_1320': {'@@INTERFACE_003@@_out': 577, '@@INTERFACE_003@@_in': 385, '@@INTERFACE_002@@_observed': 0, '@@INTERFACE_001@@_observed': 0, 'coverage': 'sampled_exact_post_nat_tuples'},
+    'schedule': {'gaming_ipv4_scope': '@@IPV4_006@@/24', 'gaming_start': '2026-10-02T20:00:00+02:00', 'gaming_end': '2026-10-03T00:00:00+02:00', 'application_device': '@@IPV4_026@@', 'application_end': '2026-10-03T01:00:00+02:00', 'network_client_end': '2026-10-03T01:00:00+02:00'},
+    'limitations': ['No observed chat use yet.', 'No causal Citrix outage diagnosis yet.', 'Router daytime measurement ended before gaming session.', 'IPv6 not covered.', 'Physical WAN capture is sampled.', 'Windows must remain awake and user logged in.'],
+}
+(root / 'Analyse/PHI-12/tagesauswertung-und-abendmessung-2026-10-02.json').write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+heading = '\n\n## Tagesauswertung und eingerichtete Abendmessung\n\n'
+for target in ['Analyse/PHI-12/diagnoseplan-2026-10-02.md', 'Linear/issues/PHI-9.md']:
+    p = root / target
+    text = p.read_text(encoding='utf-8').split(heading)[0]
+    p.write_text(text.rstrip() + heading + report + '\n', encoding='utf-8')
+p = root / 'Linear/work-packages.json'
+packages = json.loads(p.read_text(encoding='utf-8'))
+package = next(x for x in packages if x['key'] == 'gaming')
+package['description'] = (root / 'Linear/issues/PHI-9.md').read_text(encoding='utf-8')
+if report_path not in package['sources']:
+    package['sources'].append(report_path)
+p.write_text(json.dumps(packages, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+print(f'Documented report and JSON; verified {len(hashes)} original Windows files in local backup.')

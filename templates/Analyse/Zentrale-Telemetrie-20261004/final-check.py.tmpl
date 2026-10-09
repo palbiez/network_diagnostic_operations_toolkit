@@ -1,0 +1,50 @@
+import sys,json,time,concurrent.futures,collections
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+from central_observability import run,OUT
+marker='CENTRAL-FINAL-20261004-'+str(int(time.time()))
+ips=['@@IPV4_008@@','@@IPV4_022@@','@@IPV4_086@@','@@IPV4_033@@','@@IPV4_007@@','@@IPV4_087@@','@@IPV4_088@@','@@IPV4_084@@','@@IPV4_085@@','@@IPV4_012@@:65222','@@IPV4_089@@']
+cmd='logger -t CENTRAL-FINAL '+marker+'\ndate -u +%s\nuptime\nif command -v uci >/dev/null; then /etc/init.d/collectd status; /etc/init.d/collectd enabled; /etc/init.d/luci_statistics enabled; else systemctl is-active syslog-ng rsyslog node_exporter prometheus-node-exporter 2>/dev/null; fi'
+results=[]
+with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+ for r in pool.map(lambda ip:run(ip,cmd),ips):results.append(r);print(r['host'],r['output'].splitlines()[:3])
+(OUT/'final-sender-services.json').write_text(json.dumps({'marker':marker,'hosts':results},indent=2),encoding='utf-8')
+script='''python3 - <<'PY'
+from pathlib import Path
+import collections,json,urllib.request,urllib.parse,time
+marker='MARKER'
+found=[];app=[]
+for p in Path('/var/log/network').glob('*/2026-10-04-syslog.log'):
+    seen=False;appdirs=set()
+    with p.open(errors='replace') as f:
+        for l in f:
+            if marker in l:seen=True
+            if 'CENTRAL-APPFILE-20261004-ACL-VERIFIED' in l:
+                appdirs.add(l.split('dir=',1)[-1].strip())
+    if seen:found.append(p.parent.name)
+    if appdirs:app.append((p.parent.name,sorted(appdirs)))
+print('FRESH_SYSLOG_MARKER_HOSTS',sorted(found),'COUNT',len(found))
+print('APPLICATION_FILE_MARKERS',app)
+op=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+for q in ['up','network_switch_up','node_textfile_scrape_error']:
+    d=json.load(op.open('http://127.0.0.1:9090/api/v1/query?query='+urllib.parse.quote(q),timeout=10))
+    print('PROM',q,[(r['metric'],r['value'][1]) for r in d['data']['result']])
+for host in ['OpenMPTCProuter','WR1300v3','wr1300ap']:
+    p=Path('/var/log/network/mqtt')/host/'2026-10-04.jsonl';last=None;count=0
+    with p.open() as f:
+        for l in f:
+            r=json.loads(l)
+            if r['qos']==1 and not r['retained']:last=r;count+=1
+    print('MQTT_ARCHIVE',host,'fresh_qos1_records',count,'latest',last['received_at'],'payload_timestamp',last['payload'].split(':')[0])
+PY
+systemctl is-active syslog-ng prometheus node_exporter mqtt-archive omr-node-exporter-tunnel telegraf mosquitto loki alloy
+systemctl is-enabled syslog-ng prometheus node_exporter mqtt-archive omr-node-exporter-tunnel telegraf mosquitto switch-monitor.timer network-archive-compress.timer
+syslog-ng --syntax-only 2>&1 | tail -2
+promtool check config /etc/prometheus/prometheus.yml
+journalctl -u telegraf -u mqtt-archive --since '3 min ago' --no-pager | tail -8
+df -h /var/log
+'''.replace('MARKER',marker)
+time.sleep(4)
+r=run('@@IPV4_007@@',script,timeout=90)
+(OUT/'final-receiver-verification.json').write_text(json.dumps(r,indent=2),encoding='utf-8');print(r['output'])

@@ -1,0 +1,7 @@
+set -eu
+test -f /etc/phi21-vlan@@VLAN_002@@-guard.nft
+test "$(sha256sum /etc/phi21-vlan@@VLAN_002@@-guard.nft | cut -d' ' -f1)" = e6df3890bf7ea9f2bc5ac2f071ff24c0ad278d69cd91264ef49b81a655293125
+sed -i '/PHI21 deny other VLAN ingress/a\    oifname "@@INTERFACE_005@@" ct state != { established, related } counter drop comment "PHI21 internet replies only"' /etc/phi21-vlan@@VLAN_002@@-guard.nft
+nft 'add rule inet fw4 phi21_vlan10_forward oifname "@@INTERFACE_005@@" ct state != { established, related } counter drop comment "PHI21 internet replies only"'
+fw4 check >/tmp/phi21-final-fw4-check.log 2>&1
+echo 'Inbound vlan@@VLAN_002@@ forwarding restricted to established/related replies; persistent check passed'

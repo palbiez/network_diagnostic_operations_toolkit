@@ -1,0 +1,48 @@
+import sys,json
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+from central_observability import cfg,clean,connect,run,OUT
+configuration={'username':clean(cfg['Switch']['user']),'password':clean(cfg['Switch']['passwort']),'switches':{'@@IPV4_019@@':'tplink','@@IPV4_020@@':'sodola','@@IPV4_090@@':'tplink-legacy','@@IPV4_091@@':'tplink','@@IPV4_021@@':'sodola'}}
+c=connect('@@IPV4_007@@')
+try:
+ _,o,e=c.exec_command('install -d -m 700 /etc/switch-monitor; install -d -m 750 /var/log/network/switches; install -d -m 755 /var/lib/node_exporter/textfile_collector /etc/systemd/system/node_exporter.service.d')
+ assert o.channel.recv_exit_status()==0
+ s=c.open_sftp()
+ with s.file('/etc/switch-monitor/config.json','w') as f:f.write(json.dumps(configuration))
+ s.chmod('/etc/switch-monitor/config.json',0o600)
+ s.put(str(OUT/'switch_monitor.py'),'/usr/local/libexec/switch_monitor.py');s.chmod('/usr/local/libexec/switch_monitor.py',0o755)
+ units={
+ '/etc/systemd/system/switch-monitor.service':'''[Unit]
+Description=Read-only switch port snapshots and Prometheus counters
+After=network-online.target
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/libexec/switch_monitor.py
+UMask=0027
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/network/switches /var/lib/node_exporter/textfile_collector
+PrivateTmp=true
+''',
+ '/etc/systemd/system/switch-monitor.timer':'''[Unit]
+Description=Collect switch counters every minute
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=60s
+AccuracySec=5s
+Unit=switch-monitor.service
+[Install]
+WantedBy=timers.target
+''',
+ '/etc/systemd/system/node_exporter.service.d/central-textfiles.conf':'''[Service]
+ExecStart=
+ExecStart=/usr/bin/node_exporter/node_exporter --collector.textfile.directory=/var/lib/node_exporter/textfile_collector
+'''}
+ for path,body in units.items():
+  with s.file(path,'w') as f:f.write(body)
+ s.close()
+finally:c.close()
+r=run('@@IPV4_007@@',"python3 -m py_compile /usr/local/libexec/switch_monitor.py\nsystemctl daemon-reload\nsystemctl start switch-monitor\nsystemctl enable --now switch-monitor.timer\nsystemctl restart node_exporter\ngrep '^network_switch_up' /var/lib/node_exporter/textfile_collector/switches.prom\njournalctl -u switch-monitor -n 10 --no-pager")
+(OUT/'switch-monitor-install.json').write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

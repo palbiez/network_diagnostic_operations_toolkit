@@ -1,0 +1,6 @@
+#!/bin/sh
+date -Iseconds
+uci show firewall | grep -E '=zone|=forwarding|\.name=|\.network=|\.src=|\.dest=|\.forward=|\.masq='
+nft list chain inet fw4 forward
+nft list chain inet fw4 forward_vpn
+command -v tcpdump

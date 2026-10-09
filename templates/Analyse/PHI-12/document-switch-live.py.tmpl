@@ -1,0 +1,24 @@
+from pathlib import Path
+import json
+ROOT=Path(__file__).resolve().parents[2]
+report='Analyse/PHI-12/switchpfad-live-2026-10-03.md'
+links=[
+ {'a':'PS @@MAC_002@@','b':'TP-Link .@@VLAN_004@@.3 Port 3','evidence':'vlan@@VLAN_005@@ access port; PVID160; only ports1/3 link up','status':'derived; physical cable confirmation pending','speed_mbps':100},
+ {'a':'TP-Link .@@VLAN_004@@.3 Port 1','b':'Sodola 215AS .@@VLAN_004@@.7 Port 4','evidence':'TP-Link and PS MACs learned at 215AS Port4; vlan@@VLAN_005@@ tagged at TP-Link Port1','status':'strongly derived; physical cable confirmation pending','speed_mbps':100},
+ {'a':'Sodola 215AS .@@VLAN_004@@.7 Port 5','b':'Sodola 218AS .@@VLAN_004@@.4 Port 8','evidence':'user-confirmed port pair plus current MAC path and link status','status':'user confirmed and live consistent','speed_mbps':2500},
+ {'a':'Sodola 218AS .@@VLAN_004@@.4 Port 4','b':'OMR LAN, MAC @@MAC_004@@','evidence':'router MAC learned at Port4 including vlan@@VLAN_005@@','status':'strongly derived; physical cable confirmation pending','speed_mbps':1000},
+]
+data={'stand':'2026-10-03','source':report,'device':{'mac':'@@MAC_002@@','ip':'@@IPV4_016@@'},'links':links,'vlan@@VLAN_005@@':'present throughout inferred path; PS access Port3 untagged/PVID160, uplinks tagged','findings':['TP-Link Port1 RxBadPkt delta +65 in approximately11.6 seconds','TP-Link/215AS link negotiated100M Full','Sodola pages do not expose CRC/FCS/drop/link-change counters'],'limitations':['Current topology/status is not historical incident proof','RxBadPkt is not a distinct CRC counter; tagged-frame counting anomaly reported for related Easy-Smart devices, not verified here','No LLDP or direct physical confirmation for inferred links']}
+(ROOT/'Inventar/topologie_ps_7066_live_2026_10_03.json').write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+heading='\n\n## Switch-Livepruefung 03.10.2026\n\n'
+text=(@@PYTHON_STRING_036@@+report+' und Inventar/topologie_ps_7066_live_2026_10_03.json. Rohseiten bleiben lokal; Ursache offen.\n')
+for rel in ['Analyse/PHI-12/diagnoseplan-2026-10-02.md','Linear/issues/PHI-12.md','Linear/issues/PHI-6.md','Linear/issues/PHI-9.md']:
+ p=ROOT/rel;t=p.read_text(encoding='utf-8')
+ if heading not in t:p.write_text(t.rstrip()+heading+text,encoding='utf-8')
+p=ROOT/'Linear/work-packages.json';packages=json.loads(p.read_text(encoding='utf-8'))
+for key,n in [('restart-routing',12),('measurement',6),('gaming',9)]:
+ item=next(x for x in packages if x['key']==key)
+ item['description']=(ROOT/f'Linear/issues/PHI-{n}.md').read_text(encoding='utf-8')
+ if report not in item['sources']:item['sources'].append(report)
+p.write_text(json.dumps(packages,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print('Live-Switchbefund lokal und fuer PHI-6/9/12 dokumentiert; keine Zugangswerte uebertragen.')

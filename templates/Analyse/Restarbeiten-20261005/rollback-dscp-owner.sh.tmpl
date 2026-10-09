@@ -1,0 +1,8 @@
+#!/bin/sh
+# Source rollback only. Does not regenerate/reload active rules.
+set -eu
+test "$(sha256sum /etc/init.d/omr-bypass | cut -d' ' -f1)" = 9a136801d35e98bb8bf728cf3228bf99a16c8ff41c9064936031a044b3f8730d
+test "$(sha256sum /root/phi10-owner-backup-20261005/omr-bypass | cut -d' ' -f1)" = b52edcec3d1d580eb68f659dfd10e02b49eb37fae5a06fc32d7d648c44440529
+cp -p /root/phi10-owner-backup-20261005/omr-bypass /etc/init.d/omr-bypass
+sh -n /etc/init.d/omr-bypass
+echo 'Previous source restored; DSCP cleanup defect returns on later start/reload. No services reloaded.'

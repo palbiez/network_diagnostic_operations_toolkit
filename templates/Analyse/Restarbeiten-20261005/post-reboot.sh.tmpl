@@ -1,0 +1,19 @@
+date -Iseconds
+cat /proc/uptime
+cat /proc/sys/kernel/random/boot_id
+fw4 check >/tmp/phi-postboot-fw4.log 2>&1; echo fw4_exit=$?
+ip link show @@INTERFACE_001@@ | head -1
+logread | grep -E 'MTU changed externally|Removing static MTU|PATH|path.*(@@INTERFACE_002@@|@@INTERFACE_003@@)|Netlink receive failure|Unable to dump conntrack' | tail -35
+nft list chain inet fw4 mangle_forward
+nft list chain inet fw4 mangle_output
+nft list chain inet fw4 phi21_vlan10_forward
+nft list chain inet fw4 forward
+uci show omr-bypass | grep -E '@@MAC_PREFIX_002@@|70:66|160.0|\.interface=|\.interface_failover=' | head -35
+cat /etc/nftables.d/49-gaming-direct-wan.nft
+cat /etc/hotplug.d/iface/99-gaming-policy
+cat /tmp/dhcp.leases
+ip route show table 2
+ip route show table 3
+ping -c 3 -W 2 @@IPV4_002@@
+ubus call service list '{"name":"mqvpn"}' | grep -E 'running|pid'
+ls /var/run/mqvpn* /tmp/mqvpn* 2>/dev/null || true

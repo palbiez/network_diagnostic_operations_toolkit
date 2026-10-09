@@ -1,0 +1,61 @@
+#!/usr/bin/python3
+"""Read-only port snapshots for switches without an exposed syslog/SNMP interface."""
+import base64,hashlib,http.cookiejar,json,os,re,time,urllib.request,urllib.parse,html
+from datetime import datetime,timezone
+from pathlib import Path
+cfg=json.loads(Path('/etc/switch-monitor/config.json').read_text())
+ROOT=Path('/var/log/network/switches')
+metrics=[]
+for ip,kind in cfg['switches'].items():
+    now=datetime.now(timezone.utc);row={'time':now.isoformat(),'ip':ip,'family':kind}
+    client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    digest=hashlib.md5((cfg['username']+cfg['password']).encode()).hexdigest()
+    def fetch(path,data=None):
+        headers={'User-Agent':'network-observability/1.0','Referer':'http://'+ip+'/'}
+        if kind=='sodola':headers['Cookie']='admin='+digest
+        req=urllib.request.Request('http://'+ip+'/'+path,headers=headers,data=urllib.parse.urlencode(data).encode() if data else None)
+        with client.open(req,timeout=5) as response:return response.read(1000000).decode(errors='replace')
+    labels='switch="'+ip+'"'
+    try:
+        if kind=='sodola':fetch('login.cgi',{'username':cfg['username'],'password':cfg['password'],'Response':digest,'language':'EN'})
+        else:
+            try:fetch('logon.cgi',{'username':cfg['username'],'password':cfg['password'],'logon':'Login'})
+            except urllib.error.HTTPError as e:
+                # The 2017 TL-SG105E returns HTTP 401 even after setting a valid session.
+                # Authentication is checked by parsing the subsequent statistics page.
+                if kind!='tplink-legacy' or e.code!=401:raise
+        body=fetch('port.cgi?page=stats' if kind=='sodola' else 'PortStatisticsRpm.htm')
+        # Never persist auth cookies or credentials returned by a login page.
+        safe=body.replace(cfg['password'],'[REDACTED]').replace(digest,'[REDACTED]')
+        ports=[]
+        if kind=='sodola':
+            for block in re.findall(r'<tr\b[^>]*>(.*?)</tr>',body,re.S|re.I):
+                cells=[html.unescape(re.sub('<[^>]+>','',c)).strip() for c in re.findall(r'<td\b[^>]*>(.*?)</td>',block,re.S|re.I)]
+                if len(cells)<7 or not re.fullmatch(r'Port \d+',cells[0]):continue
+                def u64(v):
+                    hi,lo=map(int,v.split('-'));return hi*(1<<32)+lo
+                ports.append({'port':int(cells[0].split()[1]),'enabled':cells[1]=='Enable','link_up':cells[2]=='Link Up','tx_packets':u64(cells[3]),'rx_packets':u64(cells[4]),'tx_bytes':u64(cells[5]),'rx_bytes':u64(cells[6])})
+        else:
+            count=int(re.search(r'max_port_num\s*=\s*(\d+)',body).group(1))
+            def arr(name):return json.loads('['+re.search(r'\b'+name+r':\s*\[([^]]+)\]',body).group(1)+']')
+            state,link,pkts=arr('state'),arr('link_status'),arr('pkts')
+            for i in range(count):ports.append({'port':i+1,'enabled':bool(state[i]),'link_up':link[i]>0,'link_code':link[i],'tx_packets':pkts[4*i],'tx_errors':pkts[4*i+1],'rx_packets':pkts[4*i+2],'rx_errors':pkts[4*i+3]})
+        if not ports:raise ValueError('No authenticated port statistics found')
+        row.update(up=True,ports=ports,statistics_html=safe)
+        metrics.append('network_switch_up{'+labels+'} 1')
+        metrics.append('network_switch_last_success_timestamp_seconds{'+labels+'} '+str(now.timestamp()))
+        for port in ports:
+            plabel=labels+',port="'+str(port['port'])+'"'
+            metrics.append('network_switch_port_link_up{'+plabel+'} '+str(int(port['link_up'])))
+            for k,name in [('tx_packets','transmit_packets'),('rx_packets','receive_packets'),('tx_bytes','transmit_bytes'),('rx_bytes','receive_bytes'),('tx_errors','transmit_errors'),('rx_errors','receive_errors')]:
+                if k in port:metrics.append('network_switch_'+name+'_total{'+plabel+'} '+str(port[k]))
+        print(ip,'OK ports',len(ports),flush=True)
+    except Exception as e:
+        row.update(up=False,error=type(e).__name__)
+        metrics.append('network_switch_up{'+labels+'} 0')
+        print(ip,'FAILED',type(e).__name__,flush=True)
+    path=ROOT/ip;path.mkdir(parents=True,exist_ok=True,mode=0o750)
+    with (path/(now.strftime('%Y-%m-%d')+'.jsonl')).open('a') as f:f.write(json.dumps(row)+'\n')
+target=Path('/var/lib/node_exporter/textfile_collector/switches.prom')
+target.parent.mkdir(parents=True,exist_ok=True)
+temp=target.with_suffix('.tmp');temp.write_text('\n'.join(metrics)+'\n');temp.replace(target)

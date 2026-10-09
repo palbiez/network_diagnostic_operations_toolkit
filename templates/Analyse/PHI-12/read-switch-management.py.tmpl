@@ -1,0 +1,25 @@
+from pathlib import Path
+import urllib.request, urllib.error, json, re
+from concurrent.futures import ThreadPoolExecutor
+
+root=Path(__file__).resolve().parents[2]
+folder=root/'Analyse/PHI-12/switch-management-20261002'
+folder.mkdir(exist_ok=True)
+def read(ip):
+ record={'ip':ip,'operation':'unauthenticated HTTP GET only'}
+ try:
+  with urllib.request.urlopen('http://'+ip+'/',timeout=6) as response:
+   body=response.read(512000)
+   record.update(status=response.status,bytes=len(body))
+   (folder/(ip+'.html')).write_bytes(body)
+   html=body.decode(errors='replace')
+   record['titles']=re.findall(r'<title[^>]*>(.*?)</title>',html,re.S|re.I)
+   record['forms']=re.findall(r'<form[^>]*>',html,re.I)
+   record['login_fields']=sorted(set(re.findall(r'<input[^>]*name=[\"\x27]([^\"\x27]+)',html,re.I)))
+ except urllib.error.HTTPError as error:
+  record.update(status=error.code,authentication_scheme=(error.headers.get('WWW-Authenticate','').split(' ')[0]))
+ except Exception as error:record['error']=type(error).__name__
+ return record
+with ThreadPoolExecutor(max_workers=3) as pool:records=list(pool.map(read,['@@IPV4_019@@','@@IPV4_020@@','@@IPV4_021@@']))
+(folder/'access-summary.json').write_text(json.dumps(records,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print(json.dumps(records,ensure_ascii=False,indent=2))

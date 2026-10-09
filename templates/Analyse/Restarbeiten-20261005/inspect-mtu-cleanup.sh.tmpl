@@ -1,0 +1,8 @@
+uci show network | grep -E '\.mtu=|\.device=|\.ifname=|\.proto=|=device|\.name=|\.ip4table=|\.ipaddr=' | head -n 90
+cat /etc/hotplug.d/iface/omrvpn
+sed -n '245,315p' /etc/init.d/mqvpn
+sed -n '1230,1275p' /etc/init.d/omr-bypass
+sed -n '1460,1500p' /etc/init.d/omr-bypass
+grep -R -n 'ifmap_@@SECTION_002@@\|ifmap_@@SECTION_004@@' /etc/init.d /etc/hotplug.d /usr/share/omr* /usr/lib/lua/luci /www/luci-static/resources 2>/dev/null | head -n 15
+grep -R -n -E 'iif.*lo|90000' /etc /lib/netifd /usr/share/omr* 2>/dev/null | head -n 35
+apk info -v netifd nlbwmon mqvpn 2>/dev/null

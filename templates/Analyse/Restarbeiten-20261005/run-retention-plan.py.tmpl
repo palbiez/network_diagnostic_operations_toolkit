@@ -1,0 +1,13 @@
+from pathlib import Path
+import sys,json,shlex
+ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+import central_observability as obs
+folder=Path(__file__).resolve().parent
+code=(folder/'retention-plan.py').read_text(encoding='utf-8')
+result=obs.run('@@IPV4_007@@',"python3 - <<'PHI29_PREVIEW'\n"+code+"\nPHI29_PREVIEW\n",timeout=90)
+(folder/'retention-preview.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
+if result['exit']!=0:raise SystemExit(result['output'])
+data=json.loads(result['output']);summary={}
+for row in data['files']:
+    item=summary.setdefault(row['action'],{'files':0,'bytes':0});item['files']+=1;item['bytes']+=row['bytes']
+print(json.dumps(summary,indent=2))

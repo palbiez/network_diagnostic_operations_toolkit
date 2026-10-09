@@ -1,0 +1,44 @@
+# Dauerping vom Windows-Client. Abbruch: Strg+C
+
+$ErrorActionPreference = 'SilentlyContinue'
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LogFile = Join-Path $ScriptDir ("ping-client-{0}.log" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
+
+$Targets = @(
+    @{ Name = 'Gateway';   Address = '@@IPV4_008@@'  },
+    @{ Name = 'OMR';       Address = '@@IPV4_096@@' },
+    @{ Name = 'Logserver'; Address = '@@IPV4_007@@'  },
+        @{ Name = 'TunnelPeer';Address = '@@IPV4_002@@'    },
+        @{ Name = 'Hetzner';   Address = '@@IPV4_012@@' },
+    @{ Name = 'Internet';  Address = '@@IPV4_011@@'         }
+)
+
+"timestamp`tname`taddress`tstatus`trtt_ms" | Tee-Object -FilePath $LogFile
+Write-Host "Logging nach: $LogFile"
+Write-Host 'Abbruch mit Strg+C.'
+
+try {
+    while ($true) {
+        foreach ($Target in $Targets) {
+            $Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
+            $Pinger = New-Object System.Net.NetworkInformation.Ping
+            $Reply = $Pinger.Send($Target.Address, 1000)
+            $Pinger.Dispose()
+
+            if ($Reply.Status -eq [System.Net.NetworkInformation.IPStatus]::Success) {
+                $Rtt = [int]$Reply.RoundtripTime
+                $Line = "$Timestamp`t$($Target.Name)`t$($Target.Address)`tOK`t$Rtt"
+            } else {
+                $Line = "$Timestamp`t$($Target.Name)`t$($Target.Address)`tTIMEOUT`t-"
+            }
+
+            $Line | Tee-Object -FilePath $LogFile -Append
+        }
+             # Kurze Pause zwischen den Messdurchläufen: 0,2 Sekunden.
+             Start-Sleep -Milliseconds 200
+    }
+}
+finally {
+    Add-Content -Path $LogFile -Value ("# beendet: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'))
+    Write-Host "Log gespeichert: $LogFile"
+}

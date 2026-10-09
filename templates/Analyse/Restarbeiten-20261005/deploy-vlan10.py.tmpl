@@ -1,0 +1,17 @@
+from pathlib import Path
+import sys,json,base64
+ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+import central_observability as obs
+folder=Path(__file__).resolve().parent;backup=ROOT/'Backups/Restarbeiten-20261005'
+c=obs.connect('@@IPV4_008@@')
+try:
+    for name in ['firewall','dhcp']:
+        p=backup/(name+'.vlan@@VLAN_002@@.before')
+        if p.exists():raise RuntimeError('Backup exists; do not rerun blindly')
+        _,o,e=c.exec_command('cat /etc/config/'+name);data=o.read()
+        assert o.channel.recv_exit_status()==0 and data;p.write_bytes(data)
+finally:c.close()
+data=base64.b64encode((folder/'vlan@@VLAN_002@@-guard.nft').read_bytes()).decode()
+script="test ! -e /etc/phi21-vlan@@VLAN_002@@-guard.nft || exit 1\nprintf '%s' '"+data+"' | base64 -d > /etc/phi21-vlan@@VLAN_002@@-guard.nft\n"+(folder/'vlan@@VLAN_002@@-apply.sh').read_text()
+r=obs.run('@@IPV4_008@@',script,90)
+(folder/'vlan@@VLAN_002@@-apply-result.json').write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

@@ -1,0 +1,36 @@
+#!/bin/sh
+set -u
+umask 077
+. /root/phi12-diag-20261003/settings
+ip=@@IPV4_018@@
+mac=@@MAC_003@@
+actual=$(ip neigh show "$ip" | awk '{for(i=1;i<=NF;i++) if($i=="lladdr") {print $(i+1);exit}}')
+[ "$actual" = "$mac" ] || { echo 'Minecraft IP/MAC not verified'; exit 1; }
+D=/tmp/phi12-diag-20261003/minecraft-$ip
+mkdir -p "$D"
+printf 'utc=%s\nip=%s\nmac=%s\nend_epoch=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$ip" "$mac" "$END_EPOCH" > "$D/settings.txt"
+conntrack -E -s "$ip" -o timestamp,extended > "$D/conntrack-events.log" 2> "$D/conntrack-errors.log" &
+child=$!
+remaining=$((END_EPOCH-$(date +%s)))
+[ "$remaining" -gt 0 ] || { kill -TERM "$child"; exit 0; }
+ping -n -D -O -i 1 -W 1 -w "$remaining" "$ip" > "$D/ping-minecraft-$ip.log" 2>&1 &
+ping_child=$!
+cleanup() {
+ for pid in "$child" "$ping_child"; do kill -TERM "$pid" 2>/dev/null || true; done
+ for pid in "$child" "$ping_child"; do wait "$pid" 2>/dev/null || true; done
+ date -Is > "$D/finished.txt"
+}
+trap cleanup EXIT
+trap 'exit 0' INT TERM HUP
+while [ "$(date +%s)" -lt "$END_EPOCH" ] && [ ! -f /tmp/phi12-diag-20261003/stop ]; do
+ nowmac=$(ip neigh show "$ip" | awk '{for(i=1;i<=NF;i++) if($i=="lladdr") {print $(i+1);exit}}')
+ if [ -n "$nowmac" ] && [ "$nowmac" != "$mac" ]; then printf 'MAC changed; stopping\n' >> "$D/conntrack-errors.log"; break; fi
+ {
+  printf '\nUTC %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  ip neigh show "$ip"
+  conntrack -L -s "$ip" -o extended 2>> "$D/conntrack-errors.log"
+ } >> "$D/connection-snapshots.log"
+ size=$(du -sk /tmp/phi12-diag-20261003 | awk '{print $1}')
+ [ "$size" -lt 1048576 ] || break
+ sleep 5
+done

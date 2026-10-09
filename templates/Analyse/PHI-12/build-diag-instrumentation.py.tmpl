@@ -1,0 +1,40 @@
+from pathlib import Path
+import hashlib,json
+from datetime import datetime, timezone, timedelta
+ROOT=Path(__file__).resolve().parents[2]
+D=ROOT/'Analyse/PHI-12/messung-20261003'
+B=ROOT/'Skripte/Diagnose/PHI12-20261003'
+berlin=timezone(timedelta(hours=2))  # Europe/Berlin is UTC+2 on 3/4 October 2026.
+start=int(datetime(2026,10,3,11,30,tzinfo=berlin).timestamp())
+end=int(datetime(2026,10,4,0,0,tzinfo=berlin).timestamp())
+(B/'settings').write_text(f'START_EPOCH={start}\nEND_EPOCH={end}\n',encoding='utf-8')
+manifest=[]
+for name,target in [('firewall','/etc/init.d/firewall'),('dnsmasq','/etc/init.d/dnsmasq'),('omr-bypass','/etc/init.d/omr-bypass'),('010-services','/usr/share/omr/schedule.d/010-services'),('omr-tracker','/bin/omr-tracker')]:
+    data=(D/(name+'.original')).read_bytes();t=data.decode()
+    if name in ['firewall','dnsmasq','omr-bypass']:
+        marker='\n# PHI12 temporary init-call metadata; restored at end of measurement.\n[ ! -f /root/phi12-diag-20261003/active ] || /root/phi12-diag-20261003/notify.sh "'+name+'" "${action:-unknown}" "$$" >/dev/null 2>&1 &\n'
+        # Background only the guarded notification; no existing init action changes.
+        t=t.replace('\n','\n'+marker,1)
+    elif name=='010-services':
+        t=t.replace('\n','\n[ ! -f /root/phi12-diag-20261003/active ] || logger -p daemon.debug -t omr-schedule-010-services "diagnostic invocation pid=$$"\n',1)
+    else:
+        # Only structured numeric probe metadata; no shell xtrace or credentials.
+        for var in ['status','statusb']:
+            needle='\t\t\t\t\t'+var+'=$?'
+            # Insert after every assignment without altering the captured exit code.
+            lines=t.splitlines(True);out=[]
+            for line in lines:
+                out.append(line)
+                if line.strip()==var+'=$?':
+                    indent=line[:len(line)-len(line.lstrip())]
+                    out.append(indent+'[ ! -f /root/phi12-diag-20261003/active ] || logger -p daemon.debug -t omr-tracker-probe "interface=$OMR_TRACKER_INTERFACE device=$OMR_TRACKER_DEVICE host=$OMR_TRACKER_HOST gateway=$OMR_TRACKER_DEVICE_GATEWAY kind='+var+' rc=$'+var+' tries_left=${tries:-unknown}"\n')
+            t=''.join(out)
+        needle='\tOMR_TRACKER_PREV_STATUS="$OMR_TRACKER_STATUS"\n'
+        assert needle in t
+        t=t.replace(needle,'\t[ ! -f /root/phi12-diag-20261003/active ] || logger -p daemon.debug -t omr-tracker-cycle "interface=$OMR_TRACKER_INTERFACE device=$OMR_TRACKER_DEVICE state=$OMR_TRACKER_STATUS previous=$OMR_TRACKER_PREV_STATUS reason=$OMR_TRACKER_STATUS_MSG"\n'+needle)
+    (B/(name+'.instrumented')).write_text(t,encoding='utf-8',newline='\n')
+    manifest.append({'name':name,'target':target,'original_sha256':hashlib.sha256(data).hexdigest(),'instrumented_sha256':hashlib.sha256(t.encode()).hexdigest()})
+(B/'instrumentation.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
+(B/'original.sha256').write_text(''.join(f"{x['original_sha256']}  {x['target']}\n" for x in manifest),encoding='utf-8')
+(B/'instrumented.sha256').write_text(''.join(f"{x['instrumented_sha256']}  {x['target']}\n" for x in manifest),encoding='utf-8')
+print(f'Measurement epochs {start}–{end}; five temporary files prepared.')

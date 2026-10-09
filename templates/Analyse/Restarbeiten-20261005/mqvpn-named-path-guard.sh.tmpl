@@ -1,0 +1,16 @@
+_ensure_named_auto_paths() {
+    local file="$1"
+    if grep -qE '^[[:space:]]*Path[[:space:]]*=[[:space:]]*[^[:space:]]' "$file"; then
+        return 0
+    fi
+    if grep -qE '^[[:space:]]*BackupPath[[:space:]]*=[[:space:]]*[^[:space:]]' "$file"; then
+        # With no primary, mqvpn would create an implicit unnamed primary.
+        # Promote one available named backup so backup-only connectivity remains usable.
+        awk '!done && /^[[:space:]]*BackupPath[[:space:]]*=/ { sub(/BackupPath/, "Path"); done=1 } { print }' "$file" > "$file.named"
+        mv "$file.named" "$file"
+        logger -t mqvpn 'No primary WAN up; starting on first available named backup'
+        return 0
+    fi
+    logger -t mqvpn 'No named WAN path available; deferring start until scheduler retry'
+    return 1
+}

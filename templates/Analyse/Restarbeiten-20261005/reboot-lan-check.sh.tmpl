@@ -1,0 +1,5 @@
+date -Iseconds
+ip -4 route get @@IPV4_011@@
+printf 'lan_client_public='; curl -4 -fsS --noproxy '*' --max-time 12 https://@@HOSTNAME_013@@; echo
+curl -fsS --max-time 5 http://@@IPV4_034@@:8123/ -o /dev/null -w 'homeassistant_http=%{http_code}\n'
+curl -fsS http://127.0.0.1:9090/-/ready

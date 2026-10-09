@@ -1,0 +1,10 @@
+printf '\nCUSTOM GAMING\n'
+cat /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft
+ls /etc/hotplug.d/iface/*gaming* 2>/dev/null
+printf '\nDSCP COMPILED\n'
+nft list chain inet fw4 mangle_forward | grep omr_dscp_rule
+nft list chain inet fw4 mangle_output | grep omr_dscp_rule
+printf '\nMQVPN RUNTIME\n'
+sed '/[Kk]ey/d; /[Uu]ser/d' /var/run/mqvpn.conf
+printf '\nLOG CONFIG\n'
+uci show system | grep log

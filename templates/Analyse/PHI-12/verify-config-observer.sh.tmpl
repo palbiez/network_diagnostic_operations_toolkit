@@ -1,0 +1,10 @@
+#!/bin/sh
+echo 'OBSERVER STATUS'
+ps | grep '[p]hi12-config-events\|[u]bus listen config.change'
+cat /tmp/phi12-evening-20261002-network/config-events-status.txt
+tail -8 /tmp/phi12-evening-20261002-network/config-events.csv
+echo 'CONFIG NOTIFICATION IMPLEMENTATION'
+cat /sbin/reload_config
+echo 'MEASUREMENT HEARTBEAT'
+tail -2 /tmp/phi12-evening-20261002-network/events.csv
+tail -2 /tmp/phi12-evening-20261002-gaming/paths.csv

@@ -1,0 +1,4 @@
+sudo -n docker stats --no-stream --format '{{.Name}} {{.MemUsage}} {{.CPUPerc}}'
+cat /proc/meminfo | head -n 5
+bash -lc 'ha apps restart a0d7b954_nodered'
+bash -lc 'ha core start'

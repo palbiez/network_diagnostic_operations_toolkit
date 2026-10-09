@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# 24-Stunden-Monitoring auf dem OMR-VPS.
+# Internet: nur Fehler loggen.
+# Tunnel: nur Fehler und Interface-Zustandsänderungen loggen.
+# MQVPN/XQUIC: relevante Journalzeilen mitschreiben.
+
+set -u
+
+LOG_DIR="${LOG_DIR:-/root/vps-mqvpn-24h}"
+INTERNET_TARGET="${INTERNET_TARGET:-@@IPV4_011@@}"
+TUNNEL_TARGET="${TUNNEL_TARGET:-@@IPV4_003@@}"
+TUNNEL_IFACE="${TUNNEL_IFACE:-@@INTERFACE_004@@}"
+DURATION_SECONDS="${DURATION_SECONDS:-86400}"
+
+mkdir -p "$LOG_DIR"
+START_EPOCH="$(date +%s)"
+END_EPOCH=$((START_EPOCH + DURATION_SECONDS))
+
+INTERNET_LOG="$LOG_DIR/internet-errors.log"
+TUNNEL_LOG="$LOG_DIR/tunnel-errors.log"
+MQVPN_LOG="$LOG_DIR/mqvpn-journal.log"
+
+timestamp() {
+    date '+%Y-%m-%dT%H:%M:%S.%3N%z'
+}
+
+log_line() {
+    printf '%s\n' "$(timestamp) $*"
+}
+
+monitor_internet() {
+    while [ "$(date +%s)" -lt "$END_EPOCH" ]; do
+        if ! ping -n -c 1 -W 1 "$INTERNET_TARGET" >/dev/null 2>&1; then
+            log_line "INTERNET_TIMEOUT target=$INTERNET_TARGET" >> "$INTERNET_LOG"
+        fi
+        sleep 1
+    done
+}
+
+monitor_tunnel() {
+    local previous_state=''
+    local state
+
+    while [ "$(date +%s)" -lt "$END_EPOCH" ]; do
+        state="$(cat "/sys/class/net/$TUNNEL_IFACE/operstate" 2>/dev/null || echo missing)"
+        if [ "$state" != "$previous_state" ]; then
+            log_line "INTERFACE_STATE interface=$TUNNEL_IFACE state=$state" >> "$TUNNEL_LOG"
+            previous_state="$state"
+        fi
+
+        if ! ping -n -c 1 -W 0.2 "$TUNNEL_TARGET" >/dev/null 2>&1; then
+            log_line "TUNNEL_TIMEOUT interface=$TUNNEL_IFACE target=$TUNNEL_TARGET" >> "$TUNNEL_LOG"
+        fi
+        sleep 0.2
+    done
+}
+
+monitor_journal() {
+    if command -v journalctl >/dev/null 2>&1; then
+        timeout "$DURATION_SECONDS" journalctl -f -o short-iso 2>/dev/null \
+            | grep --line-buffered -Ei 'mqvpn|xquic|tun|mptcp|reconnect|path|loss|timeout' \
+            >> "$MQVPN_LOG" || true
+    fi
+}
+
+log_line "START internet=$INTERNET_TARGET tunnel=$TUNNEL_TARGET interface=$TUNNEL_IFACE duration=${DURATION_SECONDS}s" >> "$TUNNEL_LOG"
+
+monitor_internet & PID_INTERNET=$!
+monitor_tunnel & PID_TUNNEL=$!
+monitor_journal & PID_JOURNAL=$!
+
+cleanup() {
+    kill "$PID_INTERNET" "$PID_TUNNEL" "$PID_JOURNAL" 2>/dev/null || true
+    wait "$PID_INTERNET" "$PID_TUNNEL" "$PID_JOURNAL" 2>/dev/null || true
+    log_line "STOP" >> "$TUNNEL_LOG"
+}
+
+trap cleanup INT TERM EXIT
+wait "$PID_INTERNET" "$PID_TUNNEL" "$PID_JOURNAL"

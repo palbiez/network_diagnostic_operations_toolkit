@@ -1,0 +1,18 @@
+from pathlib import Path
+import sys,json
+ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+import central_observability as obs
+out=Path(__file__).resolve().parent
+backup=ROOT/'Backups/Restarbeiten-20261005';backup.mkdir(exist_ok=True)
+c=obs.connect('@@IPV4_008@@')
+try:
+    for name in ['sqm','omr-bypass']:
+        target=backup/(name+'.before')
+        if target.exists():raise RuntimeError('Existing backup; do not run a second time')
+        _,o,e=c.exec_command('cat /etc/config/'+name)
+        data=o.read()
+        assert o.channel.recv_exit_status()==0 and data
+        target.write_bytes(data)
+finally:c.close()
+r=obs.run('@@IPV4_008@@',(out/'cleanup-small.sh').read_text())
+(out/'cleanup-small-result.json').write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

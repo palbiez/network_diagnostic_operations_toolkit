@@ -1,0 +1,67 @@
+from pathlib import Path
+import subprocess,shutil
+drop=Path('/etc/systemd/system/syslog-ng.service.d');drop.mkdir(exist_ok=True)
+(drop/'central-file-read-group.conf').write_text('[Service]\nSupplementaryGroups=adm\n')
+# PostgreSQL logs on the logserver are readable by adm; the daemon drops DAC capabilities.
+script=Path('/usr/local/libexec/network-archive-compress.py')
+script.write_text('''from pathlib import Path
+from datetime import datetime,timezone,timedelta
+import gzip,os,shutil,re
+root=Path('/var/log/network')
+limit=datetime.now(timezone.utc).date()-timedelta(days=2)
+for p in root.rglob('*'):
+    if not p.is_file() or p.is_symlink() or not (p.name.endswith('-syslog.log') or p.name.endswith('.jsonl')):continue
+    m=re.match(r'(\\d{4}-\\d{2}-\\d{2})',p.name)
+    if not m:continue
+    try:day=datetime.strptime(m.group(1),'%Y-%m-%d').date()
+    except ValueError:continue
+    if day>=limit or datetime.fromtimestamp(p.stat().st_mtime,timezone.utc).date()>=limit:continue
+    # Skip files still open by a process (syslog-ng can retain inactive file handles).
+    opened=False
+    for proc in Path('/proc').glob('[0-9]*/fd/*'):
+        try:
+            if proc.resolve()==p.resolve():opened=True;break
+        except (OSError,RuntimeError):pass
+    if opened:continue
+    dest=Path(str(p)+'.gz')
+    if dest.exists():continue
+    before=p.stat();temp=Path(str(dest)+'.tmp')
+    try:
+        with p.open('rb') as source,gzip.open(temp,'wb',compresslevel=6) as target:shutil.copyfileobj(source,target,1024*1024)
+        after=p.stat()
+        if (before.st_size,before.st_mtime_ns)!=(after.st_size,after.st_mtime_ns):temp.unlink();continue
+        with gzip.open(temp,'rb') as compressed,p.open('rb') as original:
+            while True:
+                a=original.read(1024*1024);b=compressed.read(1024*1024)
+                if a!=b:raise RuntimeError('Archive verification failed')
+                if not a:break
+        os.chmod(temp,before.st_mode & 0o777);os.chown(temp,before.st_uid,before.st_gid)
+        temp.replace(dest);p.unlink();print('Compressed and verified',dest)
+    finally:
+        if temp.exists():temp.unlink()
+''')
+script.chmod(0o755)
+Path('/etc/systemd/system/network-archive-compress.service').write_text('''[Unit]
+Description=Compress completed central telemetry archives without retention deletion
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/libexec/network-archive-compress.py
+Nice=10
+IOSchedulingClass=idle
+UMask=0027
+''')
+Path('/etc/systemd/system/network-archive-compress.timer').write_text('''[Unit]
+Description=Daily compression of completed network archives
+[Timer]
+OnCalendar=*-*-* 03:20:00 UTC
+Persistent=true
+RandomizedDelaySec=10m
+[Install]
+WantedBy=timers.target
+''')
+subprocess.run(['python3','-m','py_compile',str(script)],check=True)
+subprocess.run(['systemctl','daemon-reload'],check=True)
+subprocess.run(['systemctl','restart','syslog-ng'],check=True)
+subprocess.run(['systemctl','enable','--now','network-archive-compress.timer'],check=True)
+subprocess.run(['systemctl','start','network-archive-compress.service'],check=True)
+print('Archive compression enabled; no retention deletion. Syslog daemon receives adm read group.')

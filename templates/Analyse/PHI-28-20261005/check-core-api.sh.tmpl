@@ -1,0 +1,13 @@
+sudo -n python3 - <<'PY'
+import json,urllib.request
+from pathlib import Path
+token=Path('/run/s6/container_environment/SUPERVISOR_TOKEN').read_text().strip()
+for path in ['/core/api/','/core/stats','/supervisor/info']:
+    try:
+        r=urllib.request.urlopen(urllib.request.Request('http://supervisor'+path,headers={'Authorization':'Bearer '+token}),timeout=8)
+        data=json.load(r)
+        if path=='/supervisor/info':data={k:data['data'][k] for k in ['healthy','supported']}
+        print(path,r.status,data)
+    except Exception as e:print(path,type(e).__name__,str(e))
+PY
+sudo -n docker inspect homeassistant --format '{{json .State}}'

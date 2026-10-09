@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+date -Is
+echo 'OLD RECEIPT MARKER:'
+grep -F 'PHI-16-SYSLOG-20261002T083000Z' /var/log/network/@@IPV4_008@@/2026-10-02-syslog.log
+echo 'NEW DISABLE MARKER (expected absent):'
+if grep -F 'PHI-16-LOGREMOTE-DISABLED-20261002T084200Z' /var/log/network/@@IPV4_008@@/2026-10-02-syslog.log; then
+ echo 'FAIL: new marker received'; exit 1
+else
+ echo 'PASS: new marker absent'
+fi
+echo 'SYSLOG LISTENER AND ROUTER CONNECTION:'
+ss -tnp | grep -F '@@IPV4_008@@:' || true
+systemctl is-active syslog-ng
+stat -c 'size=%s mtime=%y' /var/log/network/@@IPV4_008@@/2026-10-02-syslog.log

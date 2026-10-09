@@ -1,0 +1,31 @@
+python3 - <<'PY'
+import socket,struct,time,json
+from pathlib import Path
+expected=json.loads(Path('/etc/mqtt-archive/config.json').read_text())
+s=socket.socket(socket.AF_PACKET,socket.SOCK_RAW,socket.htons(3));s.settimeout(2)
+end=time.time()+22; count=0
+while time.time()<end and count<5:
+    try:b=s.recv(65535)
+    except TimeoutError:continue
+    if b[12:14]!=b'\x08\x00':continue
+    ip=b[14:]; ihl=(ip[0]&15)*4
+    if ip[9]!=6 or socket.inet_ntoa(ip[12:16])!='@@IPV4_034@@':continue
+    tcp=ip[ihl:]
+    if struct.unpack('!H',tcp[2:4])[0]!=1883:continue
+    m=tcp[(tcp[12]>>4)*4:]
+    if not m or m[0]!=16:continue
+    p=1
+    while m[p]&128:p+=1
+    p+=1
+    def string():
+        global p
+        n=int.from_bytes(m[p:p+2],'big');p+=2;v=m[p:p+n];p+=n;return v
+    proto=string();version=m[p];flags=m[p+1];p+=4
+    if version!=4:continue
+    client=string()
+    if flags&4:string();string()
+    user=string() if flags&128 else b''
+    pw=string() if flags&64 else b''
+    print(json.dumps({'client':client.decode(errors='replace'),'username':user.decode(errors='replace'),'passwordPresent':bool(pw),'passwordMatchesWorkingCollector':pw.decode(errors='replace')==expected['password']}),flush=True)
+    count+=1
+PY

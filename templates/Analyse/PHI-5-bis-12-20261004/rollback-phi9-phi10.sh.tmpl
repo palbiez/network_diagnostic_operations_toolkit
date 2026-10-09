@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+b=/root/phi9-phi10-20261004
+[ "$(sha256sum /etc/init.d/omr-dscp | cut -d ' ' -f1)" = "8ee4131d16701460208f00a3bea46aeb2faa94a922c6f5c11d00e8a2cac54f9c" ] || { echo 'DSCP script changed since preparation; abort'; exit 1; }
+[ "$(sha256sum /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft | cut -d ' ' -f1)" = "cb8988dd1696ae4e199ab82e1f532f2518322befdce81f79d9ff732ac7277d93" ] || exit 1
+[ "$(sha256sum /etc/hotplug.d/iface/99-gaming-policy | cut -d ' ' -f1)" = "8e1dd94c2c4dc60c3eaf18c00b75c219ed9aa1b678b40a9d8b4d729ae9202502" ] || exit 1
+cp -p "$b/omr-dscp.before" /etc/init.d/omr-dscp
+cp -p "$b/gaming-nft.before" /usr/share/nftables.d/chain-pre/mangle_prerouting/49-gaming-direct-wan.nft
+cp -p "$b/gaming-hotplug.before" /etc/hotplug.d/iface/99-gaming-policy
+printf '%s\n' 'Files restored; no service restarted. Manual reboot activates rollback.'

@@ -1,0 +1,11 @@
+sudo -n python3 - <<'PY'
+import json,re
+from pathlib import Path
+flows=json.loads(Path('/addon_configs/a0d7b954_nodered/flows.json').read_text())
+for n in flows:
+    if n.get('id') in ['82e64b349ecb834c','d403fbfd44b0552d']:
+        print(n['id'],re.sub(r'(password\s*[:=]\s*)[\'\"][^\'\"]*[\'\"]',r'\1[REDACTED]',n['func']), 'wires',n.get('wires'))
+for n in flows:
+    if n.get('broker')=='489094618c340eef':
+        print({k:v for k,v in n.items() if k not in ['credentials','password']})
+PY

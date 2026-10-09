@@ -1,0 +1,3 @@
+sudo -n docker logs --since 2026-10-05T07:23:00Z app_a0d7b954_nodered 2>&1 | head -n 95
+sudo -n docker exec app_a0d7b954_nodered sh -c 'find /etc -iname "*red*"; ls /opt; ps -o pid,comm,args'
+bash -lc 'ha store --help; ha store repositories --help'

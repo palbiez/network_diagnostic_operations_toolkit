@@ -1,0 +1,8 @@
+#!/bin/sh
+sed -n '370,620p' /usr/share/omr/schedule.d/010-services
+echo 'OTHER SCHEDULES'
+ls /usr/share/omr/schedule.d
+echo 'GLOBAL REFRESH'
+uci -q get omr-bypass.global.reload_rules_hour || true
+echo 'RESTART SOURCES'
+grep -nE 'firewall.*(reload|restart)|dnsmasq.*(reload|restart)|unbound.*(reload|restart)|reload_config' /usr/share/omr/schedule.d/* /etc/init.d/omr /etc/init.d/openmptcprouter-vps /etc/init.d/omr-tracker 2>/dev/null || true

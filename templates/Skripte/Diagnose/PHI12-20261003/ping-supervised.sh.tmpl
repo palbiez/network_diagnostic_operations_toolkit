@@ -1,0 +1,22 @@
+#!/bin/sh
+set -u
+umask 077
+. /root/phi12-diag-20261003/settings
+ip=${TARGET_IP:-@@IPV4_023@@}
+D=/tmp/phi12-diag-20261003
+file=${PING_LOG:-"$D/ping-lan-$ip.log"}
+child=''
+cleanup() { [ -z "$child" ] || kill -TERM "$child" 2>/dev/null || true; }
+trap cleanup EXIT
+trap 'exit 0' INT TERM HUP
+while [ "$(date +%s)" -lt "$END_EPOCH" ] && [ ! -f "$D/stop" ]; do
+ remaining=$((END_EPOCH-$(date +%s)))
+ printf '\nSESSION_START %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$file"
+ ping -n -D -O -i 1 -W 1 -w "$remaining" "$ip" >> "$file" 2>&1 &
+ child=$!
+ wait "$child"
+ rc=$?
+ printf '%s,ping-process-exit,target=%s rc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$ip" "$rc" >> "$D/events.csv"
+ child=''
+ sleep 2
+done

@@ -1,0 +1,17 @@
+python3 - <<'PY'
+from pathlib import Path
+import time,re,json,collections
+p=Path('/var/log/network/@@IPV4_034@@/2026-10-05-syslog.log')
+lines=p.read_text(errors='replace').splitlines()[-15000:]
+print('HA central log file bytes',p.stat().st_size)
+programs=collections.Counter()
+for l in lines:
+    for name in ['homeassistant','hassio_supervisor','app_a0d7b954_nodered','app_a0d7b954_ssh','app_0d869efa_prometheus_node_exporter']:
+        if name in l:programs[name]+=1
+print('program matches',dict(programs))
+lines=Path('/var/log/mosquitto/mosquitto.log').read_text(errors='replace').splitlines()[-4000:]
+start=int(time.time())-45
+recent=[l for l in lines if re.match(r'^\d+:',l) and int(l.split(':')[0])>=start]
+print('recent nodered authorization failures',sum('nodered' in l and 'not authorised' in l for l in recent))
+print('last client events',recent[-10:])
+PY

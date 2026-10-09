@@ -1,0 +1,40 @@
+import sys,json,shlex
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+from central_observability import connect,run,OUT,clean
+c=connect('@@IPV4_008@@')
+try:
+ _,o,e=c.exec_command("uci -q get 'luci_statistics.@collectd_mqtt_block[0].Password'")
+ password=o.read().decode().strip();assert password
+finally:c.close()
+c=connect('@@IPV4_007@@')
+try:
+ _,o,e=c.exec_command('install -d -m 700 /etc/mqtt-archive; install -d -m 750 /var/log/network/mqtt; install -d /usr/local/libexec')
+ assert o.channel.recv_exit_status()==0
+ s=c.open_sftp()
+ with s.file('/etc/mqtt-archive/config.json','w') as f:f.write(json.dumps({'username':'mqtt','password':password}))
+ s.chmod('/etc/mqtt-archive/config.json',0o600)
+ s.put(str(OUT/'mqtt_archive.py'),'/usr/local/libexec/mqtt_archive.py');s.chmod('/usr/local/libexec/mqtt_archive.py',0o755)
+ unit='''[Unit]
+Description=Archive Collectd MQTT telemetry under /var/log/network/mqtt
+After=network-online.target mosquitto.service
+Wants=network-online.target mosquitto.service
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/libexec/mqtt_archive.py
+Restart=always
+RestartSec=5
+UMask=0027
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/network/mqtt
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target
+'''
+ with s.file('/etc/systemd/system/mqtt-archive.service','w') as f:f.write(unit)
+ s.close()
+finally:c.close()
+r=run('@@IPV4_007@@','python3 -m py_compile /usr/local/libexec/mqtt_archive.py\nsystemd-analyze verify /etc/systemd/system/mqtt-archive.service\nsystemctl daemon-reload\nsystemctl enable --now mqtt-archive\nsystemctl is-active mqtt-archive')
+(OUT/'mqtt-install-result.json').write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

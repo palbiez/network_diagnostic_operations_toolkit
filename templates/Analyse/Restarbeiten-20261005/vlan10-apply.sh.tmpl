@@ -1,0 +1,63 @@
+set -eu
+test -z "$(uci changes firewall)"
+test -z "$(uci changes dhcp)"
+test "$(uci get network.vlan@@VLAN_002@@.device)" = @@INTERFACE_005@@
+test "$(uci get dhcp.vlan@@VLAN_002@@.ignore)" = 1
+test "$(uci get dhcp.vlan@@VLAN_002@@.limit)" = 20
+! uci -q get firewall.zone_vlan10 >/dev/null
+mkdir -p /root/phi21-vlan@@VLAN_002@@-backup-20261005
+chmod 700 /root/phi21-vlan@@VLAN_002@@-backup-20261005
+cp -p /etc/config/firewall /etc/config/dhcp /root/phi21-vlan@@VLAN_002@@-backup-20261005/
+chmod 600 /root/phi21-vlan@@VLAN_002@@-backup-20261005/*
+uci del_list firewall.zone_lan.network='vlan@@VLAN_002@@'
+uci set firewall.zone_vlan10=zone
+uci set firewall.zone_vlan10.name='vlan@@VLAN_002@@'
+uci set firewall.zone_vlan10.network='vlan@@VLAN_002@@'
+uci set firewall.zone_vlan10.input='REJECT'
+uci set firewall.zone_vlan10.output='ACCEPT'
+uci set firewall.zone_vlan10.forward='REJECT'
+for dest in wan vpn; do
+    uci set firewall.phi21_v10_$dest=forwarding
+    uci set firewall.phi21_v10_$dest.src='vlan@@VLAN_002@@'
+    uci set firewall.phi21_v10_$dest.dest="$dest"
+done
+for name in dhcp dns; do
+    uci set firewall.phi21_v10_$name=rule
+    uci set firewall.phi21_v10_$name.name="vlan@@VLAN_002@@-$name"
+    uci set firewall.phi21_v10_$name.src='vlan@@VLAN_002@@'
+    uci set firewall.phi21_v10_$name.family='ipv4'
+    uci set firewall.phi21_v10_$name.target='ACCEPT'
+done
+uci set firewall.phi21_v10_dhcp.proto='udp'
+uci set firewall.phi21_v10_dhcp.src_port='68'
+uci set firewall.phi21_v10_dhcp.dest_port='67'
+uci set firewall.phi21_v10_dns.proto='tcp udp'
+uci set firewall.phi21_v10_dns.dest_port='53'
+uci set firewall.phi21_v10_dns.dest_ip='@@IPV4_038@@'
+uci set firewall.phi21_v10_guard=include
+uci set firewall.phi21_v10_guard.type='nftables'
+uci set firewall.phi21_v10_guard.position='table-pre'
+uci set firewall.phi21_v10_guard.path='/etc/phi21-vlan@@VLAN_002@@-guard.nft'
+uci set firewall.phi21_v10_guard.enabled='1'
+if ! fw4 check >/tmp/phi21-vlan@@VLAN_002@@-fw4-check.log 2>&1; then
+    uci revert firewall
+    echo 'Configuration check failed; firewall UCI reverted'; exit 1
+fi
+printf 'table inet fw4 { include "/etc/phi21-vlan@@VLAN_002@@-guard.nft"; }\n' > /tmp/phi21-vlan@@VLAN_002@@-live.nft
+nft -c -f /tmp/phi21-vlan@@VLAN_002@@-live.nft
+nft -f /tmp/phi21-vlan@@VLAN_002@@-live.nft
+uci commit firewall
+uci set dhcp.vlan@@VLAN_002@@.ignore='0'
+uci set dhcp.vlan@@VLAN_002@@.start='100'
+uci set dhcp.vlan@@VLAN_002@@.limit='20'
+uci set dhcp.vlan@@VLAN_002@@.dhcpv4='server'
+uci add_list dhcp.vlan@@VLAN_002@@.dhcp_option='3,@@IPV4_038@@'
+uci add_list dhcp.vlan@@VLAN_002@@.dhcp_option='6,@@IPV4_038@@'
+uci commit dhcp
+/etc/init.d/dnsmasq reload
+echo 'vlan@@VLAN_002@@ guards live; persistent separate zone configured; DHCP reloaded; no firewall/network reload'
+nft list chain inet fw4 phi21_vlan10_input
+nft list chain inet fw4 phi21_vlan10_forward
+grep -E 'dhcp-range=.*vlan@@VLAN_002@@|dhcp-option=.*vlan@@VLAN_002@@|no-dhcp-interface=@@INTERFACE_005@@$' /tmp/etc/dnsmasq.conf.* || true
+ip link show @@INTERFACE_001@@ | head -1
+sha256sum /etc/config/firewall /etc/config/dhcp /etc/phi21-vlan@@VLAN_002@@-guard.nft

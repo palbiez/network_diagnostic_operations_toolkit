@@ -1,0 +1,4 @@
+sudo -n docker stats --no-stream --format '{{.Name}} {{.MemUsage}} {{.CPUPerc}}'
+head -n 5 /proc/meminfo
+sudo -n docker ps --format '{{.Names}} {{.Status}}'
+sudo -n docker logs --tail 8 app_a0d7b954_nodered 2>&1

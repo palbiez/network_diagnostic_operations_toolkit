@@ -1,0 +1,16 @@
+set -eu
+mkdir -p /root/central-telemetry-backup-20261004
+chmod 700 /root/central-telemetry-backup-20261004
+[ -f /root/central-telemetry-backup-20261004/node-exporter-default.absent ] || {
+ if [ -f /etc/default/prometheus-node-exporter ]; then cp -p /etc/default/prometheus-node-exporter /root/central-telemetry-backup-20261004/node-exporter-default; else touch /root/central-telemetry-backup-20261004/node-exporter-default.absent; fi
+}
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=l
+apt-get update -qq
+apt-get install -y --no-install-recommends prometheus-node-exporter
+printf '%s\n' 'ARGS="--web.listen-address=127.0.0.1:9100"' > /etc/default/prometheus-node-exporter
+systemctl restart prometheus-node-exporter
+systemctl enable prometheus-node-exporter
+ss -lntp | grep ':9100 '
+curl --noproxy '*' --max-time 4 -s http://127.0.0.1:9100/metrics | grep node_exporter_build_info
+uptime

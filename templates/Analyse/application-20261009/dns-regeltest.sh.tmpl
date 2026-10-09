@@ -1,0 +1,20 @@
+date -Iseconds
+for name in @@HOSTNAME_014@@ customer-product.prod.rtlplus.tech @@HOSTNAME_015@@ superrtl.sabc.livestreaming.streamabc.link @@HOSTNAME_016@@ @@HOSTNAME_017@@ @@HOSTNAME_018@@ @@HOSTNAME_019@@; do
+  echo "DOMAIN $name"
+  for run in 1 2; do
+    echo "QUERY $run"
+    answer="$(dig @@@IPV4_055@@ "$name" A +time=2 +tries=1 +noall +answer +stats)"
+    printf '%s\n' "$answer"
+    printf '%s\n' "$answer" | awk '$4 == "A" {print $5}' | while read -r addr; do
+      echo "IP $addr"
+      for setname in omr_dst_bypass_@@INTERFACE_015@@ omr_dst_bypass_@@INTERFACE_016@@; do
+        if nft get element inet fw4 "$setname" "{ $addr }" >/dev/null 2>&1; then echo "MEMBER $setname"; else echo "ABSENT $setname"; fi
+      done
+    done
+  done
+done
+printf '\n--- counter after ---\n'
+nft list chain inet fw4 mangle_prerouting | grep 'omr_dst_bypass_@@INTERFACE_002@@_dstip_4_lan_rule'
+printf '\n--- errors after ---\n'
+logread | grep -Ei 'dnsmasq.*(nftset.*(error|failed|no such)|bad option|FAILED)' | tail -10
+true

@@ -1,0 +1,26 @@
+set -eu
+test -z "$(uci changes)"
+test "$(uci -q get sqm.wan1.enabled)" = 0
+test "$(uci -q get sqm.wan1.interface)" = @@INTERFACE_005@@
+test "$(uci -q get network.wan1.device)" = @@INTERFACE_002@@
+test "$(uci -q get omr-bypass.ifmap_@@SECTION_002@@.device)" = "$(uci -q get omr-bypass.ifmap_@@SECTION_003@@.device)"
+test "$(uci -q get omr-bypass.ifmap_@@SECTION_004@@.device)" = "$(uci -q get omr-bypass.ifmap_@@SECTION_005@@.device)"
+mkdir -p /tmp/phi21-backup-20261005
+chmod 700 /tmp/phi21-backup-20261005
+cp -p /etc/config/sqm /etc/config/omr-bypass /tmp/phi21-backup-20261005/
+chmod 600 /tmp/phi21-backup-20261005/sqm /tmp/phi21-backup-20261005/omr-bypass
+sha256sum /tmp/phi21-backup-20261005/sqm /tmp/phi21-backup-20261005/omr-bypass
+uci set sqm.wan1.interface='@@INTERFACE_002@@'
+uci commit sqm
+uci delete omr-bypass.ifmap_@@SECTION_002@@
+uci delete omr-bypass.ifmap_@@SECTION_004@@
+uci commit omr-bypass
+test "$(uci -q get sqm.wan1.interface)" = @@INTERFACE_002@@
+test "$(uci -q get sqm.wan1.enabled)" = 0
+test "$(uci -q get omr-bypass.ifmap_@@SECTION_003@@.device)" = @@INTERFACE_006@@
+test "$(uci -q get omr-bypass.ifmap_@@SECTION_005@@.device)" = @@INTERFACE_007@@
+echo 'Three stale configuration entries corrected; no service reload'
+sha256sum /etc/config/sqm /etc/config/omr-bypass
+ip link show @@INTERFACE_001@@ | head -n 1
+fw4 check >/tmp/phi21-fw4-check.log 2>&1
+tail -n 1 /tmp/phi21-fw4-check.log

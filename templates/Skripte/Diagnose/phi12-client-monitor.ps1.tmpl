@@ -1,0 +1,157 @@
+param(
+    [string]$Gateway,
+    [string]$CitrixHost,
+    [string]$CitrixSessionName,
+    [ValidateRange(1,65535)][int]$CitrixPort = 443,
+    [ValidateRange(5,300)][int]$CitrixCheckIntervalSeconds = 5,
+    [ValidateRange(5,86400)][int]$DurationSeconds = 3600,
+    [long]$EndEpoch = 0,
+    [ValidateRange(500,5000)][int]$IntervalMs = 1000,
+    [ValidateRange(250,5000)][int]$PingTimeoutMs = 900,
+    [ValidateRange(5,300)][int]$SnapshotIntervalSeconds = 30,
+    [string]$OutputDirectory
+)
+$ErrorActionPreference = 'Stop'
+if (-not $OutputDirectory) {
+    $OutputDirectory = Join-Path $PSScriptRoot ('phi12-client-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ'))
+}
+if (Test-Path -LiteralPath $OutputDirectory) { throw 'Use a new output directory.' }
+New-Item -ItemType Directory -Path $OutputDirectory | Out-Null
+$OutputDirectory = (Resolve-Path -LiteralPath $OutputDirectory).Path
+if (-not $Gateway) {
+    $route = Find-NetRoute -RemoteIPAddress '@@IPV4_011@@' | Where-Object { $_.NextHop -and $_.NextHop -ne '0.0.0.0' } | Select-Object -First 1
+    if ($route) { $Gateway = $route.NextHop }
+}
+if (-not $Gateway) { throw 'Cannot detect gateway. Supply -Gateway with the local router IP.' }
+$parsedGateway = $null
+if (-not [Net.IPAddress]::TryParse($Gateway,[ref]$parsedGateway)) { throw 'Gateway must be an IP address.' }
+$encoding = New-Object System.Text.UTF8Encoding($false)
+$measurements = New-Object System.IO.StreamWriter((Join-Path $OutputDirectory 'measurements.jsonl'),$false,$encoding)
+$events = New-Object System.IO.StreamWriter((Join-Path $OutputDirectory 'events.jsonl'),$false,$encoding)
+$measurements.AutoFlush = $true
+$events.AutoFlush = $true
+function Write-Record($Writer,$Record) { $Writer.WriteLine(($Record | ConvertTo-Json -Compress -Depth 6)) }
+$snapshotWorker = {
+    param([string]$Reason,[string]$OutputDirectory)
+    $stamp = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')
+    $file = Join-Path $OutputDirectory ('state-' + $stamp + '-' + $Reason + '.json')
+    $state = @{ utc=[DateTime]::UtcNow.ToString('o'); reason=$Reason }
+    try { $state.ip = @(Get-NetIPConfiguration | ForEach-Object { [pscustomobject]@{ InterfaceAlias=$_.InterfaceAlias; InterfaceIndex=$_.InterfaceIndex; IPv4Address=@($_.IPv4Address.IPAddress); IPv4DefaultGateway=@($_.IPv4DefaultGateway.NextHop); DNSServer=@($_.DNSServer.ServerAddresses) } }) } catch { $state.ipError=$_.Exception.Message }
+    try { $state.routes = @(Get-NetRoute -AddressFamily IPv4 | Select-Object DestinationPrefix,NextHop,InterfaceIndex,RouteMetric) } catch { $state.routeError=$_.Exception.Message }
+    try { $state.adapters = @(Get-NetAdapterStatistics | Select-Object Name,ReceivedPacketErrors,OutboundPacketErrors,ReceivedDiscardedPackets,OutboundDiscardedPackets) } catch { $state.adapterError=$_.Exception.Message }
+    try { $state.adapterLinks = @(Get-NetAdapter -IncludeHidden | Select-Object Name,ifIndex,Status,LinkSpeed) } catch { $state.adapterLinkError=$_.Exception.Message }
+    try { $state.internetRoute = @(Find-NetRoute -RemoteIPAddress '@@IPV4_011@@' | Select-Object IPAddress,InterfaceAlias,InterfaceIndex,DestinationPrefix,NextHop,RouteMetric) } catch { $state.internetRouteError=$_.Exception.Message }
+    $citrixProcesses = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match '^(wfica32|wfcrun32|SelfService|Receiver|CitrixWorkspaceApp)$' })
+    $state.citrixProcesses = @($citrixProcesses | Select-Object Id,ProcessName)
+    $zscalerProcesses = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match '^(ZSA|application)' })
+    $state.zscalerProcesses = @($zscalerProcesses | Select-Object Id,ProcessName)
+    if ($zscalerProcesses.Count) {
+        try { $state.zscalerTcp = @(Get-NetTCPConnection -ErrorAction Stop | Where-Object { $_.OwningProcess -in $zscalerProcesses.Id -and $_.State -notin @('Bound','Listen') } | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State,OwningProcess) } catch { $state.zscalerTcpError=$_.Exception.Message }
+        try { $state.zscalerUdpLocal = @(Get-NetUDPEndpoint -ErrorAction Stop | Where-Object { $_.OwningProcess -in $zscalerProcesses.Id } | Select-Object LocalAddress,LocalPort,OwningProcess) } catch { $state.zscalerUdpError=$_.Exception.Message }
+    }
+    if ($citrixProcesses.Count) {
+        try { $state.citrixTcp = @(Get-NetTCPConnection -ErrorAction Stop | Where-Object { $_.OwningProcess -in $citrixProcesses.Id } | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State,OwningProcess) } catch { $state.tcpError=$_.Exception.Message }
+        try { $state.citrixUdpLocal = @(Get-NetUDPEndpoint -ErrorAction Stop | Where-Object { $_.OwningProcess -in $citrixProcesses.Id } | Select-Object LocalAddress,LocalPort,OwningProcess) } catch { $state.udpError=$_.Exception.Message }
+    }
+    $state | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $file -Encoding UTF8
+}
+$end = [DateTime]::UtcNow.AddSeconds($DurationSeconds)
+$lastSnapshot = [DateTime]::MinValue
+$lastCitrixCheck = [DateTime]::MinValue
+$dnsPending = $null
+$tcpPending = $null
+$snapshotJob = $null
+$targets = @(@{label='client_gateway';ip=$Gateway},@{label='client_internet1';ip='@@IPV4_011@@'},@{label='client_internet2';ip='@@IPV4_013@@'})
+Write-Host "STARTED: $OutputDirectory"
+Write-Host "Citrix outage: create an empty file named trigger in this folder. Stop: create stop, or Ctrl+C."
+try {
+    Write-Record $events @{utc=[DateTime]::UtcNow.ToString('o');event='started';gateway=$Gateway;citrixHost=$CitrixHost;citrixSessionName=$CitrixSessionName;citrixPort=$CitrixPort;citrixCheckIntervalSeconds=$CitrixCheckIntervalSeconds;intervalMs=$IntervalMs;timeoutMs=$PingTimeoutMs}
+    & $snapshotWorker 'before' $OutputDirectory
+    $lastSnapshot = [DateTime]::UtcNow
+    $end = if ($EndEpoch -gt 0) { [DateTimeOffset]::FromUnixTimeSeconds($EndEpoch).UtcDateTime } else { [DateTime]::UtcNow.AddSeconds($DurationSeconds) }
+    while ([DateTime]::UtcNow -lt $end) {
+        if (Test-Path -LiteralPath (Join-Path $OutputDirectory 'stop')) { break }
+        if ((Get-Item -LiteralPath (Join-Path $OutputDirectory 'measurements.jsonl')).Length -ge 16MB) { Write-Record $events @{utc=[DateTime]::UtcNow.ToString('o');event='size_limit'}; break }
+        $cycleStart = [DateTime]::UtcNow
+        $pending = @()
+        foreach ($target in $targets) {
+            $ping = New-Object Net.NetworkInformation.Ping
+            try {
+                $task = $ping.SendPingAsync([string]$target.ip,$PingTimeoutMs)
+                $pending += @{ping=$ping;task=$task;target=$target;start=[DateTime]::UtcNow}
+            } catch {
+                Write-Record $measurements @{utc=[DateTime]::UtcNow.ToString('o');kind='icmp';label=$target.label;target=$target.ip;status='local_error';error=$_.Exception.Message}
+                $ping.Dispose()
+            }
+        }
+        # All ICMP requests are already in flight; one failed target cannot delay sending the others.
+        foreach ($request in $pending) {
+            try {
+                $reply = $request.task.GetAwaiter().GetResult()
+                Write-Record $measurements @{utc=$request.start.ToString('o');completedUtc=[DateTime]::UtcNow.ToString('o');kind='icmp';label=$request.target.label;target=$request.target.ip;status=$reply.Status.ToString();rttMs=$reply.RoundtripTime}
+            } catch {
+                Write-Record $measurements @{utc=$request.start.ToString('o');kind='icmp';label=$request.target.label;target=$request.target.ip;status='local_error';error=$_.Exception.Message}
+            } finally { $request.ping.Dispose() }
+        }
+        if ($dnsPending -and ($dnsPending.task.IsCompleted -or ([DateTime]::UtcNow - $dnsPending.start).TotalMilliseconds -ge 1500)) {
+            try {
+                if (-not $dnsPending.task.IsCompleted) { throw 'DNS check exceeded 1500 ms' }
+                $addresses = @($dnsPending.task.GetAwaiter().GetResult() | Where-Object AddressFamily -eq ([Net.Sockets.AddressFamily]::InterNetwork))
+                if (-not $addresses.Count) { throw 'No IPv4 addresses returned' }
+                Write-Record $measurements @{utc=$dnsPending.start.ToString('o');completedUtc=[DateTime]::UtcNow.ToString('o');kind='dns';host=$CitrixHost;status='resolved';addresses=@($addresses | ForEach-Object ToString)}
+                $socket = New-Object Net.Sockets.TcpClient
+                try {
+                    $task = $socket.ConnectAsync($addresses[0],$CitrixPort)
+                    $tcpPending = @{socket=$socket;task=$task;ip=$addresses[0].ToString();start=[DateTime]::UtcNow;watch=[Diagnostics.Stopwatch]::StartNew()}
+                } catch {
+                    Write-Record $measurements @{utc=[DateTime]::UtcNow.ToString('o');kind='tcp_connect';target=$addresses[0].ToString();port=$CitrixPort;status='error';error=$_.Exception.Message}
+                    $socket.Dispose()
+                }
+            } catch {
+                Write-Record $measurements @{utc=$dnsPending.start.ToString('o');kind='dns';host=$CitrixHost;status='error';error=$_.Exception.Message}
+            } finally { $dnsPending=$null }
+        }
+        if ($tcpPending -and ($tcpPending.task.IsCompleted -or $tcpPending.watch.ElapsedMilliseconds -ge 1500)) {
+            try {
+                if (-not $tcpPending.task.IsCompleted) { throw 'TCP connect exceeded 1500 ms' }
+                $null = $tcpPending.task.GetAwaiter().GetResult()
+                Write-Record $measurements @{utc=$tcpPending.start.ToString('o');completedUtc=[DateTime]::UtcNow.ToString('o');kind='tcp_connect';target=$tcpPending.ip;port=$CitrixPort;status='connected';elapsedMs=$tcpPending.watch.ElapsedMilliseconds;timing='completion observed on polling cycle'}
+            } catch {
+                Write-Record $measurements @{utc=$tcpPending.start.ToString('o');kind='tcp_connect';target=$tcpPending.ip;port=$CitrixPort;status='error';error=$_.Exception.Message}
+            } finally { $tcpPending.socket.Dispose(); $tcpPending=$null }
+        }
+        if ($CitrixHost -and -not $dnsPending -and -not $tcpPending -and ([DateTime]::UtcNow - $lastCitrixCheck).TotalSeconds -ge $CitrixCheckIntervalSeconds) {
+            $lastCitrixCheck = [DateTime]::UtcNow
+            $dnsPending=@{task=[Net.Dns]::GetHostAddressesAsync($CitrixHost);start=$lastCitrixCheck}
+        }
+        $trigger = Join-Path $OutputDirectory 'trigger'
+        if ($snapshotJob -and $snapshotJob.State -ne 'Running') {
+            Write-Record $events @{utc=[DateTime]::UtcNow.ToString('o');event='snapshot_job_finished';state=$snapshotJob.State.ToString();errors=@($snapshotJob.ChildJobs | ForEach-Object { $_.Error | ForEach-Object ToString })}
+            Receive-Job -Job $snapshotJob -ErrorAction SilentlyContinue | Out-Null
+            Remove-Job -Job $snapshotJob -Force
+            $snapshotJob=$null
+        }
+        if (Test-Path -LiteralPath $trigger) {
+            Write-Record $events @{utc=[DateTime]::UtcNow.ToString('o');event='user_citrix_outage'}
+            Remove-Item -LiteralPath $trigger
+            if (-not $snapshotJob) { $snapshotJob=Start-Job -ScriptBlock $snapshotWorker -ArgumentList 'citrix-outage',$OutputDirectory }
+            $lastSnapshot = [DateTime]::UtcNow
+        } elseif (-not $snapshotJob -and ([DateTime]::UtcNow - $lastSnapshot).TotalSeconds -ge $SnapshotIntervalSeconds) {
+            $snapshotJob=Start-Job -ScriptBlock $snapshotWorker -ArgumentList 'periodic',$OutputDirectory
+            $lastSnapshot = [DateTime]::UtcNow
+        }
+        $sleepMs = $IntervalMs - ([DateTime]::UtcNow - $cycleStart).TotalMilliseconds
+        if ($sleepMs -gt 0) { Start-Sleep -Milliseconds ([int]$sleepMs) }
+    }
+} finally {
+    if ($tcpPending) { $tcpPending.socket.Dispose() }
+    if ($snapshotJob) {
+        Write-Record $events @{utc=[DateTime]::UtcNow.ToString('o');event='snapshot_job_at_stop';state=$snapshotJob.State.ToString();errors=@($snapshotJob.ChildJobs | ForEach-Object { $_.Error | ForEach-Object ToString })}
+        Stop-Job -Job $snapshotJob -ErrorAction SilentlyContinue
+        Remove-Job -Job $snapshotJob -Force -ErrorAction SilentlyContinue
+    }
+    Write-Record $events @{utc=[DateTime]::UtcNow.ToString('o');event='stopped'}
+    $measurements.Dispose()
+    $events.Dispose()
+    Write-Host "STOPPED: $OutputDirectory"
+}

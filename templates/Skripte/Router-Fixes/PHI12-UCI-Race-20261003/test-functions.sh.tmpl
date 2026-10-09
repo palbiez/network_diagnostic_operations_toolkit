@@ -1,0 +1,7 @@
+#!/bin/sh
+# Run the separately licensed tracker and scheduler tests as independent programs.
+set -eu
+test_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+bash "$test_dir/test-server.sh"
+bash "$test_dir/test-scheduler.sh"
+echo 'ALL TESTS PASSED (independent tracker and scheduler test programs)'

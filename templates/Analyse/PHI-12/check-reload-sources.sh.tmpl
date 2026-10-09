@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+date -Is
+echo 'RELEVANT CRON'
+grep -nE 'omr|firewall|dnsmasq|gaming' /etc/crontabs/root || true
+echo 'RELOAD CALL SITES'
+grep -R -nE 'Reload Shadowsocks Rust rules|Firewall reload, set server|restart.*dnsmasq|dnsmasq.*restart|firewall.*reload|reload.*firewall' /etc/hotplug.d /usr/share/omr /usr/share/omr-tracker /etc/init.d/omr* /usr/bin/omr* /usr/share/omr-schedule 2>/dev/null | head -100 || true
+echo 'GAMING HOTPLUG'
+cat /etc/hotplug.d/iface/99-gaming-policy
+echo 'RECENT CONFIG FILE TIMES'
+ls -l /etc/config/firewall /etc/config/omr-bypass /etc/config/dhcp /etc/config/network
+echo 'TRACKER RELOAD SOURCE'
+grep -R -n -A 24 -B 18 'Reload Shadowsocks Rust rules' /usr/bin /usr/share/omr-tracker 2>/dev/null | head -100 || true

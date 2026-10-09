@@ -1,0 +1,18 @@
+from pathlib import Path
+import urllib.request,json
+out=Path(__file__).resolve().parent
+base='https://@@HOSTNAME_012@@/repos/Ysurac/openmptcprouter-feeds/contents/mqvpn'
+def get(url):return urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Network-diagnosis'}),timeout=20).read()
+items=json.loads(get(base))
+for item in items:
+    if item['name']=='Makefile':
+        data=get(item['download_url']).decode();(out/'mqvpn-feed-Makefile').write_text(data,encoding='utf-8')
+        print('\n'.join(s for s in data.splitlines() if 'PKG_VERSION' in s or 'PKG_SOURCE_VERSION' in s))
+    if item['name']=='patches':
+        for patch in json.loads(get(item['url'])):
+            data=get(patch['download_url']).decode()
+            if any(s in data for s in ['MTU changed externally','IFLA_MTU','mtu_changed']):
+                (out/patch['name']).write_text(data,encoding='utf-8');print('Patch',patch['download_url'])
+                lines=data.splitlines()
+                for i,line in enumerate(lines):
+                    if 'MTU changed externally' in line:print('\n'.join(lines[max(0,i-15):i+8]))

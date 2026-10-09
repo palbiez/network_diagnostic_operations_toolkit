@@ -1,0 +1,20 @@
+python3 - <<'PY'
+from pathlib import Path
+from collections import defaultdict
+import gzip,json,os,datetime
+stats=defaultdict(lambda:{'files':0,'bytes':0,'oldest':None,'newest':None,'compressed':0})
+for p in Path('/var/log/network').rglob('*'):
+    if not p.is_file() or p.is_symlink():continue
+    parts=p.relative_to('/var/log/network').parts;group=parts[0]
+    x=stats[group];x['files']+=1;x['bytes']+=p.stat().st_size;x['compressed']+=p.suffix=='.gz'
+    date=p.name[:10]
+    try:datetime.date.fromisoformat(date)
+    except ValueError:continue
+    x['oldest']=min(x['oldest'] or date,date);x['newest']=max(x['newest'] or date,date)
+print(json.dumps(dict(stats),indent=2))
+for p in ['/etc/logrotate.d/mosquitto','/etc/logrotate.d/telegraf','/etc/logrotate.d/loki','/etc/logrotate.d/syslog-ng','/etc/default/prometheus']:
+    print(p);print(Path(p).read_text())
+PY
+curl -fsS http://127.0.0.1:9090/api/v1/status/flags | python3 -c 'import json,sys; d=json.load(sys.stdin)["data"]; print({k:v for k,v in d.items() if "retention" in k or "storage.tsdb.path" in k})'
+grep -n -E 'directory:|period:|retention|compactor|schema:|store:' /etc/loki/config.yml
+systemctl show network-archive-compress.service -p Result -p ExecMainStatus -p ActiveEnterTimestamp

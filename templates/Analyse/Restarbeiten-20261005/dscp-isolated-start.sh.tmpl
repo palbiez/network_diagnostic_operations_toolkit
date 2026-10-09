@@ -1,0 +1,16 @@
+set -eu
+probe_dir=$(mktemp -d /tmp/phi10-start.XXXXXX)
+chmod 700 "$probe_dir"
+mkdir "$probe_dir/state"
+for config_file in /etc/config/*; do if [ -f "$config_file" ]; then cp "$config_file" "$probe_dir/"; fi; done
+export UCI_CONFIG_DIR="$probe_dir"
+set +eu
+. /etc/init.d/omr-dscp
+uci() { /sbin/uci -c "$probe_dir" -t "$probe_dir/state" -p "$probe_dir/state" "$@"; }
+fw4() { echo "ISOLATED fw4 $* skipped"; return 0; }
+set +e
+start_service
+echo isolated_start_exit=$?
+uci show firewall | grep -E '^firewall.omr_dscp_rule[1-7]\.(proto|src_port|dest_port|set_dscp)'
+echo PROBE_DIR="$probe_dir"
+grep -n -E 'dscp|_remove.*rule|_remove.*ipset' /etc/init.d/omr-bypass | tail -18

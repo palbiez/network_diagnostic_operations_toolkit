@@ -1,0 +1,66 @@
+from pathlib import Path
+import tarfile, re, json, csv, io, hashlib
+from collections import Counter
+from datetime import datetime,timezone
+
+ROOT=Path(__file__).resolve().parents[2]
+archive=ROOT/'Analyse/PHI-12/daytime-20261002.tar.gz'
+result={'archive_sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),'network':{},'playstation':{},'application':{}}
+begin=datetime(2026,10,2,11,10,tzinfo=timezone.utc).timestamp()
+end=datetime(2026,10,2,11,20,tzinfo=timezone.utc).timestamp()
+with tarfile.open(archive) as tar:
+    for m in tar.getmembers():
+        if not m.isfile(): continue
+        text=tar.extractfile(m).read().decode(errors='replace')
+        name=m.name
+        if '/ping-' in name and name.startswith('phi12-network-'):
+            times=[float(x) for x in re.findall(r'time[=<]([0-9.]+) ms',text)]
+            stats=re.search(r'(\d+) packets transmitted, (\d+) received',text)
+            result['network'][Path(name).name]={'sent':int(stats[1]) if stats else None,'received':int(stats[2]) if stats else None,'max_rtt_ms':max(times) if times else None,'over_200ms':sum(t>200 for t in times)}
+        if '/events.csv' in name:
+            if name.startswith('phi12-network-'):result['network_events']=text
+            elif name.startswith('phi12-device-playstation-'):result['playstation']['events']=text
+            elif name.startswith('phi12-application-wan-'):result['application']['events']=text
+        if name.endswith('/lan-packets.log'):
+            stamps=[]
+            for line in text.splitlines():
+                match=re.match(r'(\d+\.\d+)',line)
+                if match:stamps.append(float(match[1]))
+            result['playstation']['lan_packet_lines']=len(stamps)
+            result['playstation']['lan_packet_lines_1310_1320']=sum(begin<=s<end for s in stamps)
+        if name.endswith('/path-hints.csv'):
+            rows=list(csv.DictReader(io.StringIO(text)))
+            counts=Counter(r['path_hint'] for r in rows)
+            window=Counter()
+            uniq=set()
+            for r in rows:
+                dt=datetime.strptime(r['utc'],'%Y%m%dT%H%M%SZ').replace(tzinfo=timezone.utc).timestamp()
+                if begin<=dt<end:
+                    window[r['path_hint']]+=1
+                    uniq.add((r['target'],r['proto'],r['source_port'],r['destination_port'],r['path_hint']))
+            dest=result['playstation'] if name.startswith('phi12-device-') else result['application']
+            dest['path_observations']=dict(counts)
+            dest['path_observations_1310_1320']=dict(window)
+            dest['unique_observed_tuples_1310_1320']=len(uniq)
+        if '/wire-' in name and name.endswith('.log'):
+            dest=result['playstation'] if name.startswith('phi12-device-') else result['application']
+            dest['wire_packet_lines']=dest.get('wire_packet_lines',0)+len(text.splitlines())
+            if text.strip() and 'wire_example' not in dest:dest['wire_example']=text.splitlines()[:2]
+        if name.endswith('-status.txt') and re.search(r'error|syntax|denied',text,re.I):
+            result.setdefault('capture_errors',[]).append({'file':name,'text':text[:300]})
+        if name.endswith('local-syslog.txt') and name.startswith('phi12-network-'):
+            lines=[l for l in text.splitlines() if '[STATUS]' in l and 'mqvpn' in l]
+            if lines:
+                stats=result.setdefault('mqvpn_status',{})
+                stats['loss_values']=sorted(set(stats.get('loss_values',[]))|set(int(x) for l in lines for x in re.findall(r'dgram_lost[=:](\d+)',l)))
+                stats['sample_example']=lines[-1]
+        if name.endswith('nic.csv'):
+            rows=list(csv.DictReader(io.StringIO(text)))
+            deltas={}
+            for dev in ['@@INTERFACE_002@@','@@INTERFACE_003@@']:
+                selected=[r for r in rows if r['interface']==dev]
+                if selected:
+                    deltas[dev]={k:int(selected[-1][k])-int(selected[0][k]) for k in ['carrier_changes','rx_errors','tx_errors','rx_dropped','tx_dropped'] if selected[-1][k].isdigit() and selected[0][k].isdigit()}
+            result['nic_deltas']=deltas
+(ROOT/'Analyse/PHI-12/daytime-summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print(json.dumps(result,ensure_ascii=False,indent=2))

@@ -1,0 +1,21 @@
+import io,tarfile,tempfile,json
+from pathlib import Path
+from compare import compare
+
+with tempfile.TemporaryDirectory() as tmp:
+ p=Path(tmp)/'fixture.tar.gz'
+ files={
+  'logs/services-20261003-11.log':'Sat Oct  3 11:30:02 2026 user.notice firewall.omr-server: Firewall reload\n',
+  'ping-wan1.log':'[@@EPOCH_006@@.000000] no answer yet for icmp_seq=1\n[@@EPOCH_007@@.000000] 64 bytes from @@IPV4_025@@: icmp_seq=1 ttl=53 time=10.0 ms\n[@@EPOCH_008@@.000000] no answer yet for icmp_seq=2\nSESSION_START 2026-10-03T09:30:04Z\n[@@EPOCH_009@@.000000] 64 bytes from @@IPV4_025@@: icmp_seq=2 ttl=53 time=10.0 ms\n',
+  'ping-mobile-@@IPV4_017@@.log':'[@@EPOCH_004@@.100000] 64 bytes from @@IPV4_017@@: icmp_seq=1 ttl=64 time=1.0 ms\n1 packets transmitted, 1 received\nresult_utc=2026-10-03T09:30:01Z rc=0 next_delay_s=1\n1 packets transmitted, 0 received\nresult_utc=2026-10-03T09:30:03Z rc=1 next_delay_s=300\n',
+ }
+ with tarfile.open(p,'w:gz') as t:
+  for name,text in files.items():
+   data=text.encode();info=tarfile.TarInfo('phi12-diag-20261003/'+name);info.size=len(data);t.addfile(info,io.BytesIO(data))
+ r=compare(p,Path(tmp)/'result.json')
+ assert len(r['events'])==1
+ assert r['events'][0]['epoch']==@@EPOCH_007@@
+ assert r['probes']['ping-wan1.log']['timeouts_without_later_reply']==1
+ assert r['probes']['ping-mobile-@@IPV4_017@@.log']['summary']=={'transmitted':2,'received':1}
+ assert r['events'][0]['probes']['ping-mobile-@@IPV4_017@@.log']['unanswered_without_later_reply']==1
+ print('PASS: UTC/Berlin events, delayed replies, mobile/restarted sequence reuse and timeout accounting.')

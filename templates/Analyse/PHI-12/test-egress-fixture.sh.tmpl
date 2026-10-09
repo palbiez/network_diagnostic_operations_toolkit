@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+# Synthetic tuple exercises NAT parsing/BPF compilation without producing traffic.
+testdir=/tmp/phi12-application-egress-fixture-20261002
+mkdir "$testdir"
+echo @@IPV4_029@@ > "$testdir/known-targets.txt"
+conntrack() {
+ printf '%s\n' 'ipv4 2 tcp 6 431999 ESTABLISHED src=@@IPV4_026@@ dst=@@IPV4_029@@ sport=56789 dport=443 src=@@IPV4_029@@ dst=@@IPV4_005@@ sport=443 dport=56789 mark=0 use=1'
+}
+JOY_DIR="$testdir"
+DURATION=5
+. /tmp/phi12-application-egress.sh
+grep -q ',WAN2$' "$testdir/egress/path-hints.csv"
+grep -q 'listening on any' "$testdir/egress/"wire-*-status.txt
+echo 'PASS: synthetic WAN2 tuple recognized and exact BPF accepted by tcpdump.'
+echo 'This is a parser/filter test, not observed application WAN2 traffic.'

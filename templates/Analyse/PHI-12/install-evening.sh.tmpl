@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+bin=/root/phi12-evening-20261002
+mkdir -p "$bin"
+chmod 700 "$bin"
+for script in phi12-router-monitor.sh phi12-scope-monitor.sh phi12-evening-router.sh; do
+ sh -n "/tmp/$script"
+ cp "/tmp/$script" "$bin/$script"
+ chmod 700 "$bin/$script"
+done
+cp -p /etc/crontabs/root "$bin/crontab.before"
+marker=PHI12-EVENING-20261002
+grep -Fq "$marker" /etc/crontabs/root || printf '\n@@SCHEDULE_001@@ /root/phi12-evening-20261002/phi12-evening-router.sh >> /tmp/phi12-evening-20261002-launch.log 2>&1 # %s\n' "$marker" >> /etc/crontabs/root
+cp -p /etc/crontabs/root "$bin/crontab.after"
+crontab "$bin/crontab.after"
+# crontab notifies BusyBox crond; no cron/service/network restart needed.
+date -Is
+echo 'INSTALLED:'
+grep -F "$marker" /etc/crontabs/root
+echo 'CRON PROCESS:'
+pidof crond
+echo 'FILES:'
+sha256sum "$bin/"*.sh

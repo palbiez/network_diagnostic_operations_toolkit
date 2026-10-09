@@ -1,0 +1,3 @@
+find /var/log/network -maxdepth 2 -iname '*homeassistant*' -o -iname '*150.129*'
+grep -l 'homeassistant' /var/log/network/*/*.log 2>/dev/null | head -n 10
+tail -n 10 /var/log/mosquitto/mosquitto.log

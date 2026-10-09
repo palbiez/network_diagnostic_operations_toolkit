@@ -1,0 +1,24 @@
+import sys,importlib.util,json,re
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2]
+spec=importlib.util.spec_from_file_location('switch',ROOT/'Analyse/PHI-12/read-switch-authenticated.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+m.OUT=ROOT/'Analyse/Zentrale-Telemetrie-20261004/switches';m.OUT.mkdir(exist_ok=True)
+results=[]
+for ip in ['@@IPV4_019@@','@@IPV4_020@@','@@IPV4_090@@','@@IPV4_091@@','@@IPV4_021@@']:
+ try:
+  s=m.Switch(ip)
+  if ip in ['@@IPV4_090@@','@@IPV4_091@@']:
+   # These TP-Link devices use the same login form family as .3.
+   u,b=s.request('logon.cgi',{'username':m.username,'password':m.password,'logon':'Login'});s.save('login-result.html',b)
+   u,b=s.request('/');s.save('root.html',b)
+  else:r=s.login()
+  paths=['Menu.htm','menuList.js','SystemInfoRpm.htm','PortSettingRpm.htm','PortStatisticsRpm.htm'] if ip in ['@@IPV4_019@@','@@IPV4_090@@','@@IPV4_091@@'] else ['menu.cgi','info.cgi','port.cgi?page=stats','port.cgi?page=state']
+  row={'ip':ip,'pages':[]}
+  for path in paths:
+   try:
+    u,b=s.request(path);s.save(path,b)
+    row['pages'].append({'path':path,'length':len(b),'log_or_snmp_links':re.findall(r'(?:href|src)=["\']([^"\']*(?:syslog|snmp|event|logging)[^"\']*)',b,re.I)})
+   except Exception as e:row['pages'].append({'path':path,'error':type(e).__name__})
+  results.append(row)
+ except Exception as e:results.append({'ip':ip,'error':type(e).__name__})
+(m.OUT/'summary.json').write_text(json.dumps(results,indent=2),encoding='utf-8');print(json.dumps(results,indent=2))

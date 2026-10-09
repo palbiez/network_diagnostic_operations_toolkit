@@ -1,0 +1,56 @@
+from pathlib import Path
+import sys,json,base64,hashlib
+ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+import central_observability as obs
+folder=Path(__file__).resolve().parent;backup=ROOT/'Backups/Restarbeiten-20261005'
+c=obs.connect('@@IPV4_008@@')
+try:
+    _,o,e=c.exec_command('cat /etc/init.d/mqvpn');original=o.read();assert o.channel.recv_exit_status()==0
+finally:c.close()
+target=backup/'mqvpn.init.empty-path.before'
+if target.exists():assert target.read_bytes()==original,'Router source changed since backup'
+else:target.write_bytes(original)
+helper=(folder/'mqvpn-named-path-guard.sh').read_text()
+old=original.decode();needle='\tgenerate_config || return 1\n';assert old.count(needle)==1
+insert='''\t# Avoid an implicit unnamed primary during auto-WAN startup/reinitialization.
+\tlocal auto_wan
+\tconfig_load mqvpn
+\tconfig_get auto_wan multipath auto_wan '1'
+\tif [ "$auto_wan" = '1' ]; then
+\t\t_ensure_named_auto_paths "$CONF" || return 1
+\tfi
+'''
+new=old.replace('start_service() {',helper+'\nstart_service() {',1).replace(needle,needle+insert,1)
+(folder/'mqvpn.init.named-path-fixed').write_text(new,encoding='utf-8')
+blob=base64.b64encode(new.encode()).decode();helperblob=base64.b64encode(helper.encode()).decode()
+script="""set -e
+printf '%s' '"""+blob+"""' | base64 -d > /tmp/phi13-mqvpn-fixed
+sh -n /tmp/phi13-mqvpn-fixed
+printf '%s' '"""+helperblob+"""' | base64 -d > /tmp/phi13-named-path-helper
+. /tmp/phi13-named-path-helper
+logger() { echo "ISOLATED logger $*"; }
+file=$(mktemp /tmp/phi13-paths.XXXXXX)
+printf '[Multipath]\\nPath = @@INTERFACE_002@@\\nPath = @@INTERFACE_003@@\\n' > "$file"
+_ensure_named_auto_paths "$file"
+test "$(grep -c '^Path = ' "$file")" = 2
+printf '[Multipath]\\n' > "$file"
+if _ensure_named_auto_paths "$file"; then echo 'FAIL zero paths accepted'; exit 1; fi
+printf '[Multipath]\\nBackupPath = @@INTERFACE_003@@\\nBackupPath = @@INTERFACE_002@@\\n' > "$file"
+_ensure_named_auto_paths "$file"
+test "$(grep -c '^Path = @@INTERFACE_003@@' "$file")" = 1
+test "$(grep -c '^BackupPath = @@INTERFACE_002@@' "$file")" = 1
+echo 'PASS named primary, zero WAN deferral, backup-only promotion'
+mkdir -p /root/phi13-backup-20261005
+chmod 700 /root/phi13-backup-20261005
+test ! -e /root/phi13-backup-20261005/mqvpn
+test "$(sha256sum /etc/init.d/mqvpn | cut -d' ' -f1)" = """+hashlib.sha256(original).hexdigest()+"""
+cp -p /etc/init.d/mqvpn /root/phi13-backup-20261005/mqvpn
+cp /tmp/phi13-mqvpn-fixed /etc/init.d/mqvpn
+chmod 755 /etc/init.d/mqvpn
+sh -n /etc/init.d/mqvpn
+mqvpn-path list
+echo 'Named-path guard installed for next startup; running MQVPN untouched'
+sha256sum /etc/init.d/mqvpn
+"""
+r=obs.run('@@IPV4_008@@',script,90)
+(folder/'mqvpn-empty-path-fix.json').write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

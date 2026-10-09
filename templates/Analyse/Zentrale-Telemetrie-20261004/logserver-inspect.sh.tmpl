@@ -1,0 +1,10 @@
+cat /etc/syslog-ng/syslog-ng.conf
+find /etc/syslog-ng/conf.d -type f -maxdepth 1 -exec cat {} \;
+cat /etc/prometheus/prometheus.yml
+systemctl cat prometheus mosquitto collectd telegraf node_exporter
+cat /etc/mosquitto/mosquitto.conf
+find /etc/mosquitto/conf.d -maxdepth 1 -type f ! -iname '*pass*' -exec cat {} \;
+grep -R -n -E 'mqtt|collectd|data_format|topic|server|password|token|syslog|loki|influx|outputs.file' /etc/telegraf /etc/collectd /etc/alloy /etc/loki 2>/dev/null | head -180
+find /var/log/network -maxdepth 2 -type f -printf '%TY-%Tm-%Td %TH:%TM %s %p\n' | sort | tail -45
+curl -s http://127.0.0.1:9090/api/v1/targets
+journalctl -u collectd -u telegraf -u mosquitto -u syslog-ng --since '10 min ago' --no-pager | tail -110

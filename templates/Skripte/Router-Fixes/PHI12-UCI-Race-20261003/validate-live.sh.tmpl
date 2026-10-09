@@ -1,0 +1,36 @@
+#!/bin/sh
+set -u
+umask 077
+B=/root/phi12-uci-race-fix-20261003
+date -Is > "$B/validation-start.txt"
+printf 'berlin,dnsmasq,unbound,mqvpn,sslocal,server_tracker,ifnames_pending_lines\n' > "$B/validation.csv"
+previous=''
+iteration=0
+while [ "$iteration" -le 60 ]; do
+ server_pid=$(ubus call service list '{"name":"omr-tracker"}' | jsonfilter -e '@["omr-tracker"].instances.instance5.pid')
+ signature=''
+ for svc in dnsmasq unbound mqvpn sslocal; do
+  val=$(pidof "$svc" 2>/dev/null | tr ' ' ':')
+  signature="$signature,$val"
+ done
+ deltas=$({ uci -q changes shadowsocks-libev; uci -q changes shadowsocks-rust; } | grep -c '\.ss_rules\.ifnames' || true)
+ printf '%s%s,%s,%s\n' "$(date -Is)" "$signature" "$server_pid" "$deltas" >> "$B/validation.csv"
+ if [ "$signature" != "$previous" ]; then
+  printf '%s service signature%s server_tracker=%s\n' "$(date -Is)" "$signature" "$server_pid"
+  previous="$signature"
+ fi
+ if [ $((iteration%12)) = 0 ]; then printf '%s validation elapsed=%ss pending_ifnames=%s\n' "$(date -Is)" "$((iteration*5))" "$deltas"; fi
+ iteration=$((iteration+1))
+ [ "$iteration" -gt 60 ] || sleep 5
+done
+fw4 check > "$B/fw4-after.txt" 2>&1
+printf '%s\n' "$?" > "$B/fw4-after.exit"
+nslookup example.com 127.0.0.1 > "$B/dns-after.txt" 2>&1
+printf '%s\n' "$?" > "$B/dns-after.exit"
+for pkg in network firewall dhcp unbound omr-bypass omr-tracker shadowsocks-libev shadowsocks-rust openvpn; do
+ sha256sum "/etc/config/$pkg" >> "$B/config-hashes-after.txt"
+done
+ubus call service list '{}' > "$B/services-after.json"
+logread -l 15000 > "$B/log-context-after.txt"
+date -Is > "$B/validation-end.txt"
+printf 'validation ended %s fw4=%s dns=%s\n' "$(cat "$B/validation-end.txt")" "$(cat "$B/fw4-after.exit")" "$(cat "$B/dns-after.exit")"

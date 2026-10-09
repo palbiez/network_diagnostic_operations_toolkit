@@ -1,0 +1,60 @@
+#!/bin/sh
+set -eu
+route_script=/usr/local/sbin/omr-syslog-route
+route_unit=/etc/systemd/system/omr-syslog-route.service
+route_timer=/etc/systemd/system/omr-syslog-route.timer
+test ! -e "$route_script"
+test ! -e "$route_unit"
+test ! -e "$route_timer"
+test -z "$(ip -4 route show exact @@IPV4_007@@/32)"
+backup=/root/omr-syslog-route-backup-$(date -u +%Y%m%dT%H%M%SZ)
+install -d -m 700 "$backup"
+ip -4 route show table all > "$backup/routes-before.txt"
+ip -4 rule show > "$backup/rules-before.txt"
+systemctl cat mqvpn > "$backup/mqvpn-service-before.txt"
+cp -a /etc/syslog-ng/syslog-ng.conf "$backup/syslog-ng.conf"
+cat > "$route_script" <<'EOF'
+#!/bin/sh
+set -eu
+# Only the syslog receiver is routed into the VPN. Wait for a usable tunnel.
+if ! /usr/sbin/ip -4 addr show dev @@INTERFACE_004@@ 2>/dev/null | /usr/bin/grep -q 'inet @@IPV4_002@@ '; then
+    exit 0
+fi
+current=$(/usr/sbin/ip -4 route show exact @@IPV4_007@@/32)
+case "$current" in
+    '@@IPV4_007@@ via @@IPV4_001@@ dev @@INTERFACE_004@@ proto static src @@IPV4_002@@') exit 0 ;;
+esac
+/usr/sbin/ip -4 route replace @@IPV4_007@@/32 via @@IPV4_001@@ dev @@INTERFACE_004@@ src @@IPV4_002@@ proto static
+EOF
+chmod 755 "$route_script"
+cat > "$route_unit" <<'EOF'
+[Unit]
+Description=Route OMR VPS syslog receiver through MQVPN
+After=mqvpn.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/omr-syslog-route
+EOF
+cat > "$route_timer" <<'EOF'
+[Unit]
+Description=Restore syslog host route after boot or MQVPN interface recreation
+
+[Timer]
+OnBootSec=15s
+OnUnitInactiveSec=15s
+AccuracySec=1s
+Unit=omr-syslog-route.service
+
+[Install]
+WantedBy=timers.target
+EOF
+systemd-analyze verify "$route_unit" "$route_timer"
+systemctl daemon-reload
+systemctl start omr-syslog-route.service
+systemctl enable --now omr-syslog-route.timer
+printf 'Backup: %s\n' "$backup"
+ip -4 route get @@IPV4_007@@
+nc -vz -w 5 @@IPV4_007@@ 514
+systemctl show mqvpn -p MainPID
+systemctl list-timers omr-syslog-route.timer --no-pager

@@ -1,0 +1,8 @@
+date -Iseconds
+grep -R -n -E 'mtu.*1500|MTU.*1500|SIOCSIFMTU' /etc/init.d /etc/hotplug.d /lib/netifd /usr/share/omr* /usr/bin/omr* 2>/dev/null | head -35
+grep -R -n -E 'ip link set.*mtu|ifconfig.*mtu' /etc/init.d /etc/hotplug.d /lib/netifd /usr/share/omr* /usr/bin/omr* 2>/dev/null | head -45
+command -v bpftrace; command -v perf; command -v strace
+ls -ld /sys/kernel/tracing /sys/kernel/debug/tracing 2>/dev/null
+ip neigh show @@IPV4_016@@
+nft list chain inet fw4 mangle_prerouting | grep -E 'gaming|49-gaming' | head -12
+mqvpn-path list

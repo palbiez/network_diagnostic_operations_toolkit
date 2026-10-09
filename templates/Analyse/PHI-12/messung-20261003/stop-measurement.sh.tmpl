@@ -1,0 +1,36 @@
+#!/bin/sh
+set -u
+B=/root/phi12-diag-20261003
+D=/tmp/phi12-diag-20261003
+umask 077
+roots=''
+for f in /proc/[0-9]*/cmdline; do
+ cmd=$(tr '\0' ' ' < "$f" 2>/dev/null) || continue
+ case "$cmd" in
+  "/bin/sh $B/run.sh"*|"sh $B/run.sh"*|"sh $B/minecraft.sh"*|"sh $B/ping-supervised.sh"*|"sh $B/deadline-guard.sh"*|"sh $B/minecraft-end-guard.sh"*)
+   p=${f#/proc/}; p=${p%/cmdline}
+   kill -STOP "$p" 2>/dev/null || continue
+   roots="$roots $p"
+   printf 'verified diagnostic root stopped: %s\n' "$p"
+  ;;
+ esac
+done
+touch "$D/stop"
+stop_children() {
+ for ch in $(pgrep -P "$1" 2>/dev/null); do
+  [ "$(awk '/^PPid:/ {print $2}' "/proc/$ch/status" 2>/dev/null)" = "$1" ] || continue
+  kill -STOP "$ch" 2>/dev/null || continue
+  stop_children "$ch"
+  [ "$(awk '/^PPid:/ {print $2}' "/proc/$ch/status" 2>/dev/null)" = "$1" ] || continue
+  kill -KILL "$ch" 2>/dev/null || true
+ done
+}
+for p in $roots; do stop_children "$p"; kill -KILL "$p" 2>/dev/null || true; done
+sh "$B/restore.sh" >> "$D/restore.log" 2>&1
+date -Is > "$D/finished.txt"
+printf '%s,user-requested-stop\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$D/events.csv"
+cat "$D/finished.txt" "$D/restore.log"
+echo 'remaining diagnostic scripts:'
+ps w | grep '/root/phi12-diag-20261003/' | grep -v grep || true
+echo 'remaining measurement cron:'
+grep 'PHI12-DIAG-20261003' /etc/crontabs/root || true

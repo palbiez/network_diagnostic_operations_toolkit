@@ -1,0 +1,14 @@
+#!/bin/sh
+echo 'RELEVANT BYPASS CONFIG BLOCKS:'
+awk 'BEGIN{RS=""} /wan2|application|@@MAC_005@@|@@IPV4_026@@/ {print $0 "\n"}' /etc/config/omr-bypass
+echo 'application LOGGER CURRENT TARGETS:'
+cat /tmp/phi12-application-20261002T095306Z/known-targets.txt
+echo 'application CONNECTION SNAPSHOTS TAIL:'
+tail -30 /tmp/phi12-application-20261002T095306Z/connection-snapshots.log
+echo 'CURRENT DNS:'
+nslookup @@HOSTNAME_008@@
+nslookup @@HOSTNAME_009@@
+echo 'ROUTE COMPARISON FOR CLIENT:'
+for mark in 0 0x45392 0x45393 0x45391500; do
+ ip route get @@IPV4_029@@ from @@IPV4_026@@ iif @@INTERFACE_009@@ mark "$mark"
+done

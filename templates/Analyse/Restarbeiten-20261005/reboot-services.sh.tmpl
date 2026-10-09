@@ -1,0 +1,7 @@
+date -Iseconds
+ps w | grep -E '[o]mr-dscp|[r]cS|[f]irewall'
+sed -n '1,110p' /lib/config/uci.sh
+command -v mqvpn-cli
+ls /usr/bin/*mqvpn* /usr/sbin/*mqvpn* 2>/dev/null
+mqvpn --help 2>&1 | tail -25
+grep -R -n 'omr-dscp.*stop\|omr-dscp.*restart\|omr-dscp.*start' /etc/init.d /usr/share/omr* 2>/dev/null | head -15

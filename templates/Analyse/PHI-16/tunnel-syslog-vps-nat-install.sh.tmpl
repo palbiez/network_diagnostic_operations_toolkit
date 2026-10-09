@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+test -f /usr/local/sbin/omr-syslog-route
+if nft list table ip omr_syslog >/dev/null 2>&1; then
+    echo 'Existing table; refusing to overwrite' >&2
+    exit 1
+fi
+cat > /etc/omr-syslog-nat.nft <<'EOF'
+table ip omr_syslog {
+    chain output {
+        type nat hook output priority -110; policy accept;
+        ip daddr @@IPV4_007@@ tcp dport 514 counter dnat to @@IPV4_001@@:514
+    }
+}
+EOF
+nft --check --file /etc/omr-syslog-nat.nft
+cp -a /usr/local/sbin/omr-syslog-route /root/omr-syslog-route-backup-20261002T194437Z/route-script-before-nat
+python3 - <<'PY'
+from pathlib import Path
+p=Path('/usr/local/sbin/omr-syslog-route')
+s=p.read_text()
+s=s.replace('set -eu\n','set -eu\n# MQVPN 0.16.2 dispatches only to assigned tunnel IPs, not LAN destinations.\nif ! /usr/sbin/nft list table ip omr_syslog >/dev/null 2>&1; then\n    /usr/sbin/nft --file /etc/omr-syslog-nat.nft\nfi\n',1)
+p.write_text(s)
+PY
+systemctl start omr-syslog-route.service
+nc -vz -w 5 @@IPV4_007@@ 514
+nft list table ip omr_syslog
+systemctl show mqvpn -p MainPID

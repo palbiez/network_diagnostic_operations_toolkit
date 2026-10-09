@@ -1,0 +1,13 @@
+from pathlib import Path
+import json
+ROOT=Path(__file__).resolve().parents[2]
+heading='\n\n## Minecraft-IP korrigiert: 03.10.2026, 11:55 Uhr\n\n'
+text=(@@PYTHON_STRING_030@@)
+for rel in ['Analyse/PHI-12/messung-2026-10-03.md','Analyse/PHI-12/diagnoseplan-2026-10-02.md','Linear/issues/PHI-6.md','Linear/issues/PHI-12.md']:
+ p=ROOT/rel;old=p.read_text(encoding='utf-8')
+ if heading not in old:p.write_text(old.rstrip()+heading+text,encoding='utf-8')
+p=ROOT/'Linear/work-packages.json';data=json.loads(p.read_text(encoding='utf-8'))
+for key,n in [('measurement',6),('restart-routing',12)]:
+ next(x for x in data if x['key']==key)['description']=(ROOT/f'Linear/issues/PHI-{n}.md').read_text(encoding='utf-8')
+p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print('Korrektur dokumentiert; historische .@@VLAN_006@@.104-Daten nicht als Minecraft bewertet.')

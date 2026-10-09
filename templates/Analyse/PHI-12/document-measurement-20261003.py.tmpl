@@ -1,0 +1,26 @@
+from pathlib import Path
+import json
+ROOT=Path(__file__).resolve().parents[2]
+report=ROOT/'Analyse/PHI-12/messung-2026-10-03.md'
+t=report.read_text(encoding='utf-8')
+t=t.replace(@@PYTHON_STRING_025@@,@@PYTHON_STRING_026@@)
+heading='\n\n## Minecraft-Ergaenzung und erster Zwischenstand\n\n'
+text=@@PYTHON_STRING_027@@
+if heading not in t:t+=heading+text
+report.write_text(t,encoding='utf-8')
+issue_heading='\n\n## Umsetzung und Messung 03.10.2026\n\n'
+common=@@PYTHON_STRING_028@@
+rule=@@PYTHON_STRING_029@@
+for number in [6,9,10,12]:
+ p=ROOT/f'Linear/issues/PHI-{number}.md';old=p.read_text(encoding='utf-8')
+ addition=common+rule+(text if number in [6,12] else '')
+ if issue_heading not in old:p.write_text(old.rstrip()+issue_heading+addition,encoding='utf-8')
+p=ROOT/'Analyse/PHI-12/diagnoseplan-2026-10-02.md';old=p.read_text(encoding='utf-8')
+if issue_heading not in old:p.write_text(old.rstrip()+issue_heading+common+rule+text,encoding='utf-8')
+p=ROOT/'Linear/work-packages.json';pkgs=json.loads(p.read_text(encoding='utf-8'))
+for key,n in [('measurement',6),('gaming',9),('dscp',10),('restart-routing',12)]:
+ item=next(x for x in pkgs if x['key']==key);item['description']=(ROOT/f'Linear/issues/PHI-{n}.md').read_text(encoding='utf-8')
+ for source in ['Analyse/PHI-12/messung-2026-10-03.md','Analyse/PHI-12/messung-20261003/rule-check.json']:
+  if source not in item['sources']:item['sources'].append(source)
+p.write_text(json.dumps(pkgs,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print('Messung, Regeln und Minecraft-Ergaenzung fuer PHI-6/9/10/12 dokumentiert.')

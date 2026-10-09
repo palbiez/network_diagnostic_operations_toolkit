@@ -1,0 +1,14 @@
+sudo -n docker inspect homeassistant --format '{{json .Args}}'
+sudo -n docker stats --no-stream --format '{{.Name}} {{.MemUsage}} {{.CPUPerc}}'
+sudo -n python3 - <<'PY'
+from pathlib import Path
+import json,collections,re
+root=Path('/homeassistant/.storage')
+for name,key in [('core.entity_registry','entities'),('core.device_registry','devices')]:
+    p=root/name;data=json.loads(p.read_text())['data'][key]
+    print(name,p.stat().st_size,'count',len(data))
+    if key=='entities':print('platforms',collections.Counter(n.get('platform') for n in data).most_common(10))
+for name in ['configuration.yaml','router.yaml']:
+    p=Path('/homeassistant')/name
+    text=p.read_text();print(name,len(text),len(text.splitlines()),'debug options',[l for l in text.splitlines() if re.match(r'^\s*(debug|default|asyncio|homeassistant|logger)\s*:',l)])
+PY

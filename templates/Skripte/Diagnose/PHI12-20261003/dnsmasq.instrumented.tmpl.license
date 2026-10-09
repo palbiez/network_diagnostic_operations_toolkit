@@ -1,0 +1,6 @@
+SPDX-FileCopyrightText: 2007-2012 OpenWrt.org
+SPDX-FileCopyrightText: 2026 palbiez
+SPDX-License-Identifier: GPL-2.0-only
+
+Source: https://github.com/openwrt/openwrt/blob/0ef832f34e309fd060b1eb6b9aa78e6b4c5d1c77/package/network/services/dnsmasq/files/dnsmasq.init
+Changes: Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained.

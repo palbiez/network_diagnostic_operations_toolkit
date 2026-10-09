@@ -1,0 +1,57 @@
+from pathlib import Path
+import configparser, hashlib, http.cookiejar, json, re, urllib.parse, urllib.request
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / 'Analyse/PHI-12/switch-management-20261003'
+OUT.mkdir(exist_ok=True)
+cfg = configparser.ConfigParser(interpolation=None)
+cfg.read(ROOT / 'Zugangsdaten/infos', encoding='utf-8-sig')
+section = next((s for s in cfg.sections() if 'switch' in s.lower()), 'old_router')
+def clean(s):
+    s = (s or '').strip()
+    return s[1:-1] if len(s)>1 and s[0]==s[-1] and s[0] in "\"'" else s
+password = clean(cfg[section].get('passwort') or cfg[section].get('password'))
+username = 'admin'  # Explicit user instruction, 03.10.2026.
+if not password:
+    raise SystemExit('No password found in selected credential section')
+
+class Switch:
+    def __init__(self, ip):
+        self.ip = ip
+        self.base = 'http://' + ip + '/'
+        self.jar = http.cookiejar.CookieJar()
+        self.client = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.jar))
+        self.digest = hashlib.md5((username+password).encode()).hexdigest()
+    def request(self, path, data=None, extra=None):
+        url = urllib.parse.urljoin(self.base, path)
+        if urllib.parse.urlsplit(url).hostname != self.ip:
+            raise ValueError('Off-device URL rejected')
+        headers = {'User-Agent':'Mozilla/5.0', 'Referer':self.base}
+        if extra: headers.update(extra)
+        if self.ip != '@@IPV4_019@@': headers['Cookie'] = 'admin=' + self.digest
+        req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode() if data is not None else None, headers=headers)
+        with self.client.open(req, timeout=8) as response:
+            return response.geturl(), response.read(1000000).decode(errors='replace')
+    def save(self, path, body):
+        safe = body.replace(password, '[REDACTED]').replace(self.digest, '[REDACTED]')
+        name = self.ip + '-' + re.sub(r'[^a-zA-Z0-9_.-]', '_', path)
+        (OUT/name).write_text(safe, encoding='utf-8')
+    def login(self):
+        if self.ip == '@@IPV4_019@@':
+            url, body = self.request('logon.cgi', {'username':username,'password':password,'logon':'Login'})
+        else:
+            url, body = self.request('login.cgi', {'username':username,'password':password,'Response':self.digest,'language':'EN'})
+        self.save('login-result.html', body)
+        # Check a fresh authenticated root page, not merely HTTP 200.
+        url, body = self.request('/')
+        self.save('root.html', body)
+        login_page = bool(re.search(r'name\s*=\s*["\']?Response|function doOnclick|id=["\']password',body,re.I))
+        return {'ip':self.ip,'authenticated_candidate':not login_page,'title':re.findall(r'<title[^>]*>(.*?)</title>',body,re.S|re.I),'paths':sorted(set(re.findall(r'(?:src|href)\s*=\s*["\']([^"\']+)',body,re.I)))[:40]}
+
+if __name__ == '__main__':
+    rows=[]
+    for ip in ['@@IPV4_019@@','@@IPV4_020@@','@@IPV4_021@@']:
+        try: rows.append(Switch(ip).login())
+        except Exception as e: rows.append({'ip':ip,'error':type(e).__name__})
+    (OUT/'login-summary.json').write_text(json.dumps({'credential_source_section':section,'username':'admin','results':rows},indent=2),encoding='utf-8')
+    print(json.dumps(rows,indent=2))

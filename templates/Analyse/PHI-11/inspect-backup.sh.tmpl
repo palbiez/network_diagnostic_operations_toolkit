@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+date -Is
+echo 'VERSION:'
+cat /etc/openwrt_release /etc/openmptcprouter_version 2>/dev/null || true
+uname -r
+echo 'BACKUP CONFIG:'
+if [ -e /etc/sysupgrade.conf ]; then cat /etc/sysupgrade.conf; else echo '(absent)'; fi
+echo 'PENDING UCI PACKAGES (names only):'
+uci changes | cut -d. -f1 | sort -u
+echo 'SYSUPGRADE OPTIONS:'
+sysupgrade -h 2>&1 || true
+echo 'BACKUP LIST:'
+sysupgrade -l
+echo 'CUSTOMIZATION CANDIDATES:'
+find /etc/hotplug.d /etc/init.d /etc/uci-defaults /usr/share/nftables.d /etc/nftables.d /etc/crontabs /etc/@@HOSTNAME_003@@ /etc/sysupgrade.conf /root /usr/local -type f 2>/dev/null | sort || true
+echo 'CONFIG REFERENCES (paths only, no values):'
+uci -q show firewall | grep -E '\.(path|type)=' || true
+echo 'LOCAL FILESYSTEM SPACE:'
+df -h /tmp /overlay
+echo 'PACKAGE MANAGER:'
+command -v opkg || command -v apk || true

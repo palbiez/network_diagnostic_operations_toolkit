@@ -1,0 +1,8 @@
+from pathlib import Path
+import sys,json
+ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+from phi28_homeassistant import run
+out=Path(__file__).resolve().parent
+code=(out/'dhcp150_test.py').read_text()
+result=run("sudo -n python3 - <<'PY'\n"+code+"\nPY\n")
+(out/'dhcp150-test.json').write_text(json.dumps(result,indent=2),encoding='utf-8');print(json.dumps(result,indent=2))

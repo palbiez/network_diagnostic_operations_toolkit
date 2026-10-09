@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+date -Is
+if [ -n "$(uci changes system)" ]; then
+ echo 'ABORT: uncommitted system changes'; exit 1
+fi
+echo 'PREVIOUS log_remote:'
+uci -q get 'system.@system[0].log_remote' || true
+echo 'BEFORE:'
+ubus call service list '{"name":"log"}'
+uci set 'system.@system[0].log_remote=0'
+uci commit system
+/etc/init.d/log reload
+sleep 2
+echo 'AFTER:'
+uci show system | grep -e log_remote -e log_ip -e log_port -e log_proto
+ubus call service list '{"name":"log"}'
+echo 'REMAINING LOGREAD PROCESSES:'
+for proc in /proc/[0-9]*; do
+ [ -r "$proc/comm" ] || continue
+ [ "$(cat "$proc/comm")" = logread ] || continue
+ echo "$proc"; tr '\000' '\n' < "$proc/cmdline"
+done
+logger -p user.notice -t PHI-16 'PHI-16-LOGREMOTE-DISABLED-20261002T084200Z'
+sleep 1
+echo 'LOCAL MARKER:'
+logread -e 'PHI-16-LOGREMOTE-DISABLED-20261002T084200Z'

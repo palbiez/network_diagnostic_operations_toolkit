@@ -1,0 +1,7 @@
+bash -lc 'ha core start --help; ha core restart --help; ha core options --help'
+sudo -n python3 - <<'PY'
+import subprocess,json
+data=json.loads(subprocess.check_output(['docker','inspect','homeassistant']))[0]
+print('core debug environment', [v for v in data['Config']['Env'] if v.startswith(('PYTHONASYNCIODEBUG=','HASS_DEBUG='))])
+print('entrypoint',data['Config']['Entrypoint'],'cmd',data['Config']['Cmd'])
+PY

@@ -1,0 +1,22 @@
+#!/bin/sh
+# Called by temporary init instrumentation; queue metadata only, no blocking snapshot.
+B=/root/phi12-diag-20261003
+[ -f "$B/active" ] || exit 0
+case "$2" in start|stop|restart|reload|boot|shutdown|start_service|stop_service|reload_service|restart_service|reload_rules|rules_up|rules_down|unknown) ;; *) exit 0;; esac
+. "$B/settings"
+[ "$(date +%s)" -lt "$END_EPOCH" ] || exit 0
+D=/tmp/phi12-diag-20261003
+[ -d "$D/queue" ] || exit 0
+umask 077
+f="$D/queue/event-$(date +%s)-$$"
+{
+ printf 'utc=%s\nservice=%s\naction=%s\ncaller_pid=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2" "$3"
+ p="$3"; depth=0
+ while [ -r "/proc/$p/status" ] && [ "$depth" -lt 8 ]; do
+  printf 'ancestor_pid=%s exe=' "$p"; readlink "/proc/$p/exe" || true
+  grep -E '^(Name|PPid):' "/proc/$p/status"
+  printf 'cmdline='; tr '\0' ' ' < "/proc/$p/cmdline"; printf '\n'
+  p=$(awk '/^PPid:/ {print $2}' "/proc/$p/status"); depth=$((depth+1))
+ done
+} > "$f.tmp"
+mv "$f.tmp" "$f"

@@ -1,0 +1,153 @@
+"""Prepare reviewable issues from the documented network work packages."""
+from pathlib import Path
+import json
+from linear_api import ROOT
+
+dest=ROOT/'Linear'
+discovery=json.loads((dest/'discovery.json').read_text(encoding='utf-8'))
+project=next(p for p in discovery['projects']['nodes'] if p['slugId']=='@@PRIVATE_VALUE_005@@')
+if discovery['viewer']['organization']['urlKey']!='@@PRIVATE_VALUE_001@@':
+    raise RuntimeError('Unexpected workspace')
+team=project['teams']['nodes'][0]
+states=json.loads((dest/'initial-project.json').read_text(encoding='utf-8'))['team']['states']['nodes']
+config={'workspace':'@@PRIVATE_VALUE_001@@','organizationId':discovery['viewer']['organization']['id'],'projectId':project['id'],'projectUrl':project['url'],'teamId':team['id'],'teamKey':team['key'],'states':states,'intervalMinutes':15,'syncFields':['title','description','priority','stateId']}
+(dest/'config.json').write_text(json.dumps(config,ensure_ascii=False,indent=2),encoding='utf-8')
+
+guard='WAN-Adressen @@IPV4_004@@ und @@IPV4_005@@ erhalten. MSS 1384 / @@INTERFACE_001@@ MTU 1382 / VPS MTU 1350 nicht pauschal ändern. Keinen network restart zu Diagnosezwecken. UCI/LuCI bevorzugen. Vor Änderungen sichern, jeweils eine Änderung testen; MQVPN-Neustart kann LAN-Routing beeinträchtigen.'
+items=[]
+def add(key,title,priority,finding,steps,acceptance,sources,depends=(),done=False):
+    description=f'''## Problem und Befund
+
+{finding}
+
+## Vorgehen
+
+{steps}
+
+## Abschlusskriterien
+
+{acceptance}
+
+## Rahmen und Rückweg
+
+{guard}
+
+## Nachweise
+
+Stand 02.10.2026. Lokale Dateien im Arbeitsordner Netzwerkumgebung:
+'''+''.join(f'- `{s}`\n' for s in sources)+f'\nSynchronisationskennung: `omr-workpackage:{key}`\n'
+    items.append({'key':key,'title':title,'priority':priority,'state':'Done' if done else ('Todo' if priority==2 else 'Backlog'),'description':description,'sources':list(sources),'dependsOn':list(depends)})
+
+cfg=['Analyse/config-pruefung-2026-10-02.txt']
+logs=['Analyse/tunnel-erkenntnisse-2026-10-02.json']
+measure=['Analyse/messplan-und-stabilisierung.txt']
+add('monitoring','VPS-Monitoring: aktuelle Tunnel-IP und Interface-Bindung verwenden',2,
+    '152952 TUNNEL_TIMEOUT-Zeilen bei Ziel @@IPV4_003@@. Router hat aktuell @@INTERFACE_001@@ @@IPV4_001@@, Peer .1. Historische Belegung von .3 unklar. Ping war nicht an @@INTERFACE_004@@ gebunden; stderr verworfen, erfolgreiche Proben fehlen. unknown bei TUN ist kein Down-Nachweis.',
+    '1. Aktuelle Router-Session-IP bestätigen.\n2. Auf VPS `ip route get @@IPV4_001@@ oif @@INTERFACE_004@@` und `ping -n -I @@INTERFACE_004@@ -c 5 -W 1 @@IPV4_001@@` mit Fehlermeldungen prüfen.\n3. TUNNEL_TARGET korrigieren, Ping an @@INTERFACE_004@@ binden.\n4. Erfolgsproben, RTT, Sequenzen, Exitcode und lokale Fehler speichern; pro Lauf neuen LOG_DIR verwenden.\n5. Session-/Zielwechsel dokumentieren, Journal auf mqvpn beschränken.',
+    '- [ ] Aktuelles Ziel und Pfad nachgewiesen.\n- [ ] Positive und negative Messproben samt Gesamtzahl vorhanden.\n- [ ] Lokale Pingfehler und Verzögerungen werden nicht als Paketverlust gezählt.\n- [ ] Historische Originaldaten unverändert erhalten.',
+    ['Analyse/vps-monitoring-tunneladresse-und-eee-loesung.txt',*logs],depends=['vps-access'])
+add('measurement','Mikroausfälle zwischen WAN, Fritzbox, Internet, VPS, Tunnel und Proxy lokalisieren',2,
+    'Direct-WAN-Bypass stabil laut Chat; grüne Tunnelanzeige schließt Mikroausfälle nicht aus. Im Dateiausschnitt dgram_lost=1 konstant, live später 132. Ursache und Zeitpunkt offen; der Proxy-/MPTCP-Pfad wird durch Tunnelping nicht vollständig geprüft.',
+    'Parallel pro WAN Fritzbox (@@NETWORK_SUFFIX_002@@/@@NETWORK_SUFFIX_003@@), zwei Internetziele und VPS @@IPV4_012@@ pingen; @@INTERFACE_001@@->@@IPV4_002@@ und Client-Gateway separat messen. Uhren synchronisieren (Router Berlin, VPS UTC). NIC-/Loss-Zählerdeltas und Anwendungstimestamps erfassen. Idle und kontrollierte Last vergleichen; für kurze Ereignisse begrenzte 50–100-ms-Fenster und rotierende Paketmitschnitte nutzen. Tatsächlichen Interfacepfad verifizieren.',
+    '- [ ] Vergleichbare gleichzeitige Messreihen mit Erfolgen und RTT.\n- [ ] Mindestens ein Anwendungsereignis zeitlich korreliert oder repräsentativer fehlerfreier Test dokumentiert.\n- [ ] WAN-/ISP-/Tunnel-/Proxy-Ursache mit Evidenz eingegrenzt; Unsicherheiten benannt.',[*measure,*logs],depends=['monitoring','syslog-target'])
+add('vps-access','VPS-SSH-Zugang und aktuellen MQVPN-Serverzustand verifizieren',2,
+    'SSH an @@IPV4_012@@ Port 22 mit vorhandenem Schlüssel lief in Timeout. Aktueller Serverzustand, Router-Session-IP und VPS-Version wurden nicht live bestätigt.',
+    'Richtigen SSH-Port und Zugang anhand bestehender Hetzner-/Serverkonfiguration klären. Keine Firewallöffnung auf Verdacht. Anschließend MQVPN-Version, Dienststart/PID, @@INTERFACE_004@@-IP/MTU, Routen und aktuelle Session prüfen; Schlüssel nicht in Issues oder Logausgaben ablegen.',
+    '- [ ] Autorisierter Zugriff funktioniert.\n- [ ] Aktuelle VPS-Version und Tunnel-/Sessionadressen dokumentiert.\n- [ ] Grund des Port-22-Timeouts geklärt oder nachvollziehbar begrenzt.',logs)
+add('mqvpn-upgrade','MQVPN 0.16.3 und OMR-Patches als Stabilitätsfix prüfen',2,
+    'Router MQVPN 0.16.2, Kernel 6.18.39. Upstream 0.16.3 enthält Fixes gegen stillen Blackhole-/WLB-Stall und Reassembly-Abbrüche. Aktuell minrtt: identische Ursache nicht bestätigt. 0.16.3 behebt nicht die stderr-Syslog-Schwere.',
+    'Router-/VPS-Paketversionen und OMR-Patches vergleichen. https://github.com/mp0rta/mqvpn/releases/tag/v0.16.3 und https://github.com/mp0rta/mqvpn/pull/351 prüfen. OMR-kompatible Pakete samt XQUIC verwenden; keine isolierte Bibliothek ersetzen. Backup und abgestimmten Update-/Rollbackplan erstellen, danach kontrolliertes Wartungsfenster und A/B-Messung.',
+    '- [ ] Fix-Anwendbarkeit und Paketkompatibilität dokumentiert.\n- [ ] Updateentscheidung mit Rückweg vorliegend.\n- [ ] Bei Umsetzung: Client-Routing und Messwerte nach Update geprüft, andernfalls begründete Vertagung.',[*cfg,*logs],depends=['backup','vps-access','measurement'])
+add('gaming','Gaming-Regelkonflikt zwischen OMR-Bypass und eigener nftables-Policy auflösen',2,
+    'OMR-Bypass leitet Gaming @@IPV4_006@@/24 und zwei MACs auf WAN1. Zusätzliche nft-Datei setzt .@@VLAN_003@@ auf WAN1, andere Gaming-IP auf WAN2. Hotplug verändert Tabellen 2/3. Reihenfolge kann Markierungen überschreiben.',
+    'Gewünschte WAN-Zuordnung pro Gerät klären. Bestehende UCI-, nft- und Hotplug-Dateien sichern. Tatsächliche Regeln/Zähler/öffentliche IP prüfen. Einen zentralen, möglichst UCI-/OMR-Bypass-basierten Regelweg wählen und Zusatzregeln anschließend kontrolliert stilllegen. Failover mit öffentlichem IP-Wechsel getrennt bewerten.',
+    '- [ ] Ein dokumentierter maßgeblicher Regelweg.\n- [ ] Zuordnung je Gaming-Gerät stimmt mit Routing und öffentlicher IP überein.\n- [ ] Keine konkurrierenden Markierungen; Rückweg getestet/vorbereitet.',cfg,depends=['backup'])
+add('dscp','DSCP-Generator: Portfilter erhalten und doppelte Regeln beseitigen',2,
+    'UCI dscp.classify enthält src_port/dest_port; erzeugte firewall.omr_dscp_rule2..6 fehlen Portfilter. Live nft markiert pauschal TCP/UDP. rule3/rule4 und output-Varianten sind Dubletten; cs5-Regel fehlt target. fw4 check besteht trotzdem.',
+    'Generator für src_port, dest_port, auto_dest_port prüfen und an der Quelle korrigieren. Keine dauerhafte Handkorrektur nur generierter Regeln. DSCP-Zuordnung verständlich dokumentieren. `fw4 check` sowie nft mangle_forward/mangle_output vor/nach Änderung vergleichen.',
+    '- [ ] Vorgesehene Portgrenzen erscheinen im aktiven Ruleset.\n- [ ] Echte Dubletten entfernt; keine pauschale unbeabsichtigte Überschreibung.\n- [ ] Neu-Generierung erhält die Korrektur; fw4 check besteht.',cfg,depends=['backup'])
+add('backup','Backupumfang um eigene nftables-, Hotplug- und Logdateien vervollständigen',2,
+    'Backup vom 02.10. enthält die live aktiven Gaming-nft-/Hotplug-Dateien nicht. Weitere referenzierte Includes können Paketdateien oder eigene Anpassungen sein. Vollständiger Restore ist damit nicht belegt.',
+    'Eigene Dateien von Paketdateien unterscheiden. Zusatzdateien sichern und nötige Pfade in /etc/sysupgrade.conf ergänzen. UCI-Exporte und Paket-/Versionsstand erfassen. Neues Backup erstellen und Inhalt offline prüfen; bestehendes Backup behalten.',
+    '- [ ] Alle eigenen produktiven Regeln und Hooks im Backup.\n- [ ] Backupmanifest mit Versionen und Wiederherstellungsschritten vorhanden.\n- [ ] Inhaltsprüfung erfolgreich; kein Restore auf Produktivrouter zu Testzwecken.',cfg)
+add('restart-routing','Internetverlust von LAN-Clients nach MQVPN-Neustart untersuchen',2,
+    'Laut gestrigem Chat war MQVPN nach manuellem Restart established, das Notebook hatte danach dennoch kein Internet. Routing, Policy Rules, Firewall/NAT und DNS als separate Kandidaten offen.',
+    'Vorher/Nachher `ip route`, `ip rule`, @@INTERFACE_001@@-Zustand und nft/NAT sichern. Client-Gateway, IP-Internetziel und DNS getrennt prüfen. Nur einen ohnehin geplanten Restart mit vorhandenem Zugriff begleiten; keinen network restart provozieren.',
+    '- [ ] Fehler reproduziert oder belastbarer geplanter Restarttest dokumentiert.\n- [ ] Fehlender Pfad/Regel/DNS-Verhalten identifiziert.\n- [ ] Nach Änderung Client-Internet und Rückweg bestätigt.',[*logs,'Chats/mqvpn-fehleranalyse-vorher.json'],depends=['backup','syslog-target'])
+add('orphan-path','Leeren MQVPN-Pfad nach Netzwerk-Neuinitialisierung analysieren',3,
+    'Laut Chat entstanden nach network restart drei MQVPN-Pfade: leer, @@INTERFACE_003@@, @@INTERFACE_002@@. Leerer Name lässt sich per CLI nicht entfernen. MQVPN-Restart bereinigte den Pfad, konnte aber ein LAN-Routingproblem auslösen.',
+    'Path-Recovery-/Hotplug-Code und installierte Version prüfen. Vorhandene Belege für Upstream-Bericht sammeln. Reproduktion in Testumgebung; Produktivnetz nicht durch network restart unterbrechen. Abhängigkeit zu Restart-Routing beachten.',
+    '- [ ] Auslöser und Pfad-Lifecycle mit Versionsstand dokumentiert.\n- [ ] Fix oder verlässlicher Workaround inklusive Client-Routingprüfung vorhanden.', ['Chats/mqvpn-fehleranalyse-vorher.json',*logs],depends=['restart-routing'])
+add('mtu-setter','Externen 1500-MTU-Setter auf @@INTERFACE_001@@ ermitteln',3,
+    'Historisch meldete mqvpn: MTU changed externally to 1500, restoring negotiated 1382. Aktuell @@INTERFACE_001@@ 1382, UCI ohne feste @@INTERFACE_001@@-MTU und kein entsprechendes Ereignis im neuen Syslog.',
+    'Netifd-, MQVPN-Init- und Hotplug-Code auf MTU-Setzen prüfen. Bei nächster geplanter Tunnelinitialisierung Änderungen zeitlich beobachten. Funktionierende MSS/MTU-Kombination beibehalten, keinen pauschalen 1500-Test.',
+    '- [ ] Setter identifiziert oder aktueller Build als nicht mehr betroffen verifiziert.\n- [ ] Keine wiederholte MTU-Oszillation; Client-/VPS-Werte dokumentiert.', ['Chats/mqvpn-fehleranalyse-vorher.json',*cfg],depends=['backup'])
+add('logging','MQVPN-Infoflut reduzieren und falsche Syslog-Schwere korrigieren',3,
+    'MQVPN schreibt INF/WRN/ERR nach stderr; procd übernimmt diesen Kanal als daemon.err. Runtime-Datei warn wurde offenbar nach Start von PID 22654 geändert. Daher aktiver Prozess-LogLevel unbekannt. Upstream log.c ist in 0.16.2/0.16.3 inhaltlich gleich.',
+    'Jetzt nur repetitive INF-STATUS-/Retry-Zeilen aus Anzeige filtern, Rohdaten erhalten. Beim nächsten geplanten Prozesswechsel `uci set mqvpn.interface.log_level=warn` übernehmen; neuer PID und neue Meldungen prüfen. Bei weiterem INF OMR-Build untersuchen. Dauerhaft natives Syslog-Backend als Patchkandidat, keine blanket stderr-Abschaltung.',
+    '- [ ] Infoflut in Anzeige reduziert, WRN/ERR und wichtige Diagnosedaten erhalten.\n- [ ] Aktiv übernommenes LogLevel mit neuem PID nachgewiesen.\n- [ ] Severity-Fixentscheidung dokumentiert; 0.16.3 nicht fälschlich als Loggingfix dargestellt.', ['Analyse/mqvpn-syslog-loesungsvorschlaege.txt'],depends=['restart-routing'])
+add('syslog-target','Syslog-Sendeziel an UCI angleichen und externen Empfang verifizieren',2,
+    'UCI Ziel @@IPV4_007@@ TCP/514, laufender logread-Prozess verwendet -r @@IPV4_008@@. Ringpuffer nur 128 KB. Externer Logempfang ist für Mikroausfallanalyse erforderlich.',
+    'Tatsächlichen Empfänger prüfen; System > Protokollierung als zentrale Konfiguration verwenden. Verantwortlichen Logdienst und Ursache abweichender Argumente klären. Nur diesen Dienst neu laden und frisches Testereignis am richtigen Empfänger nachweisen.',
+    '- [ ] Prozessargumente und UCI-Ziel stimmen überein.\n- [ ] Frisches Routerereignis erreicht .12 mit Zeit/Host/Programm.\n- [ ] Rohdatenarchivierung für Diagnose bestätigt.',cfg)
+add('eee','WAN2: EEE-A/B-Test mit gleichzeitigen WAN- und NIC-Messungen',3,
+    '@@INTERFACE_002@@/@@INTERFACE_005@@ igc 8086:125c: EEE aus, Fehlerzähler null. @@INTERFACE_003@@ e1000e 8086:153a: EEE aktiv, tx_dropped=6 absolut, CRC/Timeout null. I226 als Ursache nicht nachgewiesen; @@INTERFACE_003@@ ist kein I226-Port.',
+    'Erst Referenzmessung und ethtool-Zustand sichern. Ein Parameter: `ethtool --set-eee @@INTERFACE_003@@ eee off`; Link-Neuverhandlung möglich. Gleiche Last, WAN1 als Kontrolle, Zählerdeltas und Anwendungsausfälle korrelieren. Rückweg gemäß vorherigem Zustand EEE on; Persistenz erst bei reproduzierbarer Verbesserung prüfen.',
+    '- [ ] Vergleichbare Vorher/Nachher-Reihen und NIC-Deltas.\n- [ ] Verbesserung oder Wirkungslosigkeit belegt.\n- [ ] Rückweg dokumentiert; keine unbestätigte UCI-EEE-Option.', ['Analyse/vps-monitoring-tunneladresse-und-eee-loesung.txt',*measure],depends=['measurement'])
+add('dhcp','DHCP-Managementpool vereinheitlichen und vlan@@VLAN_002@@-Absicht klären',3,
+    '@@HOSTNAME_002@@ und dhcp.@@SECTION_001@@ zeigen beide auf lan, Pools .100–.199 und .200–.229 ohne Überlappung. Aktueller Startlog zeigt nur .100–.199. vlan@@VLAN_002@@ ignore=1: DHCP dort aus.',
+    'Gewünschten Pool und vlan@@VLAN_002@@-Betrieb klären. Leases und UCI sichern. Einen zentralen DHCP-Bereich für lan definieren, zusätzlichen @@SECTION_001@@-Block kontrolliert entfernen/deaktivieren, falls unbeabsichtigt. Keine statischen Leases pauschal aus Pools entfernen.',
+    '- [ ] Gewünschte Pool-/vlan@@VLAN_002@@-Konfiguration dokumentiert.\n- [ ] Keine unbeabsichtigte doppelte Konfigurationsquelle.\n- [ ] Testclient erhält passende Adresse/Gateway/DNS.',cfg,depends=['backup'])
+add('vlan@@VLAN_001@@','DHCP in vlan@@VLAN_001@@ nach Staging-IP-Bereinigung funktional bestätigen',3,
+    'Historisch no address range available via @@INTERFACE_019@@. Jetzt .@@VLAN_001@@.1/24, Pool .20–.239, im aktuellen Syslog keine solche Warnung. Fehlende Warnung allein bestätigt keine erfolgreiche DHCP-Vergabe.',
+    'UCI/netifd/dnsmasq-Zustand prüfen. Einen kontrollierten DHCP-Renew/Testclient im @@SECTION_004@@-VLAN verwenden; Offer/Ack, Gateway und DNS beobachten. Bestehende Geräte nicht gleichzeitig neu adressieren.',
+    '- [ ] DHCP-Request führt zu gültigem Offer/Ack.\n- [ ] Adresse, Gateway und DNS stimmen.\n- [ ] Keine erneute address-range-Warnung im Testfenster.',[*cfg,*logs],depends=['dhcp'])
+add('sqm','SQM-WAN1-Gerät korrigieren und Bufferbloat nur bei Lastnachweis behandeln',3,
+    'sqm.wan1.interface=@@INTERFACE_005@@ ist LAN; WAN1 verwendet @@INTERFACE_002@@. enabled=0: Fehlzuordnung wirkt derzeit nicht. Download-/Uploadwerte 0; vor Aktivierung korrigieren.',
+    'SQM-WAN1 auf @@INTERFACE_002@@, WAN2 @@INTERFACE_003@@ konfigurieren; real verfügbare Raten messen. Erst bei korrelierter Last/Jitter-Problematik SQM mit etwa 90–95% stabiler Rate testen. Keine Nullraten aktivieren; Scheduler/MTU gleichzeitig unverändert lassen.',
+    '- [ ] Richtige WAN-Geräte und begründete Raten dokumentiert.\n- [ ] Idle-/Lastvergleich zeigt Nutzen oder begründete Nichtaktivierung.\n- [ ] Durchsatz und Echtzeitstabilität geprüft.',cfg,depends=['measurement','dscp'])
+add('cleanup','UCI-Migrationsreste und redundante Regeln kontrolliert bereinigen',4,
+    'Doppelte funktionale lan->wan-/lan->vpn-Freigaben; ifmap_@@SECTION_002@@/@@SECTION_003@@ und ifmap_@@SECTION_004@@/@@SECTION_005@@ zeigen gleiche Geräte. Live doppelte iif-lo-Tabelle4-Regel und alte .3-Quellregel. Viele deaktivierte OMR-Vorlagen sind beabsichtigt.',
+    'Echte Redundanz von generierten Templates unterscheiden. Zähler, Generator und Routenherkunft prüfen; je einen belegten Alteintrag mit Sicherung entfernen. Default-Routen mit unterschiedlichen Metriken nicht als Dubletten löschen.',
+    '- [ ] Kandidaten mit Herkunft/Wirkung bewertet.\n- [ ] Nur belegte redundante Einträge bereinigt.\n- [ ] Generator erzeugt Fehler nicht erneut; Firewall-/Routingprüfung bestanden.',cfg,depends=['gaming','dscp','backup'])
+add('nlbwmon','nlbwmon-Netlink-Pufferfehler prüfen und von Tunnelproblemen trennen',3,
+    '07:16:38 Netlink receive failure: Out of memory / Unable to dump conntrack: No buffer space available. Live ca. 7.7 GB RAM verfügbar und conntrack 570/262144. Keine belegte allgemeine RAM-Erschöpfung.',
+    'Wiederholungsrate, nlbwmon-Konfiguration und Netlink-Receivebuffer untersuchen. Mit CPU/RAM/conntrack und Anwendungsausfällen korrelieren. Änderungen an Statistikdienst/Puffer nur bei Befund und einzeln testen.',
+    '- [ ] Fehlerhäufigkeit und Puffer-/Speicherursache geklärt oder eingegrenzt.\n- [ ] Tunnelkausalität bestätigt/verworfen.\n- [ ] Bei Korrektur Statistikfunktion und Ressourcen geprüft.',logs)
+add('architecture','Betriebsstrategie für Echtzeitanwendungen und Aggregation festlegen',4,
+    'Direct-WAN-Bypass war für Gaming/Chat stabil laut Chat; OMR-Pfad verursachte kurze Anwendungsabbrüche. Aggregation und nahezu unterbrechungsfreie Echtzeitsessions sind getrennte Erfolgskriterien.',
+    'Nach Messung/gezielten Fixes Anwendungsmatrix definieren: Gaming/Citrix/Chat gegebenenfalls gezielter Direct-WAN-Bypass, Massentransfers OMR. Öffentliche IP und Grenzen bestehender Sessions bei Failover berücksichtigen; Entscheidung anhand Messdaten treffen.',
+    '- [ ] Dokumentierte Anwendung-/Routingmatrix.\n- [ ] Messbare Anforderungen an Loss/Jitter/Sessionabbrüche.\n- [ ] Bewusste Entscheidung zur Aggregation und zu Failover-Grenzen.', ['Chats/production-readiness.json',*measure],depends=['measurement','gaming','mqvpn-upgrade'])
+add('debuglogger-done','Debuglogger-Autostart deaktiviert und inaktiven Zustand geprüft',4,
+    'Debuglogger war bei Liveprüfung bereits nicht aktiv; stop meldete Not found, weil kein procd-Service registriert war. disable ausgeführt; enabled Exit 1 und leere Serviceliste bestätigt.',
+    'Bereits durchgeführt: Service-/Prozessliste vor/nach stop/disable geprüft. Normalen Syslog-Prozess erhalten. Fehlendes ubus-log-Objekt im alten Debuglog ist keine Tunnelmessung.',
+    '- [x] Kein Debuglogger-Prozess.\n- [x] Kein registrierter Debuglogger-Service.\n- [x] Autostart deaktiviert; normaler Syslog nicht gestoppt.',logs,done=True)
+add('restartloop-done','MQVPN-10-Sekunden-Restartloop nach Konfigurationsabgleich behoben',3,
+    'Laut bereitgestelltem Chat löste API/UCI-Inkonsistenz wiederholtes Reconfigure/Restart aus. Werte wurden abgeglichen; danach mindestens 10 Minuten ohne Restart. Aktueller Syslog enthält keine Restartsignaturen und gleichen PID.',
+    'Abgeschlossene Korrektur aus Chat dokumentiert, keine erneute Änderung vorgenommen. Bei Wiederauftreten API/UCI-Vergleiche und local/remote close unterscheiden; separate Mikroverluste bleiben offen.',
+    '- [x] Korrektur und bisherige Verifikation dokumentiert.\n- [x] Aktueller Syslog zeigt keinen Restartloop.\n- [ ] Langfristige Stabilität wird im separaten Messissue bewertet.', ['Chats/mqvpn-fehleranalyse-vorher.json',*logs],done=True)
+add('ipcleanup-done','LAN-Stagingadressen entfernt und produktive VLAN-Adressen bestätigt',4,
+    'Chat und aktuelles Backup bestätigen .1/24 für LAN/vlan@@VLAN_002@@/@@SECTION_002@@/@@SECTION_006@@/@@SECTION_004@@/Gaming. Alte LAN-.245-Adressen entfernt; Gaming auf .@@VLAN_005@@.1 korrigiert. WAN-.245 bleiben produktiv.',
+    'Bereits abgeschlossene Bereinigung dokumentieren. DHCP-vlan@@VLAN_001@@ funktional im separaten Issue prüfen. Historische Inventardateien enthalten teilweise noch Staginginformationen.',
+    '- [x] Produktive LAN-/VLAN-.1-Adressen bestätigt.\n- [x] Keine LAN-.245-Reste im aktuellen Backup.\n- [x] WAN1/WAN2-.245 unverändert erhalten.', ['Chats/mqvpn-fehleranalyse-vorher.json',*cfg],done=True)
+
+result=ROOT/'Analyse/PHI-16/ergebnis-2026-10-02.md'
+if result.exists():
+    package=next(x for x in items if x['key']=='syslog-target')
+    package['state']='Done'
+    package['description']=result.read_text(encoding='utf-8')+'\nSynchronisationskennung: `omr-workpackage:syslog-target`\n'
+    package['sources'].append('Analyse/PHI-16/ergebnis-2026-10-02.md')
+result=ROOT/'Analyse/PHI-11/ergebnis-2026-10-02.md'
+if result.exists():
+    package=next(x for x in items if x['key']=='backup')
+    package['state']='Done'
+    package['description']=result.read_text(encoding='utf-8')
+    package['sources'].append('Analyse/PHI-11/ergebnis-2026-10-02.md')
+result=ROOT/'Analyse/PHI-12/diagnoseplan-2026-10-02.md'
+if result.exists():
+    package=next(x for x in items if x['key']=='restart-routing')
+    package['state']='In Progress'
+    package['description']=result.read_text(encoding='utf-8')
+    package['sources'].append('Analyse/PHI-12/diagnoseplan-2026-10-02.md')
+(dest/'work-packages.json').write_text(json.dumps(items,ensure_ascii=False,indent=2),encoding='utf-8')
+print(f'{len(items)} work packages prepared, {sum(x["state"]=="Done" for x in items)} already completed.')

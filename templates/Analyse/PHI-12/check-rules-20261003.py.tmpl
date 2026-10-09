@@ -1,0 +1,46 @@
+from pathlib import Path
+from collections import defaultdict,Counter
+import tarfile,json,re,shlex
+ROOT=Path(__file__).resolve().parents[2]
+D=ROOT/'Analyse/PHI-12/messung-20261003'
+def sections(text):
+ out=[];current=None
+ for line in text.splitlines():
+  try:a=shlex.split(line,comments=True)
+  except ValueError:continue
+  if not a:continue
+  if a[0]=='config':
+   current={'type':a[1],'name':a[2] if len(a)>2 else '@'+str(len(out)),'options':{},'lists':defaultdict(list)};out.append(current)
+  elif current is not None and len(a)>=3:
+   if a[0]=='option':current['options'][a[1]]=a[2]
+   if a[0]=='list':current['lists'][a[1]].append(a[2])
+ return out
+with tarfile.open(D/'prechange.tar.gz') as t:
+ files={Path(x.name).name:t.extractfile(x).read().decode(errors='replace') for x in t.getmembers() if x.isfile()}
+result={'fw4_check_exit':files['fw4-check.exit'].strip(),'fw4_check_output':files['fw4-check.txt'].strip(),'dns_local_test_exit':files['dns-local-test.exit'].strip(),'packages':{},'nft_same_chain_duplicates':[],'dscp_rules':[]}
+for pkg in ['firewall','dhcp','omr-bypass','dscp']:
+ ss=sections(files['config-'+pkg]);groups=defaultdict(list)
+ for s in ss:
+  key=json.dumps([s['type'],s['options'],dict(s['lists'])],sort_keys=True);groups[key].append(s['name'])
+ result['packages'][pkg]={'section_count':len(ss),'identical_section_groups':[g for g in groups.values() if len(g)>1],'duplicate_list_values':[{'section':s['name'],'key':k,'values':[v for v,n in Counter(vs).items() if n>1]} for s in ss for k,vs in s['lists'].items() if len(vs)!=len(set(vs))]}
+ if pkg=='firewall':result['dscp_rules']=[s for s in ss if 'dscp' in s['name'].lower() or s['options'].get('target')=='DSCP']
+nft=files['nft-ruleset.txt'];chain=None;groups=defaultdict(list)
+for line in nft.splitlines():
+ m=re.match(r'\s*chain (\S+) \{',line)
+ if m:chain=m.group(1);continue
+ if '# handle' not in line or chain is None:continue
+ norm=re.sub(r'counter packets \d+ bytes \d+', 'counter',line.strip())
+ norm=re.sub(r' # handle \d+','',norm)
+ # Comments identify generated rule sections, not match/action semantics.
+ norm=re.sub(r'comment "[^"]*"','',norm).strip()
+ if not norm:continue
+ groups[(chain,norm)].append(line.strip())
+result['nft_same_chain_duplicates']=[{'chain':k[0],'normalized_rule':k[1],'instances':v} for k,v in groups.items() if len(v)>1]
+dns={}
+for name,text in files.items():
+ if not name.startswith('dnsmasq.conf'):continue
+ lines=[l for l in text.splitlines() if l and not l.startswith('#')]
+ dns[name]={'line_count':len(lines),'max_line_bytes':max([len(l.encode()) for l in lines] or [0]),'max_nftset_line_bytes':max([len(l.encode()) for l in lines if l.startswith('nftset=')] or [0]),'duplicate_lines':[{'line':l,'count':n} for l,n in Counter(lines).items() if n>1],'over_1024_bytes':sum(len(l.encode())>1024 for l in lines)}
+result['dnsmasq_generated']=dns
+(D/'rule-check.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print(json.dumps({'fw4_check_exit':result['fw4_check_exit'],'identical_section_groups':{k:v['identical_section_groups'] for k,v in result['packages'].items()},'nft_duplicate_groups':len(result['nft_same_chain_duplicates']),'dnsmasq':dns},ensure_ascii=True))

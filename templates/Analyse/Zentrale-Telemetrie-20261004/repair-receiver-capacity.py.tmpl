@@ -1,0 +1,9 @@
+from pathlib import Path
+import subprocess,shutil
+p=Path('/etc/syslog-ng/syslog-ng.conf');b=Path('/root/central-telemetry-backup-20261004/syslog-ng-before-capacity.conf')
+if not b.exists():shutil.copy2(p,b)
+s=p.read_text().replace('tcp(ip(0.0.0.0) port(514))','tcp(ip(0.0.0.0) port(514) max-connections(100))');p.write_text(s)
+r=subprocess.run(['syslog-ng','--syntax-only'],capture_output=True,text=True)
+if r.returncode:shutil.copy2(b,p);raise SystemExit(r.stderr)
+subprocess.run(['systemctl','reload','syslog-ng'],check=True)
+print('TCP syslog receiver maximum connections increased to 100')

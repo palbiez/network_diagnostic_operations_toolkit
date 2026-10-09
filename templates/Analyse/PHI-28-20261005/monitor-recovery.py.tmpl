@@ -1,0 +1,41 @@
+from pathlib import Path
+import sys,json,time,urllib.request,datetime,paramiko
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+from phi28_homeassistant import run,OUT
+import central_observability as obs
+cmd="""sudo -n python3 - <<'PY'
+import subprocess,json,urllib.request
+from pathlib import Path
+d=json.loads(subprocess.check_output(['docker','inspect','homeassistant']))[0]
+state=d['State'];print(json.dumps({k:state[k] for k in ['Running','OOMKilled','StartedAt','ExitCode']}))
+token=Path('/run/s6/container_environment/SUPERVISOR_TOKEN').read_text().strip()
+for p in ['/core/stats','/core/api/config']:
+    try:
+        r=urllib.request.urlopen(urllib.request.Request('http://supervisor'+p,headers={'Authorization':'Bearer '+token}),timeout=5)
+        data=json.load(r)
+        if p=='/core/stats': print(json.dumps({'stats':data['data']}))
+        else:print(json.dumps({'safe_mode':data.get('safe_mode'),'state':data.get('state'),'version':data.get('version')}))
+    except Exception as e:print(type(e).__name__,str(e))
+PY
+"""
+samples=[]
+for i in range(11):
+    item={'utc':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+    try:item['ssh']=run(cmd)
+    except Exception as e:item['ssh']={'error':obs.redact(str(e))}
+    for port in [8123,9100]:
+        try:
+            url=f'http://@@IPV4_034@@:{port}/'+('metrics' if port==9100 else '')
+            with urllib.request.urlopen(url,timeout=5) as r:item[str(port)]=r.status
+        except Exception as e:item[str(port)]=str(e)
+    samples.append(item)
+    (OUT/'recovery-monitor.json').write_text(json.dumps(samples,indent=2),encoding='utf-8')
+    print(json.dumps(item),flush=True)
+    if i<10:time.sleep(30)
+c=paramiko.SSHClient();c.load_host_keys(str(OUT/'ssh_known_hosts'));c.set_missing_host_key_policy(paramiko.RejectPolicy())
+try:
+    c.connect('@@IPV4_034@@',username='@@PRIVATE_VALUE_009@@',pkey=obs.KEYS[1],timeout=8,look_for_keys=False,allow_agent=False)
+    _,o,e=c.exec_command('bash -lc "ha core info"');result={'exit':o.channel.recv_exit_status(),'output':obs.redact(o.read().decode()+e.read().decode())}
+finally:c.close()
+(OUT/'ssh-key-verification.json').write_text(json.dumps(result,indent=2),encoding='utf-8');print(json.dumps({'keyLogin':result}),flush=True)

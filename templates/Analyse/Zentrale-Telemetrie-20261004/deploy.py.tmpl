@@ -1,0 +1,14 @@
+import sys,json,shlex
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+from central_observability import connect,run,OUT
+ip,local=sys.argv[1:3];p=Path(local);remote='/root/central-'+p.name
+c=connect(ip)
+try:
+ s=c.open_sftp();s.put(str(p),remote);s.chmod(remote,0o700);s.close()
+finally:c.close()
+cmd=('python3 ' if p.suffix=='.py' else 'sh ')+shlex.quote(remote)
+r=run(ip,cmd,timeout=300)
+(OUT/(ip.replace(':','_')+'-'+p.stem+'-result.json')).write_text(json.dumps(r,indent=2),encoding='utf-8')
+print(json.dumps(r,indent=2))

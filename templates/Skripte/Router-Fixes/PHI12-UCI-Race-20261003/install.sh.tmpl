@@ -1,0 +1,51 @@
+#!/bin/sh
+set -eu
+umask 077
+S=/tmp/phi12-uci-race-stage
+B=/root/phi12-uci-race-fix-20261003
+server=/bin/omr-tracker-server
+schedule=/usr/share/omr/schedule.d/010-services
+before_server=a3924bd14762916a631866b4c9f54c4b173cd14ffad32fe3e5db4610774bb628
+before_schedule=53a0aeed51f50e31d94f6552c1e6d796b99079165322e7ec3b3696b65935d93b
+after_server=882e89c1db1f341da6105e1de69ec7541f37de33fd8fbd9f2016d333a0cbc968
+after_schedule=a23c29958c2148df89538837d6bbb89acaca10eb9ceb21e7c9853052cc66d910
+hash() { sha256sum "$1" | awk '{print $1}'; }
+[ "$(hash "$server")" = "$before_server" ] || { echo 'Unexpected server source; abort'; exit 1; }
+[ "$(hash "$schedule")" = "$before_schedule" ] || { echo 'Unexpected schedule source; abort'; exit 1; }
+[ "$(hash "$S/omr-tracker-server")" = "$after_server" ]
+[ "$(hash "$S/010-services")" = "$after_schedule" ]
+bash -n "$S/omr-tracker-server"
+sh -n "$S/010-services"
+pid=$(ubus call service list '{"name":"omr-tracker"}' | jsonfilter -e '@["omr-tracker"].instances.instance5.pid')
+[ -n "$pid" ] && [ -r "/proc/$pid/cmdline" ]
+cmd=$(tr '\0' ' ' < "/proc/$pid/cmdline")
+case "$cmd" in '/bin/bash /bin/omr-tracker-server '*) ;; *) echo 'Unexpected tracker instance'; exit 1;; esac
+[ "$(awk '/^PPid:/ {print $2}' "/proc/$pid/status")" = 1 ]
+# No user proxy edits are committed by installation.
+for pkg in shadowsocks-libev shadowsocks-rust openvpn; do
+ [ -z "$(uci -q changes "$pkg")" ] || { echo "Pending edits in $pkg; abort"; exit 1; }
+done
+mkdir "$B"
+cp -p "$server" "$B/omr-tracker-server.before"
+cp -p "$schedule" "$B/010-services.before"
+cp "$S/manifest.json" "$B/manifest.json"
+ubus call service list '{}' > "$B/services-before.json"
+for pkg in network firewall dhcp unbound omr-bypass omr-tracker shadowsocks-libev shadowsocks-rust openvpn; do
+ sha256sum "/etc/config/$pkg" >> "$B/config-hashes-before.txt"
+done
+for svc in dnsmasq unbound mqvpn sslocal; do printf '%s=%s\n' "$svc" "$(pidof "$svc" || true)" >> "$B/pids-before.txt"; done
+date -Is > "$B/start.txt"
+cp "$S/omr-tracker-server" "$server.phi12-new"
+chmod 755 "$server.phi12-new"
+mv "$server.phi12-new" "$server"
+cp "$S/010-services" "$schedule.phi12-new"
+chmod 755 "$schedule.phi12-new"
+mv "$schedule.phi12-new" "$schedule"
+cp "$S/rollback.sh" "$B/rollback.sh"
+chmod 700 "$B/rollback.sh"
+echo "$pid" > "$B/old-server-tracker.pid"
+# User preference: write files only. Activation is by manual router reboot.
+date -Is > "$B/installed.txt"
+printf 'Installed targeted fix; no daemon signalled. Manual router reboot required.\n'
+cat "$B/installed.txt" "$B/pids-before.txt"
+sha256sum "$server" "$schedule"

@@ -1,0 +1,24 @@
+import sys,json,base64
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+from central_observability import connect,run,OUT
+for ip in ['@@IPV4_008@@','@@IPV4_084@@','@@IPV4_085@@']:
+ c=connect(ip)
+ try:
+  p='/usr/libexec/stat-genconfig'
+  _,o,e=c.exec_command('cat '+p);old=o.read().decode();assert o.channel.recv_exit_status()==0
+  b='/root/central-telemetry-backup-20261004/stat-genconfig'
+  if len(old)<100:
+   _,o,e=c.exec_command('cat '+b);old=o.read().decode();assert len(old)>100
+  new=old.replace('Retain ${s.StoreRates}', 'StoreRates ${s.StoreRates}').replace('Retain ${s.CleanSession}','CleanSession ${s.CleanSession}')
+  anchor="str += s['Retain'] ?"
+  if 'QoS ${s.QoS}' not in new:
+   pos=new.index(anchor);linepos=new.rfind('\n',0,pos)+1
+   new=new[:linepos]+"\t\t\t\t\tstr += s['QoS'] ? `\\t\\tQoS ${s.QoS}\\n` : '';\n"+new[linepos:]
+  cmd=f"set -eu\n[ -f {b} ] || cp -p {p} {b}\ncat <<'CODEX_STATGEN_SOURCE' > {p}\n{new}\nCODEX_STATGEN_SOURCE\nchmod 755 {p}"
+  r=run(ip,cmd)
+  if r['exit']:raise RuntimeError(r['output'])
+ finally:c.close()
+ r=run(ip,"/usr/libexec/stat-genconfig > /tmp/central-mqtt-gencheck.conf\n/usr/sbin/collectd -t -C /tmp/central-mqtt-gencheck.conf && /etc/init.d/luci_statistics restart\nsleep 2\n/etc/init.d/collectd status\nsed -n '/<Plugin mqtt>/,/<\\/Plugin>/p' /var/etc/collectd.conf")
+ (OUT/(ip+'-mqtt-generator-repair.json')).write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

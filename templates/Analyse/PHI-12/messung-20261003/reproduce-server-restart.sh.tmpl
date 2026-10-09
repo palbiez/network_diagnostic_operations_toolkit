@@ -1,0 +1,153 @@
+#!/bin/bash
+set -u
+D=$(mktemp -d /tmp/phi12-server-repro.XXXXXX)
+mkdir "$D/state"
+trap 'printf "Isolated test files: %s\n" "$D"' EXIT
+cat > "$D/probe_shadowsocks-libev" <<'EOF'
+config server 'sss0'
+ option server '@@IPV4_012@@'
+config ss_rules 'ss_rules'
+ list ifnames '@@INTERFACE_010@@'
+ list ifnames '@@INTERFACE_011@@'
+EOF
+cp "$D/probe_shadowsocks-libev" "$D/probe_shadowsocks-rust"
+cat > "$D/probe_openvpn" <<'EOF'
+config openvpn 'omr'
+ list remote '@@IPV4_012@@'
+EOF
+cat > "$D/probe_openmptcprouter" <<'EOF'
+config server 'vps'
+ option current '1'
+EOF
+uci() {
+ local quiet='' command target
+ [ "${1:-}" != "-q" ] || { quiet=-q; shift; }
+ command=$1; shift
+ if [ "$#" -gt 0 ]; then target="probe_$1"; shift; else target=''; fi
+ /sbin/uci -c "$D" -t "$D/state" -p "$D/state" $quiet "$command" ${target:+"$target"} "$@"
+}
+config_get() {
+ case "$3" in
+ master) printf -v "$1" 1;;
+ ip) printf -v "$1" '@@IPV4_012@@';;
+ port) printf -v "$1" 65500;;
+ disabled) printf -v "$1" 0;;
+ esac
+}
+config_load() { :; }
+config_list_foreach() { serverip=@@IPV4_012@@; server_ping=true; oneserverup=1; countips=1; set_ip; }
+restart_requests=0
+_restart_proxy_services() { restart_requests=$((restart_requests+1)); echo 'RESTART_REQUESTED_WITH_HEALTHY_SERVER'; }
+declare -A _srv_prev_up
+_srv_prev_up['m:vps:1']=1
+_check_master() {
+	local name=$1
+	local count=0
+	local countips=0
+	local changes="0"
+	config_get master "$1" master
+	config_get ip "$1" ip
+	config_get port "$1" port "65500"
+	config_get disabled "$1" disabled
+	serverip=""
+	[ "$master" = "1" ] && [ -n "$ip" ] && [ "$disabled" != "1" ] && {
+		set_ip() {
+			ip="$serverip"
+			local ss_libev_server ss_rust_server
+			local state_key="m:${name}:${countips}"
+			ss_libev_server=$(uci -q get shadowsocks-libev.sss${count}.server)
+			ss_rust_server=$(uci -q get shadowsocks-rust.sss${count}.server)
+			if [ "$server_ping" = true ]; then
+				if { [ -n "$(uci -q get shadowsocks-libev)" ] && [ "$ss_libev_server" != "$ip" ]; } || \
+				   { [ -n "$(uci -q get shadowsocks-rust)" ] && [ "$ss_rust_server" != "$ip" ]; } || \
+				   { [ -n "$(uci -q get openvpn.omr)" ] && [ -z "$(uci -q get openvpn.omr.remote | grep "$ip")" ]; }; then
+					logger -t "OMR-Tracker-Server" "Master server ${name} up ($ip), set it back"
+					changes="1"
+					uci -q batch <<-EOF >/dev/null
+						set shadowsocks-libev.sss${count}.server="$ip"
+						set shadowsocks-rust.sss${count}.server="$ip"
+						set openmptcprouter.${name}.current='1'
+						del openmptcprouter.omr.detected_ss_ipv4
+						del openmptcprouter.omr.detected_public_ipv4
+						del openmptcprouter.omr.detected_ss_ipv6
+						del openmptcprouter.omr.detected_public_ipv6
+						commit openmptcprouter
+					EOF
+					[ -z "$(uci -q get openvpn.omr.remote | grep "$ip")" ] && \
+						uci -q add_list openvpn.omr.remote="$ip"
+					if [ "$count" -eq "0" ]; then
+						config_load openmptcprouter
+						config_foreach _disable_current server
+						_apply_server_config "$ip" "$name"
+					fi
+				fi
+				OMR_TRACKER_STATUS_MSG="Answer to ping and to API check"
+				# Steady state (already up last cycle, config untouched): the
+				# redir re-enable walk, ip_down bookkeeping and up-alert only
+				# matter on a down->up transition or after a config fix, and
+				# their config_load/uci churn was most of this daemon's
+				# idle-cycle CPU cost. The mail/script alerts also belong on
+				# the transition only: one alert per event, not one per cycle.
+				if [ "${_srv_prev_up[$state_key]}" != "1" ] || [ "$changes" = "1" ]; then
+					_proxy=$(uci -q get openmptcprouter.settings.proxy)
+					_vpn=$(uci -q get openmptcprouter.settings.vpn)
+					[ "$_proxy" = "shadowsocks-rust" ] && uci -q set shadowsocks-rust.sss${count}.disabled=0
+					[ "$_proxy" = "shadowsocks" ]      && uci -q set shadowsocks-libev.sss${count}.disabled=0
+					[ "$_vpn"   = "openvpn" ]          && uci -q set openvpn.omr.enabled=1
+					_enable_ss_redirs
+					[ -n "$ip" ] && [ -n "$(uci -q get openmptcprouter.${name}.ip_down | grep -w "$ip")" ] && \
+						uci -q del_list openmptcprouter.${name}.ip_down="$ip"
+					uci -q set openmptcprouter.${name}.current='1'
+					_send_mail_alert "up" "$name" "$ip"
+				fi
+				_srv_prev_up[$state_key]="1"
+				OMR_TRACKER_SERVER_IP="$ip"
+				OMR_TRACKER_STATUS="OK"
+				script_alert_up=$(uci -q get omr-tracker.proxy.script_alert_up)
+				[ -n "$script_alert_up" ] && eval "$script_alert_up"
+				count=$((count+1))
+			else
+				OMR_TRACKER_STATUS_MSG="No answer to ping and to API check"
+				if [ "${_srv_prev_up[$state_key]}" != "0" ]; then
+					[ -n "$ip" ] && \
+						[ -z "$(uci -q get openmptcprouter.${name}.ip_down | grep -w "$ip")" ] && \
+						uci -q add_list openmptcprouter.${name}.ip_down="$ip" && \
+						logger -t "OMR-Tracker-Server" "Master server ${name} down ($ip)"
+					_disable_ss_redirs_by_ip "$ip"
+					_send_mail_alert "down" "$name" "$ip"
+				fi
+				_srv_prev_up[$state_key]="0"
+				OMR_TRACKER_STATUS="ERROR"
+				script_alert_down=$(uci -q get omr-tracker.proxy.script_alert_down)
+				[ -n "$script_alert_down" ] && eval "$script_alert_down"
+			fi
+		}
+		config_load openmptcprouter
+		config_list_foreach "$1" ip _do_check_ip
+		[ "$oneserverup" = "0" ] && uci -q set openmptcprouter.${name}.current='0'
+		[ -n "$(uci -q changes openmptcprouter)" ] && uci -q commit openmptcprouter
+		# Commit only what actually changed: a no-op `uci commit` still forks
+		# and rewrites nothing but costs file locking and IO every cycle
+		[ -n "$(uci -q changes shadowsocks-libev)" ] && { changes="1"; uci -q commit shadowsocks-libev; }
+		[ -n "$(uci -q changes shadowsocks-rust)" ]  && { changes="1"; uci -q commit shadowsocks-rust; }
+		[ -n "$(uci -q changes openvpn)" ]           && { changes="1"; uci -q commit openvpn; }
+		[ "$changes" = "1" ] && _restart_proxy_services
+		return
+	}
+}
+
+echo 'TEST1: healthy server and unchanged staging'
+_check_master vps
+[ "$restart_requests" -eq 0 ] || exit 10
+echo 'TEST2: delete/add SAME interface in isolated shared staging'
+uci -q del_list shadowsocks-libev.ss_rules.ifnames=@@INTERFACE_010@@
+uci -q add_list shadowsocks-libev.ss_rules.ifnames=@@INTERFACE_010@@
+uci -q changes shadowsocks-libev
+_check_master vps
+[ "$restart_requests" -eq 1 ] || exit 11
+echo 'STAGING_AFTER_COMMIT'; uci changes shadowsocks-libev; echo 'UCI_TEMPDIR_CONTENT'; ls -la "$D/state"
+echo 'TEST3: after commit, healthy server and unchanged staging'
+_check_master vps
+
+[ "$restart_requests" -eq 1 ] || exit 12
+echo "PASS: only foreign pending interface edits requested a restart; server remained healthy"

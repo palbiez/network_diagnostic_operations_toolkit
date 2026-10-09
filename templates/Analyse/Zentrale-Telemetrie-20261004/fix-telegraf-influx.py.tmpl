@@ -1,0 +1,36 @@
+from pathlib import Path
+import urllib.request,urllib.error,json,tomllib,re,subprocess,shutil,os
+op=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+configs=tomllib.loads(Path('/root/.influxdbv2/configs').read_text())
+tokens=[Path('/root/superuser_influx').read_text().strip()]+[v.get('token','') for v in configs.values()]
+def api(path,body=None,token=None):
+ req=urllib.request.Request('http://127.0.0.1:8086/api/v2/'+path,headers={'Authorization':'Token '+token,'Content-Type':'application/json'},data=json.dumps(body).encode() if body is not None else None)
+ return json.load(op.open(req,timeout=10))
+master=None
+for candidate in tokens:
+ try:buckets=api('buckets',token=candidate)['buckets'];master=candidate;break
+ except urllib.error.HTTPError:pass
+assert master,'No working Influx administrator credential'
+org=buckets[0]['orgID']
+bucket=next((b for b in buckets if b['name']=='telegraf'),None)
+if bucket is None:bucket=api('buckets',{'name':'telegraf','orgID':org,'retentionRules':[{'type':'expire','everySeconds':2592000}]},master)
+orgs=api('orgs',token=master)['orgs'];orgname=next(o['name'] for o in orgs if o['id']==org)
+p=Path('/etc/telegraf/telegraf.conf');b=Path('/root/central-telemetry-backup-20261004');b.mkdir(mode=0o700,exist_ok=True)
+if not (b/'telegraf.conf').exists():shutil.copy2(p,b/'telegraf.conf')
+authfile=Path('/etc/telegraf/central-influx-auth.json')
+if authfile.exists():auth=json.loads(authfile.read_text())
+else:
+ auth=api('authorizations',{'orgID':org,'description':'central-telegraf-write-only','permissions':[{'action':'write','resource':{'type':'buckets','id':bucket['id'],'orgID':org}}]},master)
+ authfile.write_text(json.dumps(auth));authfile.chmod(0o600)
+s=p.read_text();s=re.sub(r'(?ms)^\[\[outputs.influxdb\]\].*?(?=^\[\[|\Z)','''[[outputs.influxdb_v2]]
+  urls = ["http://127.0.0.1:8086"]
+  organization = '''+json.dumps(orgname)+'''
+  bucket = "telegraf"
+  token = '''+json.dumps(auth['token'])+'\n',s)
+# Keep durable syslog as the log archive; eliminate unbounded /tmp duplicate and per-metric stdout noise.
+s=re.sub(r'(?ms)^\[\[outputs.file\]\].*?(?=^\[\[|\Z)','',s)
+p.write_text(s);p.chmod(0o640);shutil.chown(p,user='root',group='telegraf')
+test=subprocess.run(['telegraf','--config',str(p),'--config-directory','/etc/telegraf/telegraf.d','--test','--input-filter','cpu'],capture_output=True,text=True)
+if test.returncode:shutil.copy2(b/'telegraf.conf',p);raise SystemExit('Telegraf validation failed, restored original')
+subprocess.run(['systemctl','restart','telegraf'],check=True)
+print('Telegraf migrated to Influx v2 bucket telegraf, organisation',orgname,'with bucket-scoped write token')

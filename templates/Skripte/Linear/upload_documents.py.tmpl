@@ -1,0 +1,62 @@
+"""Attach selected credential-free findings to their Linear work packages."""
+import hashlib
+import argparse
+import json
+import urllib.request
+import uuid
+from linear_api import ROOT,Linear
+from linear_sync import save,read,lock,verify_workspace
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--file',help='Upload only this preselected workspace-relative document')
+    args=parser.parse_args()
+    folder=ROOT/'Linear';config=read(folder/'config.json');mapping=read(folder/'issue-map.json')
+    records=read(folder/'document-attachments.json',{})
+    jobs=[
+        ('Analyse/vps-monitoring-tunneladresse-und-eee-loesung.txt',['monitoring','eee']),
+        ('Analyse/mqvpn-syslog-loesungsvorschlaege.txt',['logging']),
+        ('Analyse/config-pruefung-2026-10-02.txt',['gaming','dscp','backup','dhcp','sqm','cleanup','syslog-target']),
+        ('Analyse/messplan-und-stabilisierung.txt',['measurement','eee']),
+        ('Analyse/tunnel-erkenntnisse-2026-10-02.json',['measurement']),
+        ('Analyse/PHI-16/ergebnis-2026-10-02.md',['syslog-target']),
+        ('Analyse/PHI-11/ergebnis-2026-10-02.md',['backup']),
+        ('Analyse/PHI-12/diagnoseplan-2026-10-02.md',['restart-routing']),
+        ('Analyse/PHI-12/playstation-monitoring-2026-10-02.md',['gaming']),
+        ('Analyse/PHI-12/tagesauswertung-und-abendmessung-2026-10-02.md',['restart-routing','gaming']),
+        ('Analyse/PHI-12/abend-zwischenbefund-2026-10-02-2149.md',['restart-routing','gaming','measurement']),
+        ('Analyse/PHI-12/warzone-multiplayer-switchpfad-2026-10-02.md',['restart-routing','gaming','measurement']),
+        ('Analyse/PHI-12/switchpfad-inventarabgleich-2026-10-02.md',['restart-routing','gaming','measurement']),
+        ('Analyse/PHI-12/switch-zugangstest-2026-10-02.md',['restart-routing','gaming','measurement']),
+    ]
+    if args.file:
+        jobs=[job for job in jobs if job[0]==args.file]
+        if not jobs:raise RuntimeError('File is not in the preselected document list')
+    with lock():
+        client=Linear();verify_workspace(client,config)
+        for path,keys in jobs:
+            file=ROOT/path;data=file.read_bytes()
+            if b'lin_api_' in data or b'BEGIN PRIVATE KEY' in data:
+                raise RuntimeError('Credential marker in proposed attachment; not uploaded')
+            digest=hashlib.sha256(data).hexdigest();key=path+':'+digest
+            record=records.get(key)
+            if record is None:
+                mime='application/json' if file.suffix=='.json' else 'text/plain'
+                response=client.query('mutation($type:String!,$name:String!,$size:Int!){fileUpload(contentType:$type,filename:$name,size:$size){success uploadFile{uploadUrl assetUrl headers{key value}}}}',{'type':mime,'name':file.name,'size':len(data)})['fileUpload']
+                if not response['success']:raise RuntimeError('Upload allocation failed')
+                upload=response['uploadFile'];headers={'Content-Type':mime,'Cache-Control':'public, max-age=31536000'}
+                headers.update({x['key']:x['value'] for x in upload['headers']})
+                request=urllib.request.Request(upload['uploadUrl'],data=data,method='PUT',headers=headers)
+                with urllib.request.urlopen(request,timeout=45) as put:
+                    if put.status not in (200,201,204):raise RuntimeError('Upload failed')
+                record={'path':path,'sha256':digest,'assetUrl':upload['assetUrl'],'attachments':{}}
+                records[key]=record;save(folder/'document-attachments.json',records)
+            for issue_key in keys:
+                if issue_key in record['attachments']:continue
+                attachment_id=str(uuid.UUID(bytes=uuid.uuid5(uuid.UUID(config['projectId']),key+':'+issue_key).bytes,version=4))
+                response=client.query('mutation($input:AttachmentCreateInput!){attachmentCreate(input:$input){success attachment{id url title}}}',{'input':{'id':attachment_id,'issueId':mapping[issue_key]['id'],'title':file.name,'subtitle':'Analyse-/Lösungsvorschlag, Stand 02.10.2026','url':record['assetUrl']}})['attachmentCreate']
+                if not response['success']:raise RuntimeError('Attachment creation failed')
+                record['attachments'][issue_key]=response['attachment'];save(folder/'document-attachments.json',records)
+                print('Attached',file.name,'to',mapping[issue_key]['identifier'])
+
+if __name__=='__main__':main()

@@ -1,0 +1,15 @@
+import sys,json,uuid
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'Skripte/Linear'))
+from linear_api import Linear
+from linear_sync import ISSUE_FIELDS,write_local,save
+c=json.loads((ROOT/'Linear/config.json').read_text(encoding='utf-8'))
+m=json.loads((ROOT/'Linear/issue-map.json').read_text(encoding='utf-8'))
+key='central-observability'
+if key not in m:
+ payload={'id':str(uuid.UUID(bytes=uuid.uuid5(uuid.UUID(c['projectId']),key).bytes,version=4)),'teamId':c['teamId'],'projectId':c['projectId'],'title':'Zentrale Syslog-, Prometheus- und Collectd/MQTT-Sammlung für alle Hosts herstellen','priority':2,'stateId':next(s['id'] for s in c['states'] if s['name']=='In Progress'),'description':@@PYTHON_STRING_056@@}
+ r=Linear().query('mutation($input:IssueCreateInput!){issueCreate(input:$input){success issue{'+ISSUE_FIELDS+'}}}',{'input':payload})['issueCreate']
+ assert r['success'];i=r['issue'];write_local(i)
+ m[key]={'id':i['id'],'identifier':i['identifier'],'url':i['url'],'sources':['Analyse/Zentrale-Telemetrie-20261004/']};save(ROOT/'Linear/issue-map.json',m)
+print(m[key]['identifier'],m[key]['url'])

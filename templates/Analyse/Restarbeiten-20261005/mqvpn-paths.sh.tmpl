@@ -1,0 +1,6 @@
+date -Iseconds
+mqvpn-path --help 2>&1 | head -20
+mqvpn-path list 2>&1
+uci show network.@@INTERFACE_001@@
+cat /sys/class/net/@@INTERFACE_001@@/mtu
+grep -n -E 'mtu|_drop_static|set_vpn_ip' /etc/init.d/mqvpn /etc/hotplug.d/iface/*mqvpn* 2>/dev/null

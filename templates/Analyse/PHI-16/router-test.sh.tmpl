@@ -1,0 +1,6 @@
+date -Is
+printf '\nLOG TCP SOCKET\n'
+ss -ntp | grep '@@IPV4_007@@:514'
+printf '\nTEST EVENT\n'
+logger -p user.notice -t PHI-16 'PHI-16-SYSLOG-20261002T083000Z source=OpenMPTCProuter purpose=end-to-end-syslog-verification'
+logread -e 'PHI-16-SYSLOG-20261002T083000Z'

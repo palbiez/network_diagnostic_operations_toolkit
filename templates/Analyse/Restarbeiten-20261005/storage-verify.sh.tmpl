@@ -1,0 +1,11 @@
+date -Iseconds
+systemctl show node_exporter -p ExecStart
+systemctl is-active loki influxdb syslog-ng telegraf node_exporter
+systemctl show network-archive-compress.service -p Result -p ExecMainStatus
+systemctl list-timers network-archive-compress.timer --no-pager
+cat /var/lib/network-archive-maintenance/status.json
+curl -fsS http://127.0.0.1:9100/metrics | grep -E '^network_archive_|textfile_scrape_error' || true
+curl -s -o /tmp/phi29-loki-delete-list.json -w 'loki_delete_api=%{http_code}\n' http://127.0.0.1:3100/loki/api/v1/delete
+find /var/log/network -type f -name '*.gz' -printf '%s %p\n' | head -5
+find /var/log/network -type f -mmin -3 -printf '%p\n' | head -12
+curl -fsS http://127.0.0.1:9090/-/ready

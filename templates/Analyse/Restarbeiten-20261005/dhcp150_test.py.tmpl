@@ -1,0 +1,70 @@
+"""One synthetic DHCP client; never applies an address to the running host."""
+import socket,struct,os,time,json
+from pathlib import Path
+iface='enp1s0'
+interfaces={p.name:p for p in Path('/sys/class/net').iterdir()}
+routes=Path('/proc/net/route').read_text().splitlines()[1:]
+for row in routes:
+    fields=row.split()
+    if fields[1]=='00000000':iface=fields[0];break
+assert iface in interfaces and iface!='lo'
+client=b'\x02\x50\x19\x10\x05\x01'
+xid=int.from_bytes(os.urandom(4),'big')
+s=socket.socket(socket.AF_PACKET,socket.SOCK_RAW,socket.htons(0x0800));s.bind((iface,0));s.settimeout(1)
+def checksum(data):
+    if len(data)%2:data+=b'\x00'
+    total=sum(struct.unpack('!%dH'%(len(data)//2),data))
+    while total>>16:total=(total&65535)+(total>>16)
+    return (~total)&65535
+def option(k,v):return bytes([k,len(v)])+v
+def packet(msg,requested=None,server=None,ci='0.0.0.0',dest='255.255.255.255',destmac=b'\xff'*6):
+    boot=struct.pack('!BBBBIHH4s4s4s4s16s64s128s',1,1,6,0,xid,0,0 if msg==7 else 0x8000,socket.inet_aton(ci),b'\0'*4,b'\0'*4,b'\0'*4,client+b'\0'*10,b'\0'*64,b'\0'*128)
+    opts=option(53,bytes([msg]))+option(61,b'\x01'+client)
+    if msg!=7:opts+=option(12,b'phi19-test')+option(55,bytes([1,3,6,51,54]))
+    if requested:opts+=option(50,socket.inet_aton(requested))
+    if server:opts+=option(54,socket.inet_aton(server))
+    payload=boot+b'\x63\x82\x53\x63'+opts+b'\xff'
+    payload=payload.ljust(300,b'\0')
+    udp=struct.pack('!HHHH',68,67,len(payload)+8,0)+payload
+    ip=struct.pack('!BBHHHBBH4s4s',0x45,0,len(udp)+20,xid&65535,0,64,17,0,socket.inet_aton(ci),socket.inet_aton(dest))
+    ip=ip[:10]+struct.pack('!H',checksum(ip))+ip[12:]
+    return destmac+client+b'\x08\x00'+ip+udp
+def wait(expected):
+    end=time.monotonic()+8
+    while time.monotonic()<end:
+        try:b=s.recv(65535)
+        except TimeoutError:continue
+        if b[12:14]!=b'\x08\x00':continue
+        ip=b[14:];ihl=(ip[0]&15)*4
+        if ip[9]!=17:continue
+        udp=ip[ihl:]
+        if len(udp)<8 or struct.unpack('!HH',udp[:4])!=(67,68):continue
+        data=udp[8:]
+        if len(data)<240 or data[0]!=2 or int.from_bytes(data[4:8],'big')!=xid or data[28:34]!=client:continue
+        opts={};i=240
+        while i<len(data):
+            code=data[i];i+=1
+            if code==255:break
+            if code==0:continue
+            n=data[i];i+=1;opts[code]=data[i:i+n];i+=n
+        if opts.get(53)!=bytes([expected]):continue
+        result={'message':expected,'address':socket.inet_ntoa(data[16:20]),'server':socket.inet_ntoa(opts[54]),'sourceMac':b[6:12].hex(':')}
+        for code,label in [(1,'mask'),(3,'gateway'),(6,'dns')]:
+            v=opts.get(code,b'');result[label]=[socket.inet_ntoa(v[j:j+4]) for j in range(0,len(v),4)]
+        result['leaseSeconds']=int.from_bytes(opts.get(51,b''),'big')
+        return result
+    raise TimeoutError('No DHCP '+str(expected)+' response')
+result={'interface':iface,'clientMac':client.hex(':'),'xid':xid}
+ack=None
+try:
+    s.send(packet(1));offer=wait(2);result['offer']=offer
+    assert offer['server']=='@@IPV4_037@@' and offer['address'].startswith('@@NETWORK_PREFIX_003@@@@VLAN_001@@.')
+    s.send(packet(3,offer['address'],offer['server']));ack=wait(5);result['ack']=ack
+    assert ack['address']==offer['address'] and ack['mask']==['255.255.255.0'] and ack['gateway']==['@@IPV4_037@@'] and ack['dns']==['@@IPV4_037@@']
+    assert 20<=int(ack['address'].split('.')[-1])<=239
+    result['validated']=True
+finally:
+    if ack:
+        s.send(packet(7,server=ack['server'],ci=ack['address'],dest=ack['server'],destmac=bytes.fromhex(ack['sourceMac'].replace(':',''))));result['releaseSent']=True
+    s.close()
+    print(json.dumps(result,indent=2))

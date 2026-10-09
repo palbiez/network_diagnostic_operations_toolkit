@@ -1,0 +1,22 @@
+from pathlib import Path
+import urllib.request,re,socket,base64,os,json
+out=Path(__file__).resolve().parent
+base='http://@@IPV4_034@@:8123'
+html=urllib.request.urlopen(base,timeout=8).read().decode()
+scripts=re.findall(r'href="(/frontend_latest/[^" ]+\.js)"',html)
+checks=[]
+for path in scripts[:2]:
+    with urllib.request.urlopen(base+path,timeout=8) as r:
+        checks.append({'path':path,'status':r.status,'type':r.headers.get('Content-Type'),'bytes':len(r.read())})
+with socket.create_connection(('@@IPV4_034@@',8123),timeout=8) as s:
+    key=base64.b64encode(os.urandom(16)).decode()
+    s.sendall(('GET /api/websocket HTTP/1.1\r\nHost: @@IPV4_034@@:8123\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: '+key+'\r\nSec-WebSocket-Version: 13\r\n\r\n').encode())
+    b=s.recv(4096)
+    headers,_,frame=b.partition(b'\r\n\r\n')
+    if not frame:frame=s.recv(4096)
+    n=frame[1]&127; offset=2
+    if n==126:n=int.from_bytes(frame[2:4],'big');offset=4
+    payload=frame[offset:offset+n].decode()
+    ws={'response':headers.decode().splitlines()[0],'message':json.loads(payload)}
+result={'title':'Home Assistant' in html,'assets':checks,'websocket':ws}
+(out/'frontend-check.json').write_text(json.dumps(result,indent=2),encoding='utf-8');print(json.dumps(result,indent=2))

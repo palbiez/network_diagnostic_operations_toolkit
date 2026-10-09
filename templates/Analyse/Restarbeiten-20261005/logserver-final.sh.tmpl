@@ -1,0 +1,7 @@
+date -Iseconds
+command -v influx || true
+systemctl show prometheus -p ExecStart
+grep -E 'retention|compactor|delete_request|working_directory|filesystem|directory|path' /etc/loki/config.yml /etc/loki/local-config.yaml /etc/loki/config.yaml 2>/dev/null || true
+ss -lntp | grep -E ':808[67] ' || true
+find /var/log/network -type f -printf '%TY-%Tm-%Td %s %p\n' | sort | head -12
+df -h /var/log

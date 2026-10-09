@@ -1,0 +1,35 @@
+from pathlib import Path
+import json
+
+root=Path(__file__).resolve().parents[2]
+path=root/'Inventar/topologie_ps_7066_pruefung_2026_10_02.json'
+data=json.loads(path.read_text(encoding='utf-8'))
+data['status']='teilweise_nutzerbestaetigt'
+data['nutzerangabe']=@@PYTHON_STRING_032@@
+data['verbindungen']=[{
+ 'a':{'modell':'SL902-SWTGW218AS','ip':'@@IPV4_020@@','port':8},
+ 'b':{'modell':'SL902-SWTGW215AS','ip':'@@IPV4_021@@','port':5},
+ 'status':'Verbindung und Portpaar durch Nutzer bestätigt',
+ 'portzuordnung':@@PYTHON_STRING_033@@,
+ 'live_portzaehler_gelesen':False,
+ 'quelle':'Nutzernachricht 2026-10-02: die beiden Switches sind über Port 8 und Port 5 miteinander verbunden'
+}]
+data['offen']=[x for x in data['offen'] if x!='Direkte Kabel-/Nachbarbeziehungen']+['Anschluss des Schlafzimmer-Switches an 218AS oder 215AS','Routeranschluss und vollständiger PS-Pfad']
+path.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+path=root/'Analyse/PHI-12/switchpfad-inventarabgleich-2026-10-02.md'
+text=path.read_text(encoding='utf-8')
+note=@@PYTHON_STRING_034@@
+if '## Ergänzung: Verbindung zwischen den Sodola-Switches bestätigt' not in text:
+ path.write_text(text.rstrip()+'\n'+note,encoding='utf-8')
+heading='\n\n## Sodola-Verbindung: Nutzerbestätigung\n\n'
+summary=@@PYTHON_STRING_035@@
+for relative in ['Analyse/PHI-12/diagnoseplan-2026-10-02.md','Linear/issues/PHI-6.md','Linear/issues/PHI-9.md']:
+ p=root/relative
+ p.write_text(p.read_text(encoding='utf-8').split(heading)[0].rstrip()+heading+summary,encoding='utf-8')
+p=root/'Linear/work-packages.json'
+packages=json.loads(p.read_text(encoding='utf-8'))
+for key,n in [('measurement',6),('gaming',9)]:
+ package=next(x for x in packages if x['key']==key)
+ package['description']=(root/f'Linear/issues/PHI-{n}.md').read_text(encoding='utf-8')
+p.write_text(json.dumps(packages,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print('Sodola-Portpaar dokumentiert; vollständiger PS-Pfad bleibt offen.')

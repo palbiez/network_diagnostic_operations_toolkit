@@ -1,0 +1,22 @@
+from pathlib import Path
+import json,re
+ROOT=Path(__file__).resolve().parents[2]
+out=Path(__file__).resolve().parent
+samples=json.loads((out/'recovery-monitor.json').read_text())
+assert len(samples)==11
+assert all(s['8123']==200 and s['9100']==200 for s in samples[-7:])
+key=json.loads((out/'ssh-key-verification.json').read_text());assert key['exit']==0
+for p in out.glob('*.json'):
+    text=p.read_text(encoding='utf-8')
+    clean=re.sub(r'/api/hassio_ingress/[^\s/"\\]+','/api/hassio_ingress/[REDACTED]',text)
+    if clean!=text:p.write_text(clean,encoding='utf-8')
+p=ROOT/'Linear/issues/PHI-28.md';text=p.read_text(encoding='utf-8')
+for start in ['Home Assistant Core-/Supervisor-Status','SSH-/Terminal-Zugang bewusst','Home Assistant-/Supervisor-/Add-on-Logs','MQTT-Zugang der Node-RED-Clients','Bestehende Prometheus-Metriken']:
+    text=text.replace('- [ ] '+start,'- [x] '+start)
+text+=@@PYTHON_STRING_041@@
+p.write_text(text,encoding='utf-8')
+p=ROOT/'Linear/issues/PHI-28.json';data=json.loads(p.read_text(encoding='utf-8'));data['stateId']='@@IDENTIFIER_003@@';p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+p=ROOT/'Dokumentation/home-assistant-zugang-PHI-28.md'
+with p.open('a',encoding='utf-8') as f:
+    f.write(@@PYTHON_STRING_042@@)
+print('PHI-28 result documented; In Review; browser confirmation pending')

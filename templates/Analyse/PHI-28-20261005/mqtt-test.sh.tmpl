@@ -1,0 +1,9 @@
+sudo -n docker exec -i app_a0d7b954_nodered node - <<'JS'
+const fs=require('fs');
+const mqtt=require('/opt/node_modules/mqtt');
+const ha=JSON.parse(fs.readFileSync('/homeassistant/.storage/core.config_entries')).data.entries.find(x=>x.domain==='mqtt').data;
+const c=mqtt.connect('mqtt://@@IPV4_007@@:1883',{username:ha.username,password:ha.password,clientId:'phi28-auth-check',reconnectPeriod:0,connectTimeout:5000});
+c.on('connect',()=>{console.log('HA credential MQTT authentication OK');c.end();});
+c.on('error',e=>{console.log('MQTT auth result: '+e.message);c.end();});
+setTimeout(()=>{c.end(true);process.exit();},6000);
+JS

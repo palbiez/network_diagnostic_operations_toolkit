@@ -1,0 +1,3769 @@
+{
+  "format": 1,
+  "files": {
+    "Analyse/application-20261009/bestand.sh": {
+      "parameters": [
+        "IPV4_024",
+        "IPV4_054",
+        "MAC_007",
+        "MAC_008",
+        "VLAN_001"
+      ],
+      "sha256": "d5ec1384f3b40021c302169d272f09913f15d48b2dfdfcf28b44aa54a28b3e48"
+    },
+    "Analyse/application-20261009/dns-regeltest.sh": {
+      "parameters": [
+        "HOSTNAME_014",
+        "HOSTNAME_015",
+        "HOSTNAME_016",
+        "HOSTNAME_017",
+        "HOSTNAME_018",
+        "HOSTNAME_019",
+        "INTERFACE_002",
+        "INTERFACE_015",
+        "INTERFACE_016",
+        "IPV4_055"
+      ],
+      "sha256": "2122e2abafd4f915d13abc88a750fe78ee5fd3763c52d113915b07fa6232f5b1"
+    },
+    "Analyse/application-20261009/kandidaten.sh": {
+      "parameters": [
+        "INTERFACE_015",
+        "INTERFACE_016",
+        "IPV4_054",
+        "IPV4_056",
+        "IPV4_057",
+        "IPV4_058",
+        "IPV4_059",
+        "IPV4_060",
+        "IPV4_061",
+        "IPV4_062",
+        "IPV4_063",
+        "IPV4_064",
+        "IPV4_065",
+        "IPV4_066",
+        "IPV4_067",
+        "IPV4_068",
+        "VLAN_003"
+      ],
+      "sha256": "1f200183f20b5aa5503aebbbacb754801e4afbdc00c1f90755db9b0be5e16b5e"
+    },
+    "Analyse/application-20261009/regeln.sh": {
+      "parameters": [],
+      "sha256": "41b2ed9875b2b8cb68fe5971b1cd827e82d57de9d80063878309f67e6e80a8f0"
+    },
+    "Analyse/application-20261009/regelpruefung.sh": {
+      "parameters": [
+        "IPV4_054"
+      ],
+      "sha256": "b1f3829606da2f69e1ba681fba902c344ee5fbdd787e78e14ffe82fab3c0e0f2"
+    },
+    "Analyse/application-20261009/routerlogs-1504/livecheck.sh": {
+      "parameters": [
+        "INTERFACE_015",
+        "INTERFACE_016",
+        "IPV4_054",
+        "IPV4_056",
+        "IPV4_068",
+        "IPV4_069",
+        "IPV4_070",
+        "IPV4_071",
+        "IPV4_072",
+        "IPV4_073",
+        "IPV4_074",
+        "IPV4_075",
+        "IPV4_076",
+        "IPV4_077",
+        "IPV4_078",
+        "IPV4_079",
+        "IPV4_080",
+        "IPV4_081",
+        "IPV4_082",
+        "IPV4_083"
+      ],
+      "sha256": "27d59d18b4579d1433d7952dbb2b2fbcf52b22db436da29938b7a857f6acba02"
+    },
+    "Analyse/create_reports.py": {
+      "parameters": [
+        "HOSTNAME_001",
+        "HOSTNAME_002",
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "INTERFACE_004",
+        "INTERFACE_005",
+        "INTERFACE_006",
+        "INTERFACE_007",
+        "IPV4_001",
+        "IPV4_002",
+        "IPV4_003",
+        "IPV4_004",
+        "IPV4_005",
+        "IPV4_006",
+        "IPV4_007",
+        "IPV4_008",
+        "IPV4_009",
+        "IPV4_010",
+        "IPV4_011",
+        "IPV4_012",
+        "IPV4_013",
+        "IPV4_014",
+        "PYTHON_STRING_001",
+        "PYTHON_STRING_002",
+        "PYTHON_STRING_003",
+        "PYTHON_STRING_004",
+        "PYTHON_STRING_005",
+        "PYTHON_STRING_006",
+        "PYTHON_STRING_007",
+        "PYTHON_STRING_008",
+        "PYTHON_STRING_009",
+        "PYTHON_STRING_010",
+        "PYTHON_STRING_011",
+        "PYTHON_STRING_012",
+        "PYTHON_STRING_013",
+        "PYTHON_STRING_014",
+        "PYTHON_STRING_015",
+        "PYTHON_STRING_016",
+        "PYTHON_STRING_017",
+        "PYTHON_STRING_018",
+        "SECTION_001",
+        "SECTION_002",
+        "SECTION_003",
+        "SECTION_004",
+        "SECTION_005",
+        "SECTION_006",
+        "VLAN_001",
+        "VLAN_002",
+        "VLAN_003",
+        "VLAN_004"
+      ],
+      "sha256": "c262c6aef613a2550ce463ada914968541757e09c2c0148650868b94ef8b91bd"
+    },
+    "Analyse/mqvpn-logging-inspect.sh": {
+      "parameters": [],
+      "sha256": "3e4b6db121cdf186fc216a1d3d76d0923c7efba65d28f28568bd33610c3866ae"
+    },
+    "Analyse/mqvpn-process-start.sh": {
+      "parameters": [],
+      "sha256": "c2c20c0b28d051e10b2e8931e41df6d85d72293bc41fe9fa1f0300e72c1b3ff4"
+    },
+    "Analyse/PHI-11/create-backup.sh": {
+      "parameters": [],
+      "sha256": "d6b4da3f7a04fb191a2ed9f8bf9883795d08af098ae42cab9af3257495709e6d"
+    },
+    "Analyse/PHI-11/document-result.py": {
+      "parameters": [
+        "IDENTIFIER_001",
+        "PYTHON_STRING_019"
+      ],
+      "sha256": "f5769d93e608383cdb9497611744b334cd6e30a2a8f0c5869222730c36ef9a06"
+    },
+    "Analyse/PHI-11/inspect-additional.sh": {
+      "parameters": [],
+      "sha256": "01ecbea7e1335e9c4a7fa6d6aee9b709f1f38d7486eab945c1d5090dc3c016ab"
+    },
+    "Analyse/PHI-11/inspect-backup.sh": {
+      "parameters": [
+        "HOSTNAME_003"
+      ],
+      "sha256": "16c429d5253fdb9e39c624f0f99e567d0dca41fca072141728a4c72d85adf849"
+    },
+    "Analyse/PHI-11/inspect-customizations.sh": {
+      "parameters": [
+        "HOSTNAME_003"
+      ],
+      "sha256": "c5e182bcf0774985bb5fa9bd9d57865a5f442a244982fb389d371d92e0a3910a"
+    },
+    "Analyse/PHI-11/verify-backups.py": {
+      "parameters": [],
+      "sha256": "62a27a018480f2e715be01994db930b23b9c724f490ad0fdd63236d593c026a1"
+    },
+    "Analyse/PHI-11/verify-live-after.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "IPV4_002"
+      ],
+      "sha256": "891715fae395d56ffb5af1ebf2bea9d2fb5f5e2436de934db10136d9bc56b4de"
+    },
+    "Analyse/PHI-12/analyze-daytime.py": {
+      "parameters": [
+        "INTERFACE_002",
+        "INTERFACE_003"
+      ],
+      "sha256": "0da60a3c74e103e615f22db2531600638e0f8fed358f808f3b2b2dfa23655076"
+    },
+    "Analyse/PHI-12/analyze-evening-interim.py": {
+      "parameters": [
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_015",
+        "IPV4_016",
+        "MAC_001",
+        "MAC_002",
+        "VLAN_003",
+        "VLAN_005"
+      ],
+      "sha256": "83413b8f8948dc51e2eff93093e5fb4291e93780d77adf4595d6b66f40358cfd"
+    },
+    "Analyse/PHI-12/build-diag-instrumentation.py": {
+      "parameters": [],
+      "sha256": "8e123e75728973c0bfd56f90ce1832ee3592dd07c4acb22885ea45bcdb7b384a"
+    },
+    "Analyse/PHI-12/change-minecraft-ip-20261003.sh": {
+      "parameters": [
+        "IPV4_017",
+        "IPV4_018"
+      ],
+      "sha256": "289b36c65384a72e8387922740f3bde7e43743201a79c3a367c7ed76ef9aa7d6"
+    },
+    "Analyse/PHI-12/check-playstation-lan.sh": {
+      "parameters": [
+        "INTERFACE_008",
+        "IPV4_015",
+        "IPV4_016"
+      ],
+      "sha256": "742c9f5114318d270618647f6a4ddc419702ff883d8ab41a3c520744aed42d12"
+    },
+    "Analyse/PHI-12/check-playstation-running.sh": {
+      "parameters": [
+        "INTERFACE_003"
+      ],
+      "sha256": "b36ae743b9a1d2ee12599e236e19bb58ecdba738fad193ddcedafc28b1e7f5ab"
+    },
+    "Analyse/PHI-12/check-probe-processes-20261003.sh": {
+      "parameters": [],
+      "sha256": "942b57728b461af326a5a6088a8689ab402ad6a7c99c22d359446b78e3173abb"
+    },
+    "Analyse/PHI-12/check-reload-sources.sh": {
+      "parameters": [],
+      "sha256": "71d7bb2d2163600bdfbffb8a7d4ea2b5cd4676ed8cc659785ae1fd46e7bdc9a3"
+    },
+    "Analyse/PHI-12/check-router-connectivity-20261003.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_017",
+        "IPV4_018",
+        "IPV4_019",
+        "IPV4_020",
+        "IPV4_021",
+        "IPV4_022",
+        "IPV4_023",
+        "IPV4_024",
+        "IPV4_025"
+      ],
+      "sha256": "8dd751963b8bd7ea29d7a1212d905ddd8bbeaeb4edbcefe7d72b35981e5e260c"
+    },
+    "Analyse/PHI-12/check-rules-20261003.py": {
+      "parameters": [],
+      "sha256": "0dfecbfc5a32e6758820239a652ca6c666b80d26a844449ce70f7b219af9c11a"
+    },
+    "Analyse/PHI-12/collect-daytime.sh": {
+      "parameters": [
+        "IPV4_006",
+        "MAC_001"
+      ],
+      "sha256": "ca317beb409aaf6b800aeb6cdaa7c934995214119732f598df254f7867514545"
+    },
+    "Analyse/PHI-12/collect-evening-interim.sh": {
+      "parameters": [
+        "INTERFACE_008",
+        "MAC_001",
+        "MAC_002"
+      ],
+      "sha256": "498b4b97f1954383b9e155b12fd9f2caf0093ba5ecd4a0fc1b03784ca7dff6ee"
+    },
+    "Analyse/PHI-12/collect-switch-readonly.py": {
+      "parameters": [
+        "IPV4_019",
+        "IPV4_020",
+        "IPV4_021"
+      ],
+      "sha256": "ada65def5aac97df5cce9a79b043b953e5b88a0d979e2ec6692c91940cb68f18"
+    },
+    "Analyse/PHI-12/document-connectivity-check-20261003.py": {
+      "parameters": [
+        "PYTHON_STRING_020",
+        "PYTHON_STRING_021",
+        "PYTHON_STRING_022",
+        "PYTHON_STRING_023"
+      ],
+      "sha256": "08a0b7cdf44ed7cd52aae3b9aafdbdb56ff6551843db96bc986f1f558eff46b7"
+    },
+    "Analyse/PHI-12/document-evening-interim.py": {
+      "parameters": [
+        "IDENTIFIER_002",
+        "IPV4_015",
+        "IPV4_016",
+        "MAC_001",
+        "MAC_002"
+      ],
+      "sha256": "32bef6fd300d1a25ffc734e1e69a53b342d4911c3d1618d3c766307242c72177"
+    },
+    "Analyse/PHI-12/document-lan-extension.py": {
+      "parameters": [
+        "PYTHON_STRING_024"
+      ],
+      "sha256": "5c924e963dbae327e4f87a06d2425157cfd07b284dba99b0d864665e30d12867"
+    },
+    "Analyse/PHI-12/document-measurement-20261003.py": {
+      "parameters": [
+        "PYTHON_STRING_025",
+        "PYTHON_STRING_026",
+        "PYTHON_STRING_027",
+        "PYTHON_STRING_028",
+        "PYTHON_STRING_029"
+      ],
+      "sha256": "ca40cf1148fd4808789b0e09766409993f7e0f7a63fa00a4e8da83139916dbdf"
+    },
+    "Analyse/PHI-12/document-minecraft-ip-correction.py": {
+      "parameters": [
+        "PYTHON_STRING_030",
+        "VLAN_006"
+      ],
+      "sha256": "66bad64ad1ef2e372e9d7d716aaac669034a0a9880bd6cb48a5fdd219a6db61c"
+    },
+    "Analyse/PHI-12/document-minecraft-switch-port.py": {
+      "parameters": [
+        "IPV4_018",
+        "IPV4_020",
+        "MAC_003",
+        "PYTHON_STRING_031"
+      ],
+      "sha256": "5fab674f8a6f9acd89ff2d0449f40486280d6826d4a51ce470da1d882dcfccd2"
+    },
+    "Analyse/PHI-12/document-result.py": {
+      "parameters": [
+        "IDENTIFIER_002"
+      ],
+      "sha256": "a08427a211ea6b3ea9f3b4d923c033b1cdcbd24de4245206fa95b33fd8f0ed55"
+    },
+    "Analyse/PHI-12/document-sodola-link.py": {
+      "parameters": [
+        "IPV4_020",
+        "IPV4_021",
+        "PYTHON_STRING_032",
+        "PYTHON_STRING_033",
+        "PYTHON_STRING_034",
+        "PYTHON_STRING_035"
+      ],
+      "sha256": "b493b4e72735ab869d6fd6554b5d594c7e41a9be3cb55bbaec2251492b043edd"
+    },
+    "Analyse/PHI-12/document-switch-live.py": {
+      "parameters": [
+        "IPV4_016",
+        "MAC_002",
+        "MAC_004",
+        "PYTHON_STRING_036",
+        "VLAN_004",
+        "VLAN_005"
+      ],
+      "sha256": "0015efdce4a55be82816679ca7fa38af29fa9b475384385ad9a0dec75889e4a1"
+    },
+    "Analyse/PHI-12/document-switch-login-result.py": {
+      "parameters": [
+        "PYTHON_STRING_037"
+      ],
+      "sha256": "31a5d0e21e9c2764c54c1101c6381d97dafc91eb5a26e3efa3bc2b9bc63a2b07"
+    },
+    "Analyse/PHI-12/finalize-evening.py": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_006",
+        "IPV4_026"
+      ],
+      "sha256": "0eb7c7dea7333db8900ed041f561b05db92b57be5c63a116ca0cc518bbdfdb15"
+    },
+    "Analyse/PHI-12/github-servertracker-20261003/preflight.sh": {
+      "parameters": [],
+      "sha256": "162ddc74d65ff9d30c011ec19b88e401ce925ebb7973d58ca869991649850acd"
+    },
+    "Analyse/PHI-12/github-servertracker-20261003/router-backup/rollback.sh": {
+      "parameters": [],
+      "sha256": "12ce4d59fb2da1ad58b0abed65233b59e8c04ebb2c7939c5d7e14d1827155c6c"
+    },
+    "Analyse/PHI-12/github-servertracker-20261003/servertracker-upstream.sh": {
+      "parameters": [],
+      "sha256": "a3924bd14762916a631866b4c9f54c4b173cd14ffad32fe3e5db4610774bb628"
+    },
+    "Analyse/PHI-12/github-servertracker-20261003/services-upstream.sh": {
+      "parameters": [
+        "HOSTNAME_005",
+        "HOSTNAME_006",
+        "HOSTNAME_007",
+        "INTERFACE_001",
+        "IPV4_011",
+        "IPV4_027",
+        "IPV4_028"
+      ],
+      "sha256": "fb048e5db2296006bc349dfcee1bf09366e8123d436afbb39639ab6c9332fe3d"
+    },
+    "Analyse/PHI-12/inspect-application.sh": {
+      "parameters": [
+        "HOSTNAME_008",
+        "HOSTNAME_009",
+        "IPV4_026"
+      ],
+      "sha256": "09e5b67e65a99dd885fdadfbb0ae3299d5427c7c5d8d1b783400b3e837198249"
+    },
+    "Analyse/PHI-12/inspect-capabilities.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_002",
+        "IPV4_009",
+        "IPV4_010",
+        "IPV4_011",
+        "IPV4_012"
+      ],
+      "sha256": "9649735d64837daadd4226a5596ea088d61439b73ddb23bf2e760176aaa7102e"
+    },
+    "Analyse/PHI-12/inspect-mac-wan.sh": {
+      "parameters": [
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_026",
+        "MAC_005"
+      ],
+      "sha256": "a877a1063cca8046fad06832d538cb3e1d1b27f600082b74a048e9db9898d5da"
+    },
+    "Analyse/PHI-12/inspect-measurement-detail.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_025"
+      ],
+      "sha256": "dd8b532a33aa680cb8a501370559cc9d5c9056178bcab8267a55a72f0607d153"
+    },
+    "Analyse/PHI-12/inspect-playstation.sh": {
+      "parameters": [
+        "MAC_001"
+      ],
+      "sha256": "dfd569c715a1a7d04c2765b1eb1ec9a0e5db83b12e342a44ad9c8aabff374112"
+    },
+    "Analyse/PHI-12/inspect-switch-login.py": {
+      "parameters": [
+        "IPV4_019",
+        "IPV4_020",
+        "IPV4_021"
+      ],
+      "sha256": "18b5be8d00617a1b558c117c6071ef6e9dcffbae910fa3c25e48cab04686fe6f"
+    },
+    "Analyse/PHI-12/inspect-tracker-20261003.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_025"
+      ],
+      "sha256": "5ef0c50910e4534967d5f7a771ff0c2e78554234856d7986c064e4f39675c91e"
+    },
+    "Analyse/PHI-12/inspect-wan-rules.sh": {
+      "parameters": [
+        "HOSTNAME_008",
+        "HOSTNAME_009",
+        "INTERFACE_009",
+        "IPV4_026",
+        "IPV4_029",
+        "MAC_005"
+      ],
+      "sha256": "9fbe6099d0f2eeb87731362f0be40fe9518d468b400160e5409b2f679a8e55ac"
+    },
+    "Analyse/PHI-12/install-config-events.sh": {
+      "parameters": [],
+      "sha256": "a53efca8fc85493bc55fd9855d0197be6ebf7183758c655728778546054c3edf"
+    },
+    "Analyse/PHI-12/install-evening.sh": {
+      "parameters": [
+        "SCHEDULE_001"
+      ],
+      "sha256": "03f0b5fe89eb1b403676b4ed32a9d3be789fd5da67c75100f3868219c0b3166f"
+    },
+    "Analyse/PHI-12/messung-20261003/010-services-current.sh": {
+      "parameters": [
+        "HOSTNAME_005",
+        "HOSTNAME_006",
+        "HOSTNAME_007",
+        "INTERFACE_001",
+        "IPV4_011",
+        "IPV4_027",
+        "IPV4_028"
+      ],
+      "sha256": "5dbcffdbd4509bad2c3bda0bb989beb5591e614cd6ad65f954398e34eafaf6ec"
+    },
+    "Analyse/PHI-12/messung-20261003/find-config-writers.sh": {
+      "parameters": [],
+      "sha256": "5b5b386c3bdbe9e002d0f9a20f8500aff10cf2da65875e6cc616f997ce0107f5"
+    },
+    "Analyse/PHI-12/messung-20261003/omr-tracker-server-current.sh": {
+      "parameters": [],
+      "sha256": "a3924bd14762916a631866b4c9f54c4b173cd14ffad32fe3e5db4610774bb628"
+    },
+    "Analyse/PHI-12/messung-20261003/omr-tracker-ss-current.sh": {
+      "parameters": [
+        "HOSTNAME_010",
+        "HOSTNAME_011",
+        "IPV4_011",
+        "IPV4_030"
+      ],
+      "sha256": "83ea0515ac1cea9d6b0917295417965da0109099b4b16684dd8aa8f65c648cd5"
+    },
+    "Analyse/PHI-12/messung-20261003/read-ifnames-staging.sh": {
+      "parameters": [],
+      "sha256": "d06ba1be705dc41a356932e3cafbb2f4878253e26874e878c823ac027ea07c82"
+    },
+    "Analyse/PHI-12/messung-20261003/read-server-state.sh": {
+      "parameters": [],
+      "sha256": "b58854f0bd740be8c17532a1904cc913ef554a9474a89281aac391cd1569d628"
+    },
+    "Analyse/PHI-12/messung-20261003/read-server-trigger.sh": {
+      "parameters": [],
+      "sha256": "24ebb87ca42c91243edd54d03014b6278e1d95c9d351769087f2e914aac94874"
+    },
+    "Analyse/PHI-12/messung-20261003/repair-minecraft-probe.sh": {
+      "parameters": [
+        "IPV4_018"
+      ],
+      "sha256": "df9b1a1d7aea1e8cd6ff0c166b96e459ff36cdcfea1791f8770100696ac638ac"
+    },
+    "Analyse/PHI-12/messung-20261003/reproduce-server-restart.sh": {
+      "parameters": [
+        "INTERFACE_010",
+        "INTERFACE_011",
+        "IPV4_012"
+      ],
+      "sha256": "f1c5f75029b3719381072097285999fcc3ddece2723c5074e37c1bff6a41c375"
+    },
+    "Analyse/PHI-12/messung-20261003/status-source-read.sh": {
+      "parameters": [
+        "IPV4_018"
+      ],
+      "sha256": "510090e59bac837d9e9b12701ad1ce9540d0aab27bc8bd1c4ae14bf63cf22cba"
+    },
+    "Analyse/PHI-12/messung-20261003/stop-measurement.sh": {
+      "parameters": [],
+      "sha256": "402d3cde752fc521a7452c49edd6530fc8667ac18c72c2ab16c6c92aff449b90"
+    },
+    "Analyse/PHI-12/messung-20261003/verify-stop.sh": {
+      "parameters": [
+        "IPV4_018",
+        "IPV4_023",
+        "IPV4_025"
+      ],
+      "sha256": "ffd4204f809601fbe7406670bba838058127cd2bbdeea190157d3c603fa16927"
+    },
+    "Analyse/PHI-12/paired-router-test.sh": {
+      "parameters": [
+        "IPV4_023",
+        "IPV4_031"
+      ],
+      "sha256": "a78b38865ff1b036a87e870212e479960da6fce0dfbe515deee8bfef5bfb2c10"
+    },
+    "Analyse/PHI-12/read-bypass-schedule.sh": {
+      "parameters": [],
+      "sha256": "e5c7cb1e800d10b1ce46ba51d56639249f2c68e3753566a4538d8672e1b4bcbb"
+    },
+    "Analyse/PHI-12/read-reload-code.sh": {
+      "parameters": [],
+      "sha256": "378a487f851ec75b1cfa558bd777bf18d55527e526474ed3be7d23424f1d40c8"
+    },
+    "Analyse/PHI-12/read-schedule-network.sh": {
+      "parameters": [],
+      "sha256": "fa5c2b43288a2a76cad2351f1d2e830685d0bb03b74a6036facf0c583200b6f9"
+    },
+    "Analyse/PHI-12/read-schedule-trigger.sh": {
+      "parameters": [],
+      "sha256": "f65101787d83995a30de1b7b15df0e2dfe01996651da106016bc6c5be5a60799"
+    },
+    "Analyse/PHI-12/read-switch-authenticated.py": {
+      "parameters": [
+        "IPV4_019",
+        "IPV4_020",
+        "IPV4_021"
+      ],
+      "sha256": "78bb095c9f1e84666d391296e7eb402a3d739d4b4307c44fe9db37ae02753329"
+    },
+    "Analyse/PHI-12/read-switch-management.py": {
+      "parameters": [
+        "IPV4_019",
+        "IPV4_020",
+        "IPV4_021"
+      ],
+      "sha256": "5e693d4c5f142d9f2676aa08a59c250dd4756949af205d9ef5af92cac14bf601"
+    },
+    "Analyse/PHI-12/replace-config-observer.sh": {
+      "parameters": [],
+      "sha256": "a75c914688dc6eb5d49e0e92f4a1e49c49d5d72b450056cecc9216b4ea1d4dcb"
+    },
+    "Analyse/PHI-12/smoke-router.sh": {
+      "parameters": [],
+      "sha256": "006b3105f56d69f5e81647d59f01c261ce197442af0e11186aa5f3b3d8e95e0a"
+    },
+    "Analyse/PHI-12/start-application-egress.sh": {
+      "parameters": [
+        "EPOCH_001"
+      ],
+      "sha256": "47991662b207aad86e9c3d5e0c4e475b3ad6b290a377293ff632638951892324"
+    },
+    "Analyse/PHI-12/start-playstation-1h.sh": {
+      "parameters": [
+        "IPV4_015",
+        "MAC_001"
+      ],
+      "sha256": "bb39f5e40f81b313b6dabe4281aa284dec676e9e81e4bc2ab44c85d8d238c6cb"
+    },
+    "Analyse/PHI-12/start-playstation-lan-probes.sh": {
+      "parameters": [
+        "EPOCH_002",
+        "INTERFACE_008",
+        "IPV4_015",
+        "IPV4_016"
+      ],
+      "sha256": "8ebf5e1e95e0f6924cc9c2041131f5e2d2dd44d4a7da168725c00c1228c1bcd2"
+    },
+    "Analyse/PHI-12/start-router-with-application.sh": {
+      "parameters": [
+        "IPV4_023",
+        "IPV4_026",
+        "IPV4_031",
+        "MAC_005"
+      ],
+      "sha256": "d2317969df16c1533c5dff3bf1bc05a6e1698d8d6f64120733f113c9c7543dba"
+    },
+    "Analyse/PHI-12/summarize-diagnosis.py": {
+      "parameters": [],
+      "sha256": "9990f2dd4fbc41c560ba9cade72422ba8cfce05f0579e6455183c610001fcbc4"
+    },
+    "Analyse/PHI-12/summarize-switch-readonly.py": {
+      "parameters": [
+        "IPV4_019",
+        "IPV4_020",
+        "IPV4_021",
+        "MAC_004",
+        "VLAN_005"
+      ],
+      "sha256": "5cafbc97aad09b1d33bc9807bc24c606395683ec4441e5522ac58f639225ba2d"
+    },
+    "Analyse/PHI-12/test-application.sh": {
+      "parameters": [],
+      "sha256": "674fec49e96aa7fc6254b2ab991c8122f00d92628731057444fa44f647d2a1dc"
+    },
+    "Analyse/PHI-12/test-egress-filter.sh": {
+      "parameters": [
+        "IPV4_032"
+      ],
+      "sha256": "3f0aa05e677bd7f8e5da1d67acd032fa90d4f9aac96770b271a675d20d665285"
+    },
+    "Analyse/PHI-12/test-egress-fixture.sh": {
+      "parameters": [
+        "IPV4_005",
+        "IPV4_026",
+        "IPV4_029"
+      ],
+      "sha256": "c133b94fb709be9bfcad0a29349638bcfc36badb409276469a5dd41df742b66c"
+    },
+    "Analyse/PHI-12/test-evening.sh": {
+      "parameters": [
+        "INTERFACE_008",
+        "INTERFACE_009",
+        "IPV4_006",
+        "IPV4_026"
+      ],
+      "sha256": "89ffb3b4b3481e77aa457bc102f116e647ffdedf0c74b0198df8384824fa90d0"
+    },
+    "Analyse/PHI-12/test-switch-credentials-v2.py": {
+      "parameters": [
+        "IPV4_020",
+        "IPV4_021"
+      ],
+      "sha256": "9469687d4158b4877c58a8c148f08fb384ee68f98a15e8d3ceeb69b1755b9f6d"
+    },
+    "Analyse/PHI-12/test-switch-credentials.py": {
+      "parameters": [
+        "IPV4_019",
+        "IPV4_020",
+        "IPV4_021"
+      ],
+      "sha256": "6bdb36714de3c4157a41bec331cb75746abe10d711f255322ac8e6de6064d878"
+    },
+    "Analyse/PHI-12/test-tplink-old-router.py": {
+      "parameters": [
+        "IPV4_019"
+      ],
+      "sha256": "b0b729f5b7163dec73aa31bb2d26dc55f53b017ab2d38bdeefaa8d5b34b4b630"
+    },
+    "Analyse/PHI-12/upstream-pr335-20261006/326.patch": {
+      "parameters": [],
+      "sha256": "b88d33988ac83e6334c57a1aeddac37f55bd4b8a1239388e1fea7ca3192c1b46"
+    },
+    "Analyse/PHI-12/upstream-pr335-20261006/335.patch": {
+      "parameters": [],
+      "sha256": "2756df09368c8ff5e78ae6b0697ec1baa4ba14345c9a89330c4909d6db0be378"
+    },
+    "Analyse/PHI-12/verify-config-observer.sh": {
+      "parameters": [],
+      "sha256": "130f806b4ad2aaf43e8af46900dc1f4251c6417cf632822f296b6cea33f55147"
+    },
+    "Analyse/PHI-12/verify-threshold-live.sh": {
+      "parameters": [],
+      "sha256": "cacb1f0d49dc76a9045fbdd5a16e2e503f05bf42b96399ca267d240820d46e08"
+    },
+    "Analyse/PHI-16/check-logremote-disabled-server.sh": {
+      "parameters": [
+        "IPV4_008"
+      ],
+      "sha256": "0dc1b6914b4913dc531cab47f56771146dd515c53c8bcfb707580c64113bfc4c"
+    },
+    "Analyse/PHI-16/disable-logremote.sh": {
+      "parameters": [],
+      "sha256": "3f581beccf89d2d9fb16fd071e70ec1dd9752ddc40caf893ab0f9b88d716298c"
+    },
+    "Analyse/PHI-16/document_logremote_disabled.py": {
+      "parameters": [
+        "IPV4_007",
+        "PYTHON_STRING_038"
+      ],
+      "sha256": "f8133c4f454594f3e1d70240257847db1cd08f50cfeb6a7e830245d8cd875995"
+    },
+    "Analyse/PHI-16/document_result.py": {
+      "parameters": [
+        "IPV4_007",
+        "IPV4_008",
+        "PYTHON_STRING_014",
+        "PYTHON_STRING_039",
+        "PYTHON_STRING_040"
+      ],
+      "sha256": "efe24cce6e64355a992ba90fa5d364402836c4fb9e1139b6d5ffa6463e8302a6"
+    },
+    "Analyse/PHI-16/logserver-archive.sh": {
+      "parameters": [
+        "IPV4_008"
+      ],
+      "sha256": "1146a30788d804088147c36e4a9489fc1a3e4d2ec906a7581dfcd7df9efc64c1"
+    },
+    "Analyse/PHI-16/logserver-config-check.sh": {
+      "parameters": [],
+      "sha256": "b4d3d9cae6759ca870c2de5df7f5ca06a64d588f593c4621506966861be304fc"
+    },
+    "Analyse/PHI-16/logserver-inspect.sh": {
+      "parameters": [
+        "IPV4_008"
+      ],
+      "sha256": "a2128a7ca84b6e80b8090107951d6508a991fd0a4f4c357cf43cc74c034e5a5b"
+    },
+    "Analyse/PHI-16/router-inspect.sh": {
+      "parameters": [],
+      "sha256": "8c23b48591c845916b4427fbc2f36d9defdd92bcf2f60677123cc489159e779f"
+    },
+    "Analyse/PHI-16/router-test.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "3e641ed1cc5d2186356bd97d48418e111529ab143a6508f304b9d50f3b8b44f0"
+    },
+    "Analyse/PHI-16/tunnel-syslog-final-vps-check.sh": {
+      "parameters": [
+        "INTERFACE_004",
+        "IPV4_001",
+        "IPV4_007"
+      ],
+      "sha256": "278a331f7a11979614b783b3e6c3052356d332df90f535d818b10ae2597377f8"
+    },
+    "Analyse/PHI-16/tunnel-syslog-install.sh": {
+      "parameters": [
+        "INTERFACE_004",
+        "IPV4_001",
+        "IPV4_002",
+        "IPV4_007"
+      ],
+      "sha256": "698fd61f3de068143a90a9dc93842b6fe25e1376225a42d6497a4779a5f19aea"
+    },
+    "Analyse/PHI-16/tunnel-syslog-path-check.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "f550202d315a7a56a68806cd56527e33a9e6fc9c0b85238a6ebdf49dde942eb1"
+    },
+    "Analyse/PHI-16/tunnel-syslog-receiver-check.sh": {
+      "parameters": [
+        "IPV4_002"
+      ],
+      "sha256": "c4265ade196e762d92eb1ec35aa3ed0bac4400f431bcedc3e60a2269dd9b6030"
+    },
+    "Analyse/PHI-16/tunnel-syslog-receiver-inspect.sh": {
+      "parameters": [
+        "IPV4_002"
+      ],
+      "sha256": "1f338a2dc331ea247402cfcb091578b09b02590211cd526e5a250c2c984cf4b4"
+    },
+    "Analyse/PHI-16/tunnel-syslog-reconnect.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "fa7c6afdff6fffd03b3d9f0cdaa3bb400d32b02ff7b47399584dea25efe12844"
+    },
+    "Analyse/PHI-16/tunnel-syslog-router-debug.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "IPV4_007"
+      ],
+      "sha256": "9b2034ab3d6e111d84bdd6c95cc58c59d9fb9c16a6e279bfcf154b2ce90883d3"
+    },
+    "Analyse/PHI-16/tunnel-syslog-router-inspect.sh": {
+      "parameters": [],
+      "sha256": "f7830d7b04f6509d63efe56019cb7dcc4a776c573195217c492b628a32f0714c"
+    },
+    "Analyse/PHI-16/tunnel-syslog-router-install.sh": {
+      "parameters": [
+        "IPV4_001",
+        "IPV4_002",
+        "IPV4_007"
+      ],
+      "sha256": "63c764c141dc7df5f4ae3d9cad668f24dc0f97a68b741fb9aa48c9eb56744392"
+    },
+    "Analyse/PHI-16/tunnel-syslog-test.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "2398f37b93b01e3b9448b26da6ea8a28561f446027f1ce70b21861eac2a9234b"
+    },
+    "Analyse/PHI-16/tunnel-syslog-verify-receiver.sh": {
+      "parameters": [
+        "IPV4_002"
+      ],
+      "sha256": "134ad85f907528ef35bbd4041dec97c2c46fd4ebb6793eaa6acfbbf32fa993aa"
+    },
+    "Analyse/PHI-16/tunnel-syslog-vps-debug.sh": {
+      "parameters": [
+        "INTERFACE_004",
+        "IPV4_007",
+        "NETWORK_PREFIX_001",
+        "NETWORK_PREFIX_002"
+      ],
+      "sha256": "c41e3662328c07e4590804982a536a9a005ad8545ab88222a06cc79f740fffe8"
+    },
+    "Analyse/PHI-16/tunnel-syslog-vps-inspect.sh": {
+      "parameters": [
+        "IPV4_033"
+      ],
+      "sha256": "afdcf8d44e80fccbbcae577690f8b7fd4706b64f6347a7c4963a64b4accf1f5c"
+    },
+    "Analyse/PHI-16/tunnel-syslog-vps-nat-install.sh": {
+      "parameters": [
+        "IPV4_001",
+        "IPV4_007"
+      ],
+      "sha256": "f32b1498b1d97e1b37213a2e05dc035948c68a10ac503fbb940cab0d52b929ed"
+    },
+    "Analyse/PHI-16/tunnel-syslog-vps-preflight.sh": {
+      "parameters": [
+        "INTERFACE_004",
+        "IPV4_007"
+      ],
+      "sha256": "f340c34689d4934a4a031b9186f2d9fbba91d546846291c47b7e86fcd8ef4ca2"
+    },
+    "Analyse/PHI-28-20261005/add-logspout.sh": {
+      "parameters": [],
+      "sha256": "cc2ac6f967191d6a497397ba02cfe96620f1ac26e0b5d25146bb7fcc7e587a4f"
+    },
+    "Analyse/PHI-28-20261005/capture-mqtt-auth.sh": {
+      "parameters": [
+        "IPV4_034"
+      ],
+      "sha256": "d3e1457dd4a51c14ab099e0be006f1c8c0f5b11a1fc6db954b40002abc619ed9"
+    },
+    "Analyse/PHI-28-20261005/change-verification.sh": {
+      "parameters": [],
+      "sha256": "b763170c7512fb8e43e2bd056398dbe1b2526bae40c89ab81fd7fe1d111eac86"
+    },
+    "Analyse/PHI-28-20261005/check-core-api.sh": {
+      "parameters": [],
+      "sha256": "ab6086a3960c1e84de1dc87440cb6f24aafbf585fd38977517947a4abffd4818"
+    },
+    "Analyse/PHI-28-20261005/check-logspout.sh": {
+      "parameters": [],
+      "sha256": "9bb77ee186fb3d1cd9fa4ed6dc0689bf5d9cd38b736bad4878421f69b35fd485"
+    },
+    "Analyse/PHI-28-20261005/client-origin.sh": {
+      "parameters": [],
+      "sha256": "4f3c591f2b2f1577032017acfd6142dd47d4d6ce1032ad5ae5927115b8a9a665"
+    },
+    "Analyse/PHI-28-20261005/configure-logspout.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "5d3ab735b242a7ac06e0810650b98cdf5cff0fdcfb5dc48222710280460df7ff"
+    },
+    "Analyse/PHI-28-20261005/configure-ssh-key.py": {
+      "parameters": [],
+      "sha256": "dbea2270fe7748b468e6cc79457268941b8efb080a2ba1bab16071b89d177ba4"
+    },
+    "Analyse/PHI-28-20261005/connect-functions.sh": {
+      "parameters": [],
+      "sha256": "0b3590929771c1d10c98549a0718591c8fd99d26fe33d1081fbe22516a3387f4"
+    },
+    "Analyse/PHI-28-20261005/core-load-inspect.sh": {
+      "parameters": [],
+      "sha256": "c7f0b38b5db680d48ea66e6da3b58a9f9d496cd0bfff46da2155ef229d1105bc"
+    },
+    "Analyse/PHI-28-20261005/core-recovery-help.sh": {
+      "parameters": [],
+      "sha256": "12298251d6c432b8617990ba7de7190ff7a1f411a552a02c07f76209beaa760e"
+    },
+    "Analyse/PHI-28-20261005/core-stop-investigate.sh": {
+      "parameters": [],
+      "sha256": "f7cd24a79c6fb4118a7b78a114bffea8f4304b7f9b7759aac438305f25d287f0"
+    },
+    "Analyse/PHI-28-20261005/custom-debug-inspect.sh": {
+      "parameters": [],
+      "sha256": "bb05ca8b580193ab0fde29a78709923617af4a4f9abf5b3604c320d7686e2839"
+    },
+    "Analyse/PHI-28-20261005/debug-config.sh": {
+      "parameters": [],
+      "sha256": "0e860e9e0885e9987d949df4deff1b5f8efa608608d7c338ddbddcf33c4b7611"
+    },
+    "Analyse/PHI-28-20261005/debugpy-source-and-logs.sh": {
+      "parameters": [],
+      "sha256": "87adb10d3302d6dcb4f8bd02623a3858791bc160b8647bcfb99934ce4270ef90"
+    },
+    "Analyse/PHI-28-20261005/disable-debugpy.sh": {
+      "parameters": [],
+      "sha256": "2762ed0bdf6b4591c17a7172e6f141c778b4ea48cd2329ad906554ba3edb5d54"
+    },
+    "Analyse/PHI-28-20261005/final-config-and-logs.sh": {
+      "parameters": [],
+      "sha256": "389a64c6fe029f79095edb1c9b4093529c662edd0222095dc4fb84835d79fd02"
+    },
+    "Analyse/PHI-28-20261005/finalize-issue.py": {
+      "parameters": [
+        "IDENTIFIER_003",
+        "PYTHON_STRING_041",
+        "PYTHON_STRING_042"
+      ],
+      "sha256": "d3ecfbd105e0e2751b398ff4c127887ab86e0b90d373c4d674a4516014057e86"
+    },
+    "Analyse/PHI-28-20261005/flow-env-summary.sh": {
+      "parameters": [],
+      "sha256": "b25877d6f61f4dab7d73f554957901b6bf39eadc8fc80ca818766b03af842372"
+    },
+    "Analyse/PHI-28-20261005/flow-mqtt-inspect.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "1abb39f9a78f55077fc9c7a22221a19a0200902ccbd6f10763d0fbbdd64fba50"
+    },
+    "Analyse/PHI-28-20261005/frontend-check.py": {
+      "parameters": [
+        "IPV4_034"
+      ],
+      "sha256": "de11c3a1d5df2c774db2b9caab976c04dcf4a7765dd5ed4c8ef1f57ddbfc67f8"
+    },
+    "Analyse/PHI-28-20261005/inspect-admin.sh": {
+      "parameters": [],
+      "sha256": "6591e73bb427ad369458f8477c5ff6e0661e99a0fa669cbd8c8ba80274ce8601"
+    },
+    "Analyse/PHI-28-20261005/inspect-mqtt.sh": {
+      "parameters": [],
+      "sha256": "798cc7e36da3a82166b8f30a47e02f778d0df5c788f956d6ba4779c43fb0827c"
+    },
+    "Analyse/PHI-28-20261005/inspect-services.sh": {
+      "parameters": [
+        "PRIVATE_VALUE_009"
+      ],
+      "sha256": "1edf0329023bedbd49fbd2fad0b8e45d0d3a8261a5db1946fa5b2c62e91ac2ff"
+    },
+    "Analyse/PHI-28-20261005/inspect.sh": {
+      "parameters": [
+        "PRIVATE_VALUE_009"
+      ],
+      "sha256": "675c220472dbc82f9f7ca93904b640be2b1963051df631545bca3267a8f6f20a"
+    },
+    "Analyse/PHI-28-20261005/install-logspout-app.sh": {
+      "parameters": [],
+      "sha256": "427e000900f684a1eb309a7aeefdd25141283365051d5b9129960b9f251ea55c"
+    },
+    "Analyse/PHI-28-20261005/logserver-inspect.sh": {
+      "parameters": [],
+      "sha256": "91f4e0421ed30fe90688e770cd4c3c008212b1d776d76985c1fe2694584317b3"
+    },
+    "Analyse/PHI-28-20261005/logserver-logspout-verify.sh": {
+      "parameters": [],
+      "sha256": "0a4a4505d71ea41eca18136215b570c5ad546ab9fa2936f3c6a049c2abdfeec7"
+    },
+    "Analyse/PHI-28-20261005/logspout-install.sh": {
+      "parameters": [],
+      "sha256": "f5213befaef66c58362acae1a95d12cd501db5b99ac5ac74fbfde0e22892aa24"
+    },
+    "Analyse/PHI-28-20261005/memory-and-restart-nodered.sh": {
+      "parameters": [],
+      "sha256": "947fdf057e1a4121d83610bd212cd8d4a514609621343c9be217342fd22fbe72"
+    },
+    "Analyse/PHI-28-20261005/memory-snapshot.sh": {
+      "parameters": [],
+      "sha256": "2cfa76cb41e8bfc595604e4f5c7e38bfbba9ffaed6d26fb2ff38b74df4f6bb93"
+    },
+    "Analyse/PHI-28-20261005/monitor-recovery.py": {
+      "parameters": [
+        "IPV4_034",
+        "PRIVATE_VALUE_009"
+      ],
+      "sha256": "0fe3f6183cf6bc5f34f4c4bcc3fcc5d0deac79512c36de376934f9a234939a4a"
+    },
+    "Analyse/PHI-28-20261005/mosquitto-config.sh": {
+      "parameters": [],
+      "sha256": "7415c29e6002d5428cd4c47ede2d1666de1414c942b2d072829b19bcbec354e9"
+    },
+    "Analyse/PHI-28-20261005/mqtt-code.sh": {
+      "parameters": [],
+      "sha256": "a5c2461bf36b33d4275106f90b95296309e6907149f89b636178f4c59dcda704"
+    },
+    "Analyse/PHI-28-20261005/mqtt-credentials-check.sh": {
+      "parameters": [],
+      "sha256": "a0c4f3dbefb16eac1455c7f68353816a9e8f34edcbf213defa888d720d671ff2"
+    },
+    "Analyse/PHI-28-20261005/mqtt-runtime-api.sh": {
+      "parameters": [],
+      "sha256": "d3f689447498750adca0325d68ebf97be72b9454f134f29d49690a0648753eab"
+    },
+    "Analyse/PHI-28-20261005/mqtt-sockets.sh": {
+      "parameters": [],
+      "sha256": "7c4ffe8d8ed8e5590a1f28b29cbd0439f0ce4a1a653b393de0580a72cb0e86b0"
+    },
+    "Analyse/PHI-28-20261005/mqtt-summary.sh": {
+      "parameters": [],
+      "sha256": "d5288a2c9c94f1fd36fd21ae7143a8c3ace38ef372dff4b355d5f537a80a0312"
+    },
+    "Analyse/PHI-28-20261005/mqtt-test.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "56ef0995ba9689b11f384eea7d26e5d63e706d05610a05a52450dd2e0de96f42"
+    },
+    "Analyse/PHI-28-20261005/nodered-runtime.sh": {
+      "parameters": [],
+      "sha256": "0a198c204ac2d7eb1ae46fcf9c29614febe4d0f1fa590a6d7261255a120eb3af"
+    },
+    "Analyse/PHI-28-20261005/oom-memory-evidence.sh": {
+      "parameters": [],
+      "sha256": "fdcf5ccfa14b493f51d49f4a4c5b61f590e3180522a28ee8ca086a574049cb1c"
+    },
+    "Analyse/PHI-28-20261005/other-mqtt-clients.sh": {
+      "parameters": [],
+      "sha256": "166b55fd546002fc9edd460f626d12e484993508e649aa72984b6caa06244e83"
+    },
+    "Analyse/PHI-28-20261005/prior-outage.sh": {
+      "parameters": [],
+      "sha256": "ccbd38609163bb01db92cf8ee8c12d48e5553840b823af27dc1338b37a004848"
+    },
+    "Analyse/PHI-28-20261005/progress.py": {
+      "parameters": [
+        "IDENTIFIER_002",
+        "PYTHON_STRING_043"
+      ],
+      "sha256": "fd8bbafc15610daf3e06df1acd1f73a93530db90e8d8d0160380947d0f9b3731"
+    },
+    "Analyse/PHI-28-20261005/prometheus-final.sh": {
+      "parameters": [
+        "IPV4_034"
+      ],
+      "sha256": "731592ce22199b49c44c623c2427cd1a8a05e6d1fe91b1430ad9e35d3c82a13c"
+    },
+    "Analyse/PHI-28-20261005/refresh-mqtt-credentials.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "3456b69af2cbcef163c5eb333e62fd2c73be2dc37fbc4c8eaca6d52e92c045f0"
+    },
+    "Analyse/PHI-28-20261005/restart-normal-background.sh": {
+      "parameters": [],
+      "sha256": "f8808f541932ac8d7e8047032fc58e2fd7e96cafff87b47b134f8e63316df5e7"
+    },
+    "Analyse/PHI-28-20261005/restart-normal.sh": {
+      "parameters": [],
+      "sha256": "c65ffc943b69e80c13715f51f704ab54baa234da8a904d044c85644b411e2fd5"
+    },
+    "Analyse/PHI-28-20261005/restart-ssh-background.sh": {
+      "parameters": [],
+      "sha256": "5a7dccef862ef754accb2f22aa12dbec86f6108e4aee25a4fc3001f01c44730d"
+    },
+    "Analyse/PHI-28-20261005/runtime2.sh": {
+      "parameters": [],
+      "sha256": "ac5b584f7970c5659c939786a23f72f055e46ac9f96ce27843779bdef4fb1f7b"
+    },
+    "Analyse/PHI-28-20261005/socket-owners.sh": {
+      "parameters": [],
+      "sha256": "5e6f3329a0ecc1f9c8312d81016fa8cfc7b70ce8588865991770e1e2aaf5015c"
+    },
+    "Analyse/PHI-28-20261005/start-safe-mode.sh": {
+      "parameters": [],
+      "sha256": "97fda079c114cb64cec1d7767255177fc4015e8fe3bea3a4acc9378c8e02cc9a"
+    },
+    "Analyse/PHI-28-20261005/verify-logs-mqtt.sh": {
+      "parameters": [
+        "IPV4_034"
+      ],
+      "sha256": "c41f0d954eb3fbf1961678cb37d0a2a06dc51e866e82c9927e6cdacf33968510"
+    },
+    "Analyse/PHI-28-20261005/verify-mqtt-refresh.sh": {
+      "parameters": [],
+      "sha256": "5e1a508def5b9f6a6743b91b7f664ce21686f4912b20b50632c7137e15386f7c"
+    },
+    "Analyse/PHI-5-bis-12-20261004/omr-dscp.patch": {
+      "parameters": [],
+      "sha256": "f468fa2f25e7a61766315a29879dbf05042d9991754647447b30926c52cbe404"
+    },
+    "Analyse/PHI-5-bis-12-20261004/prepare-phi9-phi10.sh": {
+      "parameters": [],
+      "sha256": "ae4239c7d02936faeb0e72a0be869503acd6624af3da44a93f16e4bb8ebabe29"
+    },
+    "Analyse/PHI-5-bis-12-20261004/rollback-phi9-phi10.sh": {
+      "parameters": [],
+      "sha256": "11ad77e2a5dfce2146ba49bffb765c817a418087b78e55ba6e791013d7f348dc"
+    },
+    "Analyse/PHI-5-bis-12-20261004/test-dscp-isolated.sh": {
+      "parameters": [],
+      "sha256": "7faf48df0a89f1e198c6492d8dd14966e9c0cd99355efc54a7a2105df89e6fd5"
+    },
+    "Analyse/Restarbeiten-20261005/apply-cleanup.py": {
+      "parameters": [
+        "IPV4_008"
+      ],
+      "sha256": "8edc54bd48950a303d8088d27159b80bdf2566cf0bf03e0dbcf10da676a29140"
+    },
+    "Analyse/Restarbeiten-20261005/archive-preflight.sh": {
+      "parameters": [],
+      "sha256": "eb3c7dc6ae900ba6ba69cc72db02a91eb347d419d9484d0a13c8a62abfe8b581"
+    },
+    "Analyse/Restarbeiten-20261005/archive-roundtrip.sh": {
+      "parameters": [
+        "IPV4_002"
+      ],
+      "sha256": "5bb96a30ab6eaae685921b0c6a6645b05c40371db72262006ab0f12d8163324b"
+    },
+    "Analyse/Restarbeiten-20261005/bypass-dscp-owner.sh": {
+      "parameters": [],
+      "sha256": "19baa2b939279299a7d8c83415a418bf8be7fc5b3dad0932c5a74504d5a8dbdd"
+    },
+    "Analyse/Restarbeiten-20261005/bypass-dscp-source.sh": {
+      "parameters": [],
+      "sha256": "3dbb0305abae7fc8b50818347d9541f0c4b15991633f4f8a7f210285e4bf7739"
+    },
+    "Analyse/Restarbeiten-20261005/capabilities.sh": {
+      "parameters": [
+        "VLAN_002"
+      ],
+      "sha256": "8adcfed3f109488ad91521350d454c900173dc6317fdf4889eacdbfb36481a10"
+    },
+    "Analyse/Restarbeiten-20261005/cleanup-preflight.sh": {
+      "parameters": [
+        "MAC_006",
+        "SECTION_002",
+        "SECTION_003",
+        "SECTION_004",
+        "SECTION_005"
+      ],
+      "sha256": "b8b01ccb674d49de4888456db2e48d62a0629392b725411dc922089a48583a84"
+    },
+    "Analyse/Restarbeiten-20261005/cleanup-small.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_005",
+        "INTERFACE_006",
+        "INTERFACE_007",
+        "SECTION_002",
+        "SECTION_003",
+        "SECTION_004",
+        "SECTION_005"
+      ],
+      "sha256": "84aa88ef1632cc656c33eeb78a00d2472db7a019542d70d7599854976ea9e87a"
+    },
+    "Analyse/Restarbeiten-20261005/close-after-reboot.py": {
+      "parameters": [
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "INTERFACE_005",
+        "IPV4_035",
+        "IPV4_036",
+        "MAC_PREFIX_001",
+        "MAC_PREFIX_002",
+        "NETWORK_SUFFIX_001",
+        "VLAN_002",
+        "VLAN_003",
+        "VLAN_005"
+      ],
+      "sha256": "d0452092085e6c4a451cc228c17ce1c7d5f7ada67c1701582149614de960bdd6"
+    },
+    "Analyse/Restarbeiten-20261005/deploy-alerts.py": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "1ca003a9dc8085b60fd31d0a5395b2f5e8e419380590846c2352f89b84be9751"
+    },
+    "Analyse/Restarbeiten-20261005/deploy-storage.py": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "66acd34d3fa155cea511ec42e7a6f6e3c67b0c80a036a50ac069871ffa696410"
+    },
+    "Analyse/Restarbeiten-20261005/deploy-vlan10.py": {
+      "parameters": [
+        "IPV4_008",
+        "VLAN_002"
+      ],
+      "sha256": "b20ffe0f5d5378f9a08ab25a801bb7eb51327dc9bbdee103641f5db3aaef2fc7"
+    },
+    "Analyse/Restarbeiten-20261005/dhcp150_test.py": {
+      "parameters": [
+        "IPV4_037",
+        "NETWORK_PREFIX_003",
+        "VLAN_001"
+      ],
+      "sha256": "fcd26c15f8e853a66a7b536ca4c9ea328bbc9bee184c073c3d1c3022db085aef"
+    },
+    "Analyse/Restarbeiten-20261005/dscp-context.sh": {
+      "parameters": [],
+      "sha256": "9bdab51fa782753c78e797690884c08c3840fe2f21123a650678df2957a4670c"
+    },
+    "Analyse/Restarbeiten-20261005/dscp-debug.sh": {
+      "parameters": [],
+      "sha256": "2aa3339b75c907a6fe0706dc1b340a0face5c42fb3e558f158c1ec36308bf120"
+    },
+    "Analyse/Restarbeiten-20261005/dscp-isolated-start.sh": {
+      "parameters": [],
+      "sha256": "8ac32cf17d11b470cc2c661d47eb8445883ae20188556d79f6d1113453fb0dfb"
+    },
+    "Analyse/Restarbeiten-20261005/extra-check.sh": {
+      "parameters": [
+        "HOSTNAME_002",
+        "INTERFACE_005",
+        "VLAN_002"
+      ],
+      "sha256": "3e15c495e099f033ed825bf37a1182d8456cec664ed856936138f2be793ab65c"
+    },
+    "Analyse/Restarbeiten-20261005/final-router.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "MAC_006",
+        "SECTION_002",
+        "SECTION_003",
+        "SECTION_004",
+        "SECTION_005"
+      ],
+      "sha256": "e794cf26c34d040973814dfa5830a907ecdf99c605b664f57b8d587654f5187e"
+    },
+    "Analyse/Restarbeiten-20261005/finish-decisions.py": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_005",
+        "VLAN_002"
+      ],
+      "sha256": "1436d0fbffa4695b17aefd1591e25f17bbad06f8aeaad55d4e3f3b7276757227"
+    },
+    "Analyse/Restarbeiten-20261005/fix-dscp-owner.py": {
+      "parameters": [
+        "IPV4_008"
+      ],
+      "sha256": "97fd7825730a15214b0b81ad063a123b75e6b48aa8ffb385f8a88e758a10d929"
+    },
+    "Analyse/Restarbeiten-20261005/fix-mqvpn-empty-path.py": {
+      "parameters": [
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_008"
+      ],
+      "sha256": "ad0efb66917ccc37493804b2e6c4548ce2119125d70be47af8497dd141814d87"
+    },
+    "Analyse/Restarbeiten-20261005/influx-buckets.sh": {
+      "parameters": [],
+      "sha256": "d534464ee78a0ed79e26da68f18e0f02acf63d28dbcf0b67039711b034a6d88d"
+    },
+    "Analyse/Restarbeiten-20261005/influx-policy-test.sh": {
+      "parameters": [],
+      "sha256": "5954eaeb6029cd81a9b95bb41b71d1acaab1b35791cd62061c9dad05ab563460"
+    },
+    "Analyse/Restarbeiten-20261005/influx-retention.sh": {
+      "parameters": [],
+      "sha256": "1eaac4746e58943f7c188581928d55987adf01768929c520335275211070acac"
+    },
+    "Analyse/Restarbeiten-20261005/inspect-mtu-cleanup.sh": {
+      "parameters": [
+        "SECTION_002",
+        "SECTION_004"
+      ],
+      "sha256": "76e0fecfda6084081025c8aa541d507f38b4c80a6db114cc7549d721187fead6"
+    },
+    "Analyse/Restarbeiten-20261005/logserver-detail.sh": {
+      "parameters": [],
+      "sha256": "0acfcd159d3c859f7fd4f13a36b94defa3817159322c532a7ee9fe8c7617c129"
+    },
+    "Analyse/Restarbeiten-20261005/logserver-final.sh": {
+      "parameters": [],
+      "sha256": "e654492e17516735ff3b2c49334c21497621b7a334e8a786ce3f60aa6577523c"
+    },
+    "Analyse/Restarbeiten-20261005/logserver-inventory.sh": {
+      "parameters": [],
+      "sha256": "32653c83caff9fb67e414ac1526aae9bed17f7f82f64f2fe7235352af5039da9"
+    },
+    "Analyse/Restarbeiten-20261005/loki-meta.sh": {
+      "parameters": [],
+      "sha256": "5e701f430136d7002ffd25685e47d61faf5d8081cfee3dc3ddba1c6d6f40e837"
+    },
+    "Analyse/Restarbeiten-20261005/mqvpn-named-path-guard.sh": {
+      "parameters": [],
+      "sha256": "4ce26845ff280deba5f95d996659cd844c3052b0af1188733cae1a0587b9c65c"
+    },
+    "Analyse/Restarbeiten-20261005/mqvpn-paths.sh": {
+      "parameters": [
+        "INTERFACE_001"
+      ],
+      "sha256": "b64e5682e81737aa930b89bbd20066bb04b977b8e8cb01f3d29c1950baa07911"
+    },
+    "Analyse/Restarbeiten-20261005/mtu-setter-search.sh": {
+      "parameters": [
+        "IPV4_016"
+      ],
+      "sha256": "9027221bce1297f6faebebbf76f2b18c79dc58ef3bd68659926e11ba99f8ad52"
+    },
+    "Analyse/Restarbeiten-20261005/nlbw-mtu-check.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "IPV4_002"
+      ],
+      "sha256": "5d44fb04e05bfe39c5a06048955527baa71bcdf6e3dfa7b2985aaec382f246db"
+    },
+    "Analyse/Restarbeiten-20261005/path-empty-origin.sh": {
+      "parameters": [],
+      "sha256": "83f15e71afd5cb9c8eb00a02f84e1fe407e1fef56c37ea1800b60c7903b980b7"
+    },
+    "Analyse/Restarbeiten-20261005/path-init-lifecycle.sh": {
+      "parameters": [],
+      "sha256": "bc3119be0d22ec93eaabfc4798c78e2ad9841b56569b4fbfd6128fcb5eaf26ca"
+    },
+    "Analyse/Restarbeiten-20261005/PHI14-live-mtu-check.proposed.patch": {
+      "parameters": [],
+      "sha256": "ff72a67104e9bdf460954a30e708e457e8cb161d35bceff5891a08820f8b7463"
+    },
+    "Analyse/Restarbeiten-20261005/post-reboot-detail.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "IPV4_015",
+        "IPV4_016",
+        "MAC_PREFIX_003"
+      ],
+      "sha256": "2d429b8ac86f073a048e3a20063530aecc6c3125a4092b2b1130d55e00ea3332"
+    },
+    "Analyse/Restarbeiten-20261005/post-reboot.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_002",
+        "MAC_PREFIX_002"
+      ],
+      "sha256": "70695664a3e7d9e4aeaf0a0c714a6bcd297700e1235c7770891fc61ee15a4382"
+    },
+    "Analyse/Restarbeiten-20261005/prepare-mtu-guard-patch.py": {
+      "parameters": [],
+      "sha256": "eb7e3e84f8289d5c280bc4ba3f4c23ab1ebb0e63052e06beb001dbc70e46258c"
+    },
+    "Analyse/Restarbeiten-20261005/read-mqvpn-mtu.py": {
+      "parameters": [
+        "HOSTNAME_012"
+      ],
+      "sha256": "f3953fec9d1126afa6dfa38867052426a83b43c8701041c32e47bf7565907265"
+    },
+    "Analyse/Restarbeiten-20261005/read-omr-mqvpn-patches.py": {
+      "parameters": [
+        "HOSTNAME_012"
+      ],
+      "sha256": "34ba1f33c1b341e352d9478f145460036564cb1e45a9ed2ba7890c4e049fcaa4"
+    },
+    "Analyse/Restarbeiten-20261005/read-upstream.py": {
+      "parameters": [],
+      "sha256": "0effc6ab8e717a084898de511ee32d58636ec42f37f771456475c9a3e3f9f742"
+    },
+    "Analyse/Restarbeiten-20261005/reboot-final.sh": {
+      "parameters": [
+        "HOSTNAME_013",
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "INTERFACE_008",
+        "IPV4_011",
+        "IPV4_015",
+        "IPV4_016",
+        "NETWORK_PREFIX_004"
+      ],
+      "sha256": "e118003739666df87cc33f23a11349f07ac83584a2fa5d03e783c284d23e7f7c"
+    },
+    "Analyse/Restarbeiten-20261005/reboot-lan-check.sh": {
+      "parameters": [
+        "HOSTNAME_013",
+        "IPV4_011",
+        "IPV4_034"
+      ],
+      "sha256": "9ad41d69e874e3e4c34184686f7db9fb544087bc27f77a5a9f19e5c91531645b"
+    },
+    "Analyse/Restarbeiten-20261005/reboot-router-last.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_008",
+        "IPV4_015",
+        "IPV4_016",
+        "NETWORK_PREFIX_004"
+      ],
+      "sha256": "3df032a8dacc6cc2bb69f1c68c2e6021ae62d6b622d3bd17106b41081ce874f9"
+    },
+    "Analyse/Restarbeiten-20261005/reboot-services.sh": {
+      "parameters": [],
+      "sha256": "8e4e36c90410e040a96f69641eb26767910a954036b33d90960d562684f26d48"
+    },
+    "Analyse/Restarbeiten-20261005/retention-metadata.sh": {
+      "parameters": [],
+      "sha256": "483c9b585673b1bb12d9144aa6c73b4ae9e27ac7bf2666fe45af058890ac70dc"
+    },
+    "Analyse/Restarbeiten-20261005/retention-plan.py": {
+      "parameters": [],
+      "sha256": "0f82001fa22372155473d50ae021d23eaf809dbea9151aca86f3d86b4069b946"
+    },
+    "Analyse/Restarbeiten-20261005/rollback-dscp-owner.sh": {
+      "parameters": [],
+      "sha256": "b88ca8cf32d4eee0efd414f28b08f81da50bda1c41aefe77ac779e4fd1d3c9c2"
+    },
+    "Analyse/Restarbeiten-20261005/rollback-mqvpn-named-path.sh": {
+      "parameters": [],
+      "sha256": "cb8ee8f9d5b9dbafc7ceaeeb9198a09f84ab7a90588a5e7f3c6e2855dbc1e88d"
+    },
+    "Analyse/Restarbeiten-20261005/rollback-small.sh": {
+      "parameters": [],
+      "sha256": "b60415651eadefbf71a3cc94af8703c00fc888abef484b3ae8caf9a02f4509e5"
+    },
+    "Analyse/Restarbeiten-20261005/rollback-vlan10.sh": {
+      "parameters": [
+        "VLAN_002"
+      ],
+      "sha256": "1a2f587f2bfd89cd9f455ae0466958cb8ed23a22463e71228bb6206327626c82"
+    },
+    "Analyse/Restarbeiten-20261005/router-audit.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "NETWORK_PREFIX_003",
+        "VLAN_001"
+      ],
+      "sha256": "64df74ab73aea91cfc50bb28a0e503d2d6ef4a2e7630a09eb56c72762a29f483"
+    },
+    "Analyse/Restarbeiten-20261005/router-sources.sh": {
+      "parameters": [
+        "INTERFACE_001"
+      ],
+      "sha256": "1cfe46ac6da8d7f93061c7a85b9a2993a893ff730fbeb26e7159dffff8656ed6"
+    },
+    "Analyse/Restarbeiten-20261005/run-dhcp-test.py": {
+      "parameters": [],
+      "sha256": "b19b2c61a3d42a59ff1d830efc8c815c8bca07a626adc14adc33665ea5ac2dcb"
+    },
+    "Analyse/Restarbeiten-20261005/run-retention-plan.py": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "6b81d65c4ff37ae8bf4dcecfd443b77cadb62736928ee71382d8092e915a2b86"
+    },
+    "Analyse/Restarbeiten-20261005/run.py": {
+      "parameters": [],
+      "sha256": "0dcffe4a04a3672556dd4ac1b52a70138b4dadbe8a78376062261e0274e53149"
+    },
+    "Analyse/Restarbeiten-20261005/storage-final.sh": {
+      "parameters": [],
+      "sha256": "a6be15b740e8195fae323d2890ed409aa5bb9266d5ce006f45f05c9402a30ba2"
+    },
+    "Analyse/Restarbeiten-20261005/storage-metrics-fix.sh": {
+      "parameters": [],
+      "sha256": "84d1649f465473e97ebb0214bd80eaa505182977b656ed4cffa9b6824a0e066b"
+    },
+    "Analyse/Restarbeiten-20261005/storage-pressure-test.py": {
+      "parameters": [],
+      "sha256": "cda209886f1acdd49eb363bb2874c92b3c055b471fbc32fa9fe15109d1f3d033"
+    },
+    "Analyse/Restarbeiten-20261005/storage-pressure.py": {
+      "parameters": [],
+      "sha256": "1c6e7569b05817a51d6ddf65213726ffc767a04f2dba6f5f00a61518101676ee"
+    },
+    "Analyse/Restarbeiten-20261005/storage-verify.sh": {
+      "parameters": [],
+      "sha256": "bae0b842fde537113724bf0230018d26f1221d691dbaa0bd659da4e3f3122a96"
+    },
+    "Analyse/Restarbeiten-20261005/update-issues.py": {
+      "parameters": [
+        "PYTHON_STRING_044",
+        "PYTHON_STRING_045",
+        "PYTHON_STRING_046",
+        "PYTHON_STRING_047",
+        "PYTHON_STRING_048",
+        "PYTHON_STRING_049",
+        "PYTHON_STRING_050",
+        "PYTHON_STRING_051",
+        "PYTHON_STRING_052",
+        "PYTHON_STRING_053",
+        "PYTHON_STRING_054"
+      ],
+      "sha256": "e3c428c559759af79570e112aab56c15bd653a74775d004ff43ab5806790434f"
+    },
+    "Analyse/Restarbeiten-20261005/vlan10-apply.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_005",
+        "IPV4_038",
+        "VLAN_002"
+      ],
+      "sha256": "34822a630b3fb47366de8e0082ddca59f07b0bdedf339decbc43759666589066"
+    },
+    "Analyse/Restarbeiten-20261005/vlan10-final-check.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "NETWORK_PREFIX_004",
+        "VLAN_002"
+      ],
+      "sha256": "ff8ba907628fe7a625364956d8f63fc4fc8fc7eb219a9b428dda6d6f39790c41"
+    },
+    "Analyse/Restarbeiten-20261005/vlan10-guard.nft": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "INTERFACE_005",
+        "INTERFACE_012",
+        "INTERFACE_013",
+        "INTERFACE_014",
+        "IPV4_038",
+        "IPV4_039",
+        "IPV4_040",
+        "IPV4_041",
+        "IPV4_042",
+        "IPV4_043",
+        "IPV4_044",
+        "IPV4_045",
+        "IPV4_046",
+        "IPV4_047",
+        "VLAN_002"
+      ],
+      "sha256": "d4dca2e3c94a9d349398e289c10e629f8fbd6135184868a9d3229237c41d6283"
+    },
+    "Analyse/Restarbeiten-20261005/vlan10-isolated-test.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_005",
+        "INTERFACE_010",
+        "IPV4_007",
+        "IPV4_011",
+        "IPV4_038",
+        "IPV4_039",
+        "IPV4_048",
+        "IPV4_049",
+        "IPV4_050",
+        "IPV4_051",
+        "IPV4_052",
+        "IPV4_053",
+        "VLAN_002"
+      ],
+      "sha256": "a9e09e452720fdae1a5a4115d8059918e9a9b42b285dfda491d3d825ebecf229"
+    },
+    "Analyse/Restarbeiten-20261005/vlan10-isolated-trace.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_005",
+        "INTERFACE_010",
+        "IPV4_007",
+        "IPV4_011",
+        "IPV4_038",
+        "IPV4_039",
+        "IPV4_048",
+        "IPV4_049",
+        "IPV4_050",
+        "IPV4_051",
+        "IPV4_052",
+        "IPV4_053",
+        "VLAN_002"
+      ],
+      "sha256": "5436e42364a510a6ab8012334b5207392cb8f6e6b524239170be34516eb3d810"
+    },
+    "Analyse/Restarbeiten-20261005/vlan10-post.sh": {
+      "parameters": [
+        "INTERFACE_005",
+        "IPV4_007",
+        "IPV4_011",
+        "IPV4_051",
+        "NETWORK_PREFIX_004",
+        "VLAN_002"
+      ],
+      "sha256": "8ac2fcf6f0f4b6cc8504bc3385adc0b5d636e1f2b80b9f296789a6630c80cb78"
+    },
+    "Analyse/Restarbeiten-20261005/vlan10-preflight.sh": {
+      "parameters": [
+        "INTERFACE_005",
+        "VLAN_002"
+      ],
+      "sha256": "4bc8402dc3d3d1e4da75e676642dfbe65d0c998769f0847011a640fcdd5f969e"
+    },
+    "Analyse/Restarbeiten-20261005/vlan10-return-guard.sh": {
+      "parameters": [
+        "INTERFACE_005",
+        "VLAN_002"
+      ],
+      "sha256": "788d54f6d5b2cbb0f71568640f12290c2695f3f4920c2359f8f0ec8ae4ce66f6"
+    },
+    "Analyse/router-extra.sh": {
+      "parameters": [],
+      "sha256": "0612df2d6aa247ea6237d8b000592001f5cfb8a90716b3db8444220eba716e14"
+    },
+    "Analyse/router-inspect.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "INTERFACE_005"
+      ],
+      "sha256": "4035aba144ca74648e6296e8b2c447b159f3daabe64ca4b33c049e7a85450b4c"
+    },
+    "Analyse/router-verify.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "INTERFACE_005",
+        "IPV4_002"
+      ],
+      "sha256": "d3795093fbaf93107bbd32134918a2eadcb402822c322974511c6463d47afe01"
+    },
+    "Analyse/vps-inspect.sh": {
+      "parameters": [
+        "INTERFACE_004",
+        "IPV4_001",
+        "IPV4_003"
+      ],
+      "sha256": "c15a0d8d28cf8a7440ed86a1b797ca44867329b7a43a55e4f44e4037701d1ca8"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/align-ap-mqtt.py": {
+      "parameters": [
+        "IPV4_008",
+        "IPV4_084",
+        "IPV4_085"
+      ],
+      "sha256": "0a915a548ee4bdee2e8ed32a61e93f971abea7e7506a81e7dfd79f63c6d1e1d9"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/ap-inspect.sh": {
+      "parameters": [],
+      "sha256": "d1d75bf4592963133ecf051d3c2242a14b3df699d15894d7d02c62b665a16a7c"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/app-log-forwarding.py": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "14753a0b4e3d2a1e2e27883c60fad116ca04a3d4efe3f47591ad713f5471721a"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/audit.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "049a929ec1c77ca9548049e2d372fa76ee24f5bdfcd49705c7b88bca4c5fcd5e"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/configure-archive-maintenance.py": {
+      "parameters": [],
+      "sha256": "5fcd34069f2a4afd4bb087ad2fee70710a504ec11a31dabf2a100cee4c116e26"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/create-ha-issue.py": {
+      "parameters": [
+        "PYTHON_STRING_055"
+      ],
+      "sha256": "dd340ec149aa3c83bd3adfd1129d5aa04ae960b432ec07f5673408f610655cad"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/create_issue.py": {
+      "parameters": [
+        "PYTHON_STRING_056"
+      ],
+      "sha256": "2c5771e8cb5839b066d4dbed6be247aa0e81b9003e996cf409d36291c5d12ec2"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/deploy.py": {
+      "parameters": [],
+      "sha256": "3acdc4b735b2063a00428a93a56714ebf89fb29920d603404f8964d1adcc36e9"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/extra-app-log-patterns.py": {
+      "parameters": [],
+      "sha256": "8880c7f44b32834c38cd4188c5459f6bb7abaae0035d29d3e5fd0cac10d0e846"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/final-check.py": {
+      "parameters": [
+        "IPV4_007",
+        "IPV4_008",
+        "IPV4_012",
+        "IPV4_022",
+        "IPV4_033",
+        "IPV4_084",
+        "IPV4_085",
+        "IPV4_086",
+        "IPV4_087",
+        "IPV4_088",
+        "IPV4_089"
+      ],
+      "sha256": "e22e2e88c2d7dc4a13a718221cb258b06e6a0420ba6ac2c256691d7962bf4c3f"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/fix-telegraf-influx.py": {
+      "parameters": [],
+      "sha256": "730c9fbe193969580888bb9194d857b7a5ba245e2c43bfb380db9980adac33a2"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/increase-log-message-limit.py": {
+      "parameters": [],
+      "sha256": "d05016bf5ed226578f1e734b5bfd1945d9bf5a1d5824f3f88d7618366d1fd268"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/install-mqtt.py": {
+      "parameters": [
+        "IPV4_007",
+        "IPV4_008"
+      ],
+      "sha256": "f9c4a6d24cb200189721eac99354535fbe19247f64f6abb27e2eba6041b61052"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/install-switch-monitor.py": {
+      "parameters": [
+        "IPV4_007",
+        "IPV4_019",
+        "IPV4_020",
+        "IPV4_021",
+        "IPV4_090",
+        "IPV4_091"
+      ],
+      "sha256": "835ef5014d251bfaf880b77fe7af400487dd8083af9cdf221bc77703d70d99ef"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/install-tools.sh": {
+      "parameters": [],
+      "sha256": "5df4fc0d4b6f9b07ad78ce861d05b691b800218ce2e24420ea524128331a3572"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/install-tunnel.py": {
+      "parameters": [
+        "IPV4_007",
+        "IPV4_012"
+      ],
+      "sha256": "77dd4759734272e61c27974f491dfdceddb4d1ba05382db8a51da7c098514bcf"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/install-vps-exporter.sh": {
+      "parameters": [],
+      "sha256": "0f7155ae3d14e05815fd90a7c00cd224e98e28d97fad40cf8331652736b06b8a"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/logserver-inspect.sh": {
+      "parameters": [],
+      "sha256": "298f78ecd70b180d3bb6fa1053fa1c14f14300bf00a4256b26641ab46a427e87"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/logserver-tools.sh": {
+      "parameters": [
+        "IPV4_034"
+      ],
+      "sha256": "dbc614bc9a104e7a7fb75bdac6929c65b12a1a7a20a559ce1790739b80dd3566"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/mqtt_archive.py": {
+      "parameters": [],
+      "sha256": "7425049c882cc67d54bb6bbaec14088e2172cce226ed55bfde6f945328273af9"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/repair-collectd.sh": {
+      "parameters": [],
+      "sha256": "c6342eff3abef650a331b6674b1dc82cb6028824d800f81ada0ce394a0d78f7d"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/repair-mqtt-generator.py": {
+      "parameters": [
+        "IPV4_008",
+        "IPV4_084",
+        "IPV4_085"
+      ],
+      "sha256": "6e10ae7c9299908250ac83a6aa21768cfef5f87125f90dfbad1ddd8e7cf1ebc9"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/repair-prometheus.py": {
+      "parameters": [
+        "IPV4_087",
+        "IPV4_088"
+      ],
+      "sha256": "a9b1ca4fdc7630dea89e877b89f19b303c0a800c68f4e83eaa6d9648a0e90943"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/repair-receiver-capacity.py": {
+      "parameters": [],
+      "sha256": "0471f43498b18342c354bc562792f88fb12bc78272099db74e8ae728c2996015"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/repair-router.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "b3e5f9acd0e898832b9827b5c98cfd6cdffec6ad6f4c891cc75ed46f234cc678"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/repair-syslog-file-acls.py": {
+      "parameters": [],
+      "sha256": "56634b4023caa94abd8e77c4b5c86415bcc1ca5f148fe327c48ae10c82f66fd5"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/repair-syslog.py": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "e7bf58530ed0c4db353f52fc6d10212f3589ae0aeee333d67790896bc0a35040"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/repair-webshop-log-acls.py": {
+      "parameters": [],
+      "sha256": "87003c929e0750feb65f2b9088cb8bef2c40bf806f1fab03f77814b54ccaad30"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/router-inspect.sh": {
+      "parameters": [],
+      "sha256": "6cb3296a99397a3dbb0d44e1410a615e558bb3921ed8f3d654df0867eb3463a6"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/server-detail.sh": {
+      "parameters": [
+        "IPV4_007"
+      ],
+      "sha256": "e704f5a4f0d4a3bd402ee0fec38823128e50777a8849a2e3b355edda4b7d9329"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/switch-inspect.py": {
+      "parameters": [
+        "IPV4_019",
+        "IPV4_020",
+        "IPV4_021",
+        "IPV4_090",
+        "IPV4_091"
+      ],
+      "sha256": "5602ac2327960917c64251b3cf4c2c01b4a219cb0e976b28fce3ca3bc9f23a08"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/switch5-basic.py": {
+      "parameters": [
+        "IPV4_090"
+      ],
+      "sha256": "c59b45afcbb857632dddd460c4eb1f597666fe20840bf44481c635584c6d2b51"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/switch_monitor.py": {
+      "parameters": [],
+      "sha256": "3e8edc8f8a39314a25489425f9bef07cb5ccd2863fa2e755d4d68b8baf22ccd4"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/verify-core.sh": {
+      "parameters": [],
+      "sha256": "591f8fe8093cc5cdec8068e2d17bf0a7aefde8501c62c59ae2eacdebfe3fd696"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/verify-final-telemetry.sh": {
+      "parameters": [],
+      "sha256": "7d5752a24f67e543022593a28e0bd02b3d3a9d7ad0e546ba4ba39e2386072299"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/verify-storage.py": {
+      "parameters": [],
+      "sha256": "72ab275b46f715984d9ad9496dbfaa3a17909135f0f0f3ad24bfa4ecf37ee82b"
+    },
+    "Analyse/Zentrale-Telemetrie-20261004/vps-detail.sh": {
+      "parameters": [
+        "INTERFACE_004",
+        "IPV4_007"
+      ],
+      "sha256": "a6a637c3e8d0d88b5fb374b9fc145ebb623754ea225f9850b3d6cea978edd5e9"
+    },
+    "openwrt_patch/400-wifi-mac80211-defer-ap-side-ft-key-upload.patch": {
+      "parameters": [],
+      "sha256": "dffeefba673269a9b9f52f3528ec9ca870615d3002947d66dccc91ead6cee52e"
+    },
+    "openwrt_patch/openwrt-25.12.5-ft/package/kernel/mac80211/patches/subsys/400-wifi-mac80211-defer-ap-side-ft-key-upload-6.18.26.patch": {
+      "parameters": [],
+      "sha256": "558ad6ae2a87d02ee42a6d9cf50494f1b939b7297448d8b9df698a0f94c91d29"
+    },
+    "Skripte/Bestand/cudy-244-ap-umbau.sh": {
+      "parameters": [
+        "INTERFACE_017",
+        "IPV4_084",
+        "SECTION_002",
+        "SECTION_004",
+        "SECTION_008",
+        "SECTION_009",
+        "VLAN_001",
+        "VLAN_002",
+        "VLAN_003",
+        "VLAN_004",
+        "VLAN_006"
+      ],
+      "sha256": "bd16494f7da1ae58b7037833087f6b3ca352d7a3f8bf5fde0d37663360916fda"
+    },
+    "Skripte/Bestand/gaming-policy-hotplug.sh": {
+      "parameters": [
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_009",
+        "IPV4_010",
+        "IPV4_092",
+        "IPV4_093"
+      ],
+      "sha256": "33047410d339e56d2f1563510483634f562d0ce6ee432b73e0beba4a3bb99dba"
+    },
+    "Skripte/Bestand/gaming-source-wan.nft": {
+      "parameters": [
+        "IPV4_006",
+        "IPV4_015",
+        "IPV4_094",
+        "IPV4_095"
+      ],
+      "sha256": "bd7c8f2b2de048bce1cc7fbed1706fc6c1ac078839e21e4c4216b180e58d3fa8"
+    },
+    "Skripte/Bestand/mqvpn-debuglog.init": {
+      "parameters": [],
+      "sha256": "390d242e3d7647fdc23919a406942a93ebff3fc2644b983d9cdbd3efb5a1b8e7"
+    },
+    "Skripte/Bestand/ping-diagnose-client.ps1": {
+      "parameters": [
+        "IPV4_002",
+        "IPV4_007",
+        "IPV4_008",
+        "IPV4_011",
+        "IPV4_012",
+        "IPV4_096"
+      ],
+      "sha256": "64d04b70d35913a32b3a70ac52685402bc86259b87be20adf1c3c62f7c3084f7"
+    },
+    "Skripte/Bestand/ping-diagnose-logserver.sh": {
+      "parameters": [
+        "IPV4_002",
+        "IPV4_008",
+        "IPV4_011",
+        "IPV4_012",
+        "IPV4_023",
+        "IPV4_096"
+      ],
+      "sha256": "154da6cbe3141d591271ed41b088b6c4f269ba3dc12a8fcb8b67feb28525a71f"
+    },
+    "Skripte/Bestand/ping-tunnel-monitor.ps1": {
+      "parameters": [
+        "IPV4_002"
+      ],
+      "sha256": "d1e7916c550aa576f35ec6ddfc422bac527b1cbb26c4edea0d6fc1db9c645282"
+    },
+    "Skripte/Bestand/vps-mqvpn-24h-monitor.service": {
+      "parameters": [],
+      "sha256": "7a5b0a6fa931ff9504b0ff439ece326d8d79745ee8c78f1f233e1dfe6528ce26"
+    },
+    "Skripte/Bestand/vps-mqvpn-24h-monitor.sh": {
+      "parameters": [
+        "INTERFACE_004",
+        "IPV4_003",
+        "IPV4_011"
+      ],
+      "sha256": "c073ce4e643cf864673f21a3632eba2eb2e0f2e122407969480088666e89e40b"
+    },
+    "Skripte/Diagnose/central_observability.py": {
+      "parameters": [],
+      "sha256": "c468424389d5c81a26cbf2cd674a5ce3103ac0c34b0507a414232f3934e28e93"
+    },
+    "Skripte/Diagnose/PHI12-20261003/010-services.instrumented": {
+      "parameters": [
+        "HOSTNAME_005",
+        "HOSTNAME_006",
+        "HOSTNAME_007",
+        "INTERFACE_001",
+        "IPV4_011",
+        "IPV4_027",
+        "IPV4_028"
+      ],
+      "sha256": "7c724a6a479ed7c490434fe6b5b1e07c97b06613bdf50eb4a81cd7dc8972ac6f"
+    },
+    "Skripte/Diagnose/PHI12-20261003/compare.py": {
+      "parameters": [],
+      "sha256": "39c11246ede3224fdbcc10d408ba36d85c1e43c8c6c37df036c1db2f6b46ccab"
+    },
+    "Skripte/Diagnose/PHI12-20261003/deadline-guard.sh": {
+      "parameters": [],
+      "sha256": "3a61bbf0a96cdd768eeb2c1fb59bd07ef214246230a187995352f48a2e135456"
+    },
+    "Skripte/Diagnose/PHI12-20261003/dnsmasq.instrumented": {
+      "parameters": [
+        "IPV4_042",
+        "IPV4_097",
+        "MAC_009",
+        "MAC_010"
+      ],
+      "sha256": "80ac6421478dec5f92f10c315f00ddf06914877120d8dbeb02b8723ed5a06043"
+    },
+    "Skripte/Diagnose/PHI12-20261003/firewall.instrumented": {
+      "parameters": [],
+      "sha256": "2a828da811c792f23a31080e894ac674827f645f8c43ac706eef5df4002a259a"
+    },
+    "Skripte/Diagnose/PHI12-20261003/install.sh": {
+      "parameters": [
+        "SCHEDULE_002",
+        "SCHEDULE_003"
+      ],
+      "sha256": "4bf875efe9dc93815cb42fcf757b70c33ecd799df97dab84dac5a9e8465b3774"
+    },
+    "Skripte/Diagnose/PHI12-20261003/instrumentation.json": {
+      "parameters": [],
+      "sha256": "55dd92c3960e771dd103c7c9c883eebc4c636c89e1e3715f45000da7d0874799"
+    },
+    "Skripte/Diagnose/PHI12-20261003/instrumented.sha256": {
+      "parameters": [],
+      "sha256": "8c71ef7e0071163b5b07e4ced7cf5e2f80950416bb06e689253a85ebf1262fd9"
+    },
+    "Skripte/Diagnose/PHI12-20261003/minecraft-end-guard.sh": {
+      "parameters": [
+        "IPV4_018"
+      ],
+      "sha256": "ae43580f96a1b8b2fe193c7976f75df594a80f56ca3259a7c9d70a5e06d715ef"
+    },
+    "Skripte/Diagnose/PHI12-20261003/minecraft.sh": {
+      "parameters": [
+        "IPV4_018",
+        "MAC_003"
+      ],
+      "sha256": "c32579eccbb9f65709991d36d4f343682386751d3523a575958d1483bb82a879"
+    },
+    "Skripte/Diagnose/PHI12-20261003/mobile-ping.sh": {
+      "parameters": [],
+      "sha256": "2c46b5c04049314022729495946a0625b2f70ad683a0ff1d87c75c4cb809954e"
+    },
+    "Skripte/Diagnose/PHI12-20261003/notify.sh": {
+      "parameters": [],
+      "sha256": "e398b6ef9e1530324d3f1acdb57a9041f45b7fe736a992bc2146f8363c8dea42"
+    },
+    "Skripte/Diagnose/PHI12-20261003/offload.py": {
+      "parameters": [
+        "EPOCH_003",
+        "IPV4_008"
+      ],
+      "sha256": "62d99accbab7819bbb81448c1c5f82900df1ae439ac266cf92bcf2a25455a05a"
+    },
+    "Skripte/Diagnose/PHI12-20261003/omr-bypass.instrumented": {
+      "parameters": [
+        "HOSTNAME_021",
+        "HOSTNAME_022",
+        "HOSTNAME_023",
+        "HOSTNAME_024",
+        "INTERFACE_005"
+      ],
+      "sha256": "2db2ccbe38050bd9daf1fb4d3e5fd0ee10a039fe5b596315dd37409f71f34b50"
+    },
+    "Skripte/Diagnose/PHI12-20261003/omr-tracker.instrumented": {
+      "parameters": [
+        "INTERFACE_018",
+        "IPV4_011",
+        "IPV4_098",
+        "IPV4_099"
+      ],
+      "sha256": "5a7e45f8560c43f5b56aab04e4f450908bcf8e9e54efb03d0f45dad418898620"
+    },
+    "Skripte/Diagnose/PHI12-20261003/original.sha256": {
+      "parameters": [],
+      "sha256": "6078f209445fd545c963ad7e678750cfb111e6ee16e0e0cb279326b3ad0686f3"
+    },
+    "Skripte/Diagnose/PHI12-20261003/ping-supervised.sh": {
+      "parameters": [
+        "IPV4_023"
+      ],
+      "sha256": "58b96903fb8d78193e201e8dafe5bbda445ae78b37b65af34bbdf1bc79fef911"
+    },
+    "Skripte/Diagnose/PHI12-20261003/restore.sh": {
+      "parameters": [],
+      "sha256": "0fe8d6e514d9c12d29b88afa0aceb67c4794ce29b1c5ee24f65daf4f5b8e72b2"
+    },
+    "Skripte/Diagnose/PHI12-20261003/run.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_002",
+        "IPV4_009",
+        "IPV4_010",
+        "IPV4_017",
+        "IPV4_022",
+        "IPV4_023",
+        "IPV4_024",
+        "IPV4_025"
+      ],
+      "sha256": "d71f0b2d90ef0c86b24fb681ee273e9b366deeeba40e166888909346a3d1d34a"
+    },
+    "Skripte/Diagnose/PHI12-20261003/schedule-offload.ps1": {
+      "parameters": [],
+      "sha256": "6d95dacf3d64cf581bcd98a3be44247a6f21e5aabccd6168942d666bce166778"
+    },
+    "Skripte/Diagnose/PHI12-20261003/settings": {
+      "parameters": [
+        "EPOCH_004",
+        "EPOCH_005"
+      ],
+      "sha256": "461c5c65a78eb66e38b20bffc809585041aa8b1a34afd436c46d373c2034d578"
+    },
+    "Skripte/Diagnose/PHI12-20261003/snapshot.sh": {
+      "parameters": [
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "INTERFACE_005"
+      ],
+      "sha256": "4fc8fd08381998824e86a22e76506dcc949367eaff60e4be4315fa56bd4fe803"
+    },
+    "Skripte/Diagnose/PHI12-20261003/test-compare.py": {
+      "parameters": [
+        "EPOCH_004",
+        "EPOCH_006",
+        "EPOCH_007",
+        "EPOCH_008",
+        "EPOCH_009",
+        "IPV4_017",
+        "IPV4_025"
+      ],
+      "sha256": "bee9be9d05522a6a38c974e5633881501bf2bdc5c429d839c9f1a6e21d077f9d"
+    },
+    "Skripte/Diagnose/phi12-application-egress.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_001",
+        "IPV4_026",
+        "MAC_005"
+      ],
+      "sha256": "055ac133d4aa360d23de66993de388cca4ee8fb297f95065c751536e857db6dc"
+    },
+    "Skripte/Diagnose/phi12-application-monitor.sh": {
+      "parameters": [
+        "HOSTNAME_008",
+        "HOSTNAME_009",
+        "HOSTNAME_025",
+        "HOSTNAME_026",
+        "IPV4_026",
+        "MAC_005"
+      ],
+      "sha256": "f1aa6fa68981c6796ab839c695bb862c1341e0531af21e2c767a55a79a2342d8"
+    },
+    "Skripte/Diagnose/phi12-client-monitor.ps1": {
+      "parameters": [
+        "IPV4_011",
+        "IPV4_013"
+      ],
+      "sha256": "90fb896f73bf20c21604858cad7dc4c4976b7ab924bda3882ee497708baef004"
+    },
+    "Skripte/Diagnose/phi12-config-events.sh": {
+      "parameters": [
+        "EPOCH_010"
+      ],
+      "sha256": "5571cd2f46a0cb9d4d95d8671e8a5a3edb54233b8a85beda9d44ad6a41dc80a0"
+    },
+    "Skripte/Diagnose/phi12-device-egress.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_001",
+        "IPV4_026",
+        "MAC_005"
+      ],
+      "sha256": "8e6021a8393878be9e73922bfa60556952d3a870aaa378f92edd8c451a66b4f9"
+    },
+    "Skripte/Diagnose/phi12-device-monitor.sh": {
+      "parameters": [],
+      "sha256": "ae93be5ac38fbdc529bbf88c1fdaa6adaa30315524bfc408fdf3de355e002972"
+    },
+    "Skripte/Diagnose/phi12-evening-client.ps1": {
+      "parameters": [
+        "EPOCH_010",
+        "EPOCH_011"
+      ],
+      "sha256": "c615aef7aadb5749e7f3d40b23ba59640be449ab9c023df75acd3d879888bde6"
+    },
+    "Skripte/Diagnose/phi12-evening-router.sh": {
+      "parameters": [
+        "EPOCH_002",
+        "EPOCH_010",
+        "EPOCH_011",
+        "INTERFACE_008",
+        "INTERFACE_009",
+        "IPV4_006",
+        "IPV4_023",
+        "IPV4_026",
+        "IPV4_031"
+      ],
+      "sha256": "b28fb060b77d0cb48ff1f40766de0698c4c5e7449361c87da3b5ca58886f57ab"
+    },
+    "Skripte/Diagnose/phi12-router-monitor.sh": {
+      "parameters": [
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "IPV4_002",
+        "IPV4_009",
+        "IPV4_010",
+        "IPV4_011",
+        "IPV4_012",
+        "IPV4_013"
+      ],
+      "sha256": "7bc1e849dcb1325a05fb68914404dd2d33831ee0b6f13d707aea4966f506c2f5"
+    },
+    "Skripte/Diagnose/phi12-scope-monitor.sh": {
+      "parameters": [
+        "HOSTNAME_008",
+        "HOSTNAME_009",
+        "HOSTNAME_025",
+        "HOSTNAME_026",
+        "INTERFACE_002",
+        "INTERFACE_003"
+      ],
+      "sha256": "9f4d07c9b1f7dcc1e39152ccb00c13cb3f8e305d8a3a407e96d18770953b2945"
+    },
+    "Skripte/Diagnose/phi28_homeassistant.py": {
+      "parameters": [
+        "IPV4_034",
+        "PRIVATE_VALUE_009"
+      ],
+      "sha256": "1a7e0f17bb004bdbc344b018c7d0225dd89d68ac6792863424d49741078abc00"
+    },
+    "Skripte/Diagnose/phi5-vps-monitor-wrapper.sh": {
+      "parameters": [
+        "INTERFACE_004",
+        "IPV4_011"
+      ],
+      "sha256": "a4f53f6acbbd5abc8d9dc69021b326733f08ee5d8b93b8cc0f1383957f279ff8"
+    },
+    "Skripte/Diagnose/phi5-vps-probes.py": {
+      "parameters": [
+        "INTERFACE_004",
+        "IPV4_011"
+      ],
+      "sha256": "4eb74ff4aa451e0fb54b0a99c0a14ead67ec39fe21d0d538568f3dd6419243b3"
+    },
+    "Skripte/Diagnose/Start-PHI12-Citrix.ps1": {
+      "parameters": [
+        "IPV4_008",
+        "IPV4_031",
+        "PRIVATE_VALUE_006"
+      ],
+      "sha256": "9c2e3f648d9085c665124a5c9b257c147c740909316074e780cdaf5ff6a37b13"
+    },
+    "Skripte/Dokumentation/erstelle_dokumentation.py": {
+      "parameters": [
+        "PYTHON_STRING_057",
+        "PYTHON_STRING_058",
+        "PYTHON_STRING_059",
+        "PYTHON_STRING_060",
+        "PYTHON_STRING_061",
+        "PYTHON_STRING_062",
+        "PYTHON_STRING_063",
+        "PYTHON_STRING_064",
+        "PYTHON_STRING_065",
+        "PYTHON_STRING_066",
+        "PYTHON_STRING_067",
+        "PYTHON_STRING_068",
+        "PYTHON_STRING_069",
+        "PYTHON_STRING_070",
+        "PYTHON_STRING_071",
+        "PYTHON_STRING_072",
+        "PYTHON_STRING_073",
+        "PYTHON_STRING_074",
+        "PYTHON_STRING_075",
+        "PYTHON_STRING_076",
+        "PYTHON_STRING_077",
+        "PYTHON_STRING_078",
+        "PYTHON_STRING_079",
+        "PYTHON_STRING_080",
+        "PYTHON_STRING_081",
+        "PYTHON_STRING_082",
+        "PYTHON_STRING_083",
+        "PYTHON_STRING_084",
+        "PYTHON_STRING_085",
+        "PYTHON_STRING_086",
+        "PYTHON_STRING_087",
+        "PYTHON_STRING_088",
+        "PYTHON_STRING_089",
+        "PYTHON_STRING_090",
+        "PYTHON_STRING_091",
+        "PYTHON_STRING_092",
+        "PYTHON_STRING_093",
+        "PYTHON_STRING_094",
+        "PYTHON_STRING_095",
+        "PYTHON_STRING_096",
+        "PYTHON_STRING_097",
+        "PYTHON_STRING_098",
+        "PYTHON_STRING_099",
+        "PYTHON_STRING_100",
+        "PYTHON_STRING_101"
+      ],
+      "sha256": "045164b01a64ec0c20690917dbf3465b6ad5dfc63675c258265e9e3cfc39ac59"
+    },
+    "Skripte/Dokumentation/erstelle_telemetrie_discovery.py": {
+      "parameters": [
+        "IPV4_002",
+        "IPV4_007",
+        "IPV4_008",
+        "IPV4_012",
+        "IPV4_022",
+        "IPV4_025",
+        "IPV4_033",
+        "IPV4_034",
+        "IPV4_084",
+        "IPV4_085",
+        "IPV4_086",
+        "IPV4_087",
+        "IPV4_088",
+        "IPV4_089",
+        "NETWORK_PREFIX_003",
+        "PRIVATE_VALUE_004",
+        "PYTHON_STRING_102",
+        "PYTHON_STRING_103",
+        "PYTHON_STRING_104",
+        "PYTHON_STRING_105",
+        "PYTHON_STRING_106",
+        "PYTHON_STRING_107",
+        "PYTHON_STRING_108",
+        "PYTHON_STRING_109",
+        "PYTHON_STRING_110",
+        "PYTHON_STRING_111",
+        "PYTHON_STRING_112",
+        "PYTHON_STRING_113",
+        "PYTHON_STRING_114",
+        "PYTHON_STRING_115",
+        "PYTHON_STRING_116",
+        "PYTHON_STRING_117",
+        "PYTHON_STRING_118",
+        "PYTHON_STRING_119",
+        "SECTION_004",
+        "VLAN_004"
+      ],
+      "sha256": "f0e89456cb9cb2b93cdfddb7d28d6f315d464888eebcb6e033ef1622a146c2ba"
+    },
+    "Skripte/Linear/erstelle_logserver_retention_issue.py": {
+      "parameters": [
+        "PYTHON_STRING_120"
+      ],
+      "sha256": "bd1e327f472a0f8bd26458c467bf680ed6eb20b6f7151f85b4e1da39b3c15bf2"
+    },
+    "Skripte/Linear/linear_api.py": {
+      "parameters": [],
+      "sha256": "bcd6bad34a92688ce48301a1f905f61c9c95e466da5afdc4d5d6ad14c85b6ccb"
+    },
+    "Skripte/Linear/linear_sync.py": {
+      "parameters": [],
+      "sha256": "2413e1a07f9c5fabfe74cef95a5316613f2f03d795b1808f428f71df5c056561"
+    },
+    "Skripte/Linear/prepare_work_packages.py": {
+      "parameters": [
+        "HOSTNAME_002",
+        "INTERFACE_001",
+        "INTERFACE_002",
+        "INTERFACE_003",
+        "INTERFACE_004",
+        "INTERFACE_005",
+        "INTERFACE_019",
+        "IPV4_001",
+        "IPV4_002",
+        "IPV4_003",
+        "IPV4_004",
+        "IPV4_005",
+        "IPV4_006",
+        "IPV4_007",
+        "IPV4_008",
+        "IPV4_012",
+        "NETWORK_SUFFIX_002",
+        "NETWORK_SUFFIX_003",
+        "PRIVATE_VALUE_001",
+        "PRIVATE_VALUE_005",
+        "SECTION_001",
+        "SECTION_002",
+        "SECTION_003",
+        "SECTION_004",
+        "SECTION_005",
+        "SECTION_006",
+        "VLAN_001",
+        "VLAN_002",
+        "VLAN_003",
+        "VLAN_005"
+      ],
+      "sha256": "a789543553431fdcd0e160533d34e0ad5d24fcfae877b850ffa41fa4fe300af9"
+    },
+    "Skripte/Linear/run-sync.ps1": {
+      "parameters": [],
+      "sha256": "22d3eda5c5532955c24acc668d5b4be1e43404260ce8354c5bde5c3591a37034"
+    },
+    "Skripte/Linear/tests/test_sync.py": {
+      "parameters": [],
+      "sha256": "3a03a03ddd291cf81b7162ab22240fcf75bcd65f7569638c5eec210964ffa5e4"
+    },
+    "Skripte/Linear/upload_documents.py": {
+      "parameters": [],
+      "sha256": "caf832ef931b50a0556ff2d5017a45f94adf6f206f5325047d8f60ca7da1532d"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/010-services.patch": {
+      "parameters": [],
+      "sha256": "6ff042d0d2d004cd7c7466e9cb75a9df8772ce715633617864b144cbed88cc53"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/010-services": {
+      "parameters": [
+        "HOSTNAME_005",
+        "HOSTNAME_006",
+        "HOSTNAME_007",
+        "INTERFACE_001",
+        "IPV4_011",
+        "IPV4_027",
+        "IPV4_028"
+      ],
+      "sha256": "0958303883e27d52ee89649e73efd5eb469fdd88f748ddb41e29e2ba8fc90666"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/build-fix.py": {
+      "parameters": [],
+      "sha256": "4b6562fd42dbc74ad55f7e677610a19eec82b91fb36dc9e8d0348c06df3fabf0"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/build-tests.py": {
+      "parameters": [
+        "INTERFACE_002",
+        "INTERFACE_010",
+        "INTERFACE_019",
+        "IPV4_012",
+        "IPV4_100"
+      ],
+      "sha256": "beed9540f24f56aa0d640c1dc51ab04c36adc2af0c382917ab3265766a173f0d"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/install.sh": {
+      "parameters": [],
+      "sha256": "ebccd3da07e7271852f8dc11cff4139ed4ee6a7513457754e1f3e715c148d289"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/manifest.json": {
+      "parameters": [],
+      "sha256": "c73fceb8bcaae17f246229382f53be4916a2c415b5e4f6d1570ff3d5279c193b"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/omr-tracker-server.patch": {
+      "parameters": [],
+      "sha256": "e1a9a92f8ab728466020573eb90164421386c9c88657877966899a046e0d5f1a"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/omr-tracker-server": {
+      "parameters": [],
+      "sha256": "882e89c1db1f341da6105e1de69ec7541f37de33fd8fbd9f2016d333a0cbc968"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/rollback.sh": {
+      "parameters": [],
+      "sha256": "12ce4d59fb2da1ad58b0abed65233b59e8c04ebb2c7939c5d7e14d1827155c6c"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/test-functions.sh": {
+      "parameters": [],
+      "sha256": "986e6fe226f70497275f92f4d4124bf4335a5f299b1e556f5962874d4666d39b"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/test-scheduler.sh": {
+      "parameters": [
+        "INTERFACE_002",
+        "INTERFACE_010",
+        "INTERFACE_019",
+        "IPV4_012"
+      ],
+      "sha256": "d24d5c79bc358867327cdf6b15331fce9b2a76346e0834a53737e6f57408832c"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/test-server.sh": {
+      "parameters": [
+        "INTERFACE_010",
+        "IPV4_012",
+        "IPV4_100"
+      ],
+      "sha256": "61080372ca084f67d05210123a074af5ebe4ce436035a5e167431dee0efb1d7f"
+    },
+    "Skripte/Router-Fixes/PHI12-UCI-Race-20261003/validate-live.sh": {
+      "parameters": [],
+      "sha256": "7856276d32b80b77a6017f884c56acebb15f4c7ed58ba401e0c6c3b53499033d"
+    }
+  },
+  "parameters": {
+    "PYTHON_STRING_001": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_002": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_003": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_004": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_005": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_006": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_007": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_008": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_009": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_010": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_011": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_012": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_013": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_014": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_015": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_016": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_017": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_018": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PRIVATE_VALUE_001": {
+      "type": "private_value",
+      "description": "Operator-supplied private value; original value removed."
+    },
+    "PRIVATE_VALUE_002": {
+      "type": "private_value",
+      "description": "Operator-supplied private value; original value removed."
+    },
+    "PRIVATE_VALUE_003": {
+      "type": "private_value",
+      "description": "Operator-supplied private value; original value removed."
+    },
+    "PRIVATE_VALUE_004": {
+      "type": "private_value",
+      "description": "Operator-supplied private value; original value removed."
+    },
+    "PRIVATE_VALUE_005": {
+      "type": "private_value",
+      "description": "Operator-supplied private value; original value removed."
+    },
+    "PRIVATE_VALUE_006": {
+      "type": "private_value",
+      "description": "Operator-supplied private value; original value removed."
+    },
+    "PRIVATE_VALUE_007": {
+      "type": "private_value",
+      "description": "Operator-supplied private value; original value removed."
+    },
+    "PRIVATE_VALUE_008": {
+      "type": "private_value",
+      "description": "Operator-supplied private value; original value removed."
+    },
+    "PRIVATE_VALUE_009": {
+      "type": "private_value",
+      "description": "Operator-supplied private value; original value removed."
+    },
+    "IPV4_001": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_002": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_003": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_004": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_005": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_006": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_007": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_008": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_009": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_010": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_011": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_012": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_013": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_014": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "HOSTNAME_001": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_002": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "INTERFACE_001": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "INTERFACE_002": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "INTERFACE_003": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "INTERFACE_004": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "INTERFACE_005": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "INTERFACE_006": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "INTERFACE_007": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "VLAN_001": {
+      "type": "vlan",
+      "description": "Operator-supplied vlan; original value removed."
+    },
+    "VLAN_002": {
+      "type": "vlan",
+      "description": "Operator-supplied vlan; original value removed."
+    },
+    "VLAN_003": {
+      "type": "vlan",
+      "description": "Operator-supplied vlan; original value removed."
+    },
+    "VLAN_004": {
+      "type": "vlan",
+      "description": "Operator-supplied vlan; original value removed."
+    },
+    "SECTION_001": {
+      "type": "section",
+      "description": "Operator-supplied section; original value removed."
+    },
+    "SECTION_002": {
+      "type": "section",
+      "description": "Operator-supplied section; original value removed."
+    },
+    "SECTION_003": {
+      "type": "section",
+      "description": "Operator-supplied section; original value removed."
+    },
+    "SECTION_004": {
+      "type": "section",
+      "description": "Operator-supplied section; original value removed."
+    },
+    "SECTION_005": {
+      "type": "section",
+      "description": "Operator-supplied section; original value removed."
+    },
+    "SECTION_006": {
+      "type": "section",
+      "description": "Operator-supplied section; original value removed."
+    },
+    "PYTHON_STRING_019": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "IDENTIFIER_001": {
+      "type": "identifier",
+      "description": "Operator-supplied identifier; original value removed."
+    },
+    "HOSTNAME_003": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "IPV4_015": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_016": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "MAC_001": {
+      "type": "mac",
+      "description": "Operator-supplied mac; original value removed."
+    },
+    "MAC_002": {
+      "type": "mac",
+      "description": "Operator-supplied mac; original value removed."
+    },
+    "VLAN_005": {
+      "type": "vlan",
+      "description": "Operator-supplied vlan; original value removed."
+    },
+    "IPV4_017": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_018": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "INTERFACE_008": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "IPV4_019": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_020": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_021": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_022": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_023": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_024": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_025": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "PYTHON_STRING_020": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_021": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_022": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_023": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "IDENTIFIER_002": {
+      "type": "identifier",
+      "description": "Operator-supplied identifier; original value removed."
+    },
+    "PYTHON_STRING_024": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_025": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_026": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_027": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_028": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_029": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_030": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "VLAN_006": {
+      "type": "vlan",
+      "description": "Operator-supplied vlan; original value removed."
+    },
+    "PYTHON_STRING_031": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "MAC_003": {
+      "type": "mac",
+      "description": "Operator-supplied mac; original value removed."
+    },
+    "PYTHON_STRING_032": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_033": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_034": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_035": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_036": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "MAC_004": {
+      "type": "mac",
+      "description": "Operator-supplied mac; original value removed."
+    },
+    "PYTHON_STRING_037": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "IPV4_026": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_027": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_028": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "HOSTNAME_004": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_005": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_006": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_007": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_008": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_009": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "MAC_005": {
+      "type": "mac",
+      "description": "Operator-supplied mac; original value removed."
+    },
+    "IPV4_029": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "INTERFACE_009": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "SCHEDULE_001": {
+      "type": "schedule",
+      "description": "Operator-supplied schedule; original value removed."
+    },
+    "IPV4_030": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "HOSTNAME_010": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_011": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "INTERFACE_010": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "INTERFACE_011": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "IPV4_031": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "EPOCH_001": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "EPOCH_002": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "IPV4_032": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "PYTHON_STRING_038": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_039": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_040": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "NETWORK_PREFIX_001": {
+      "type": "network_prefix",
+      "description": "Operator-supplied network prefix; original value removed."
+    },
+    "NETWORK_PREFIX_002": {
+      "type": "network_prefix",
+      "description": "Operator-supplied network prefix; original value removed."
+    },
+    "IPV4_033": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_034": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "PYTHON_STRING_041": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_042": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "IDENTIFIER_003": {
+      "type": "identifier",
+      "description": "Operator-supplied identifier; original value removed."
+    },
+    "PYTHON_STRING_043": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "MAC_006": {
+      "type": "mac",
+      "description": "Operator-supplied mac; original value removed."
+    },
+    "IPV4_035": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_036": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "NETWORK_SUFFIX_001": {
+      "type": "network_suffix",
+      "description": "Operator-supplied network suffix; original value removed."
+    },
+    "MAC_PREFIX_001": {
+      "type": "mac_prefix",
+      "description": "Operator-supplied mac prefix; original value removed."
+    },
+    "MAC_PREFIX_002": {
+      "type": "mac_prefix",
+      "description": "Operator-supplied mac prefix; original value removed."
+    },
+    "IPV4_037": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "NETWORK_PREFIX_003": {
+      "type": "network_prefix",
+      "description": "Operator-supplied network prefix; original value removed."
+    },
+    "MAC_PREFIX_003": {
+      "type": "mac_prefix",
+      "description": "Operator-supplied mac prefix; original value removed."
+    },
+    "HOSTNAME_012": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_013": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "NETWORK_PREFIX_004": {
+      "type": "network_prefix",
+      "description": "Operator-supplied network prefix; original value removed."
+    },
+    "PYTHON_STRING_044": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_045": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_046": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_047": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_048": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_049": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_050": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_051": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_052": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_053": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_054": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "IPV4_038": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_039": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_040": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_041": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_042": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_043": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_044": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_045": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_046": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_047": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "INTERFACE_012": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "INTERFACE_013": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "INTERFACE_014": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "IPV4_048": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_049": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_050": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_051": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_052": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_053": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_054": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "MAC_007": {
+      "type": "mac",
+      "description": "Operator-supplied mac; original value removed."
+    },
+    "MAC_008": {
+      "type": "mac",
+      "description": "Operator-supplied mac; original value removed."
+    },
+    "IPV4_055": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "HOSTNAME_014": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_015": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_016": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_017": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_018": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_019": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "INTERFACE_015": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "INTERFACE_016": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "IPV4_056": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_057": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_058": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_059": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_060": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_061": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_062": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_063": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_064": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_065": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_066": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_067": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_068": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_069": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_070": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_071": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_072": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_073": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_074": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_075": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_076": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_077": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_078": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_079": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_080": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_081": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_082": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_083": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_084": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_085": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "PYTHON_STRING_055": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_056": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "IPV4_086": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_087": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_088": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_089": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_090": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_091": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "HOSTNAME_020": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "SECTION_007": {
+      "type": "section",
+      "description": "Operator-supplied section; original value removed."
+    },
+    "INTERFACE_017": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "SECTION_008": {
+      "type": "section",
+      "description": "Operator-supplied section; original value removed."
+    },
+    "SECTION_009": {
+      "type": "section",
+      "description": "Operator-supplied section; original value removed."
+    },
+    "IPV4_092": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_093": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_094": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_095": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_096": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_097": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "MAC_009": {
+      "type": "mac",
+      "description": "Operator-supplied mac; original value removed."
+    },
+    "MAC_010": {
+      "type": "mac",
+      "description": "Operator-supplied mac; original value removed."
+    },
+    "SCHEDULE_002": {
+      "type": "schedule",
+      "description": "Operator-supplied schedule; original value removed."
+    },
+    "SCHEDULE_003": {
+      "type": "schedule",
+      "description": "Operator-supplied schedule; original value removed."
+    },
+    "EPOCH_003": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "HOSTNAME_021": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_022": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_023": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_024": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "IPV4_098": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "IPV4_099": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    },
+    "INTERFACE_018": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "EPOCH_004": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "EPOCH_005": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "EPOCH_006": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "EPOCH_007": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "EPOCH_008": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "EPOCH_009": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "EPOCH_010": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "EPOCH_011": {
+      "type": "epoch",
+      "description": "Operator-supplied epoch; original value removed."
+    },
+    "HOSTNAME_025": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "HOSTNAME_026": {
+      "type": "hostname",
+      "description": "Operator-supplied hostname; original value removed."
+    },
+    "PYTHON_STRING_057": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_058": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_059": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_060": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_061": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_062": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_063": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_064": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_065": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_066": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_067": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_068": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_069": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_070": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_071": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_072": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_073": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_074": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_075": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_076": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_077": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_078": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_079": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_080": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_081": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_082": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_083": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_084": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_085": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_086": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_087": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_088": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_089": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_090": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_091": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_092": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_093": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_094": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_095": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_096": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_097": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_098": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_099": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_100": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_101": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_102": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_103": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_104": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_105": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_106": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_107": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_108": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_109": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_110": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_111": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_112": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_113": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_114": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_115": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_116": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_117": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_118": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_119": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "PYTHON_STRING_120": {
+      "type": "python_string",
+      "description": "Operator-supplied python string; original value removed."
+    },
+    "INTERFACE_019": {
+      "type": "interface",
+      "description": "Operator-supplied interface; original value removed."
+    },
+    "NETWORK_SUFFIX_002": {
+      "type": "network_suffix",
+      "description": "Operator-supplied network suffix; original value removed."
+    },
+    "NETWORK_SUFFIX_003": {
+      "type": "network_suffix",
+      "description": "Operator-supplied network suffix; original value removed."
+    },
+    "IPV4_100": {
+      "type": "ipv4",
+      "description": "Operator-supplied ipv4; original value removed."
+    }
+  }
+}

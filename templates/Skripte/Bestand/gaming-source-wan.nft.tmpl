@@ -1,0 +1,9 @@
+# Gaming source-based WAN policy
+#
+# PlayStation @@IPV4_015@@ -> WAN1 (policy mark 0x45393)
+# All other clients in VLAN 160 -> WAN2 (policy mark 0x45392)
+# The /32 rule is first; the second rule explicitly excludes the PlayStation.
+
+ip saddr @@IPV4_015@@ counter meta mark set 0x45393 comment "gaming-ps-160128-wan1"
+ip saddr @@IPV4_006@@/25 counter meta mark set 0x45392 comment "gaming-other-wan2-low"
+ip saddr @@IPV4_094@@-@@IPV4_095@@ counter meta mark set 0x45392 comment "gaming-other-wan2-high"

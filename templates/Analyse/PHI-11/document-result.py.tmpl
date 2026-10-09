@@ -1,0 +1,39 @@
+from pathlib import Path
+import json
+
+ROOT = Path(__file__).resolve().parents[2]
+report = (ROOT / "Analyse/PHI-11/ergebnis-2026-10-02.md").read_text(encoding="utf-8")
+(ROOT / "Linear/issues/PHI-11.md").write_text(report, encoding="utf-8")
+(ROOT / "Backups/PHI-11-2026-10-02/README.md").write_text(report, encoding="utf-8")
+p = ROOT / "Linear/issues/PHI-11.json"
+data = json.loads(p.read_text(encoding="utf-8"))
+data["stateId"] = "@@IDENTIFIER_001@@"
+p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+p = ROOT / "Linear/work-packages.json"
+data = json.loads(p.read_text(encoding="utf-8"))
+package = next(x for x in data if x["key"] == "backup")
+package["state"] = "Done"
+package["description"] = report
+if "Analyse/PHI-11/ergebnis-2026-10-02.md" not in package["sources"]:
+    package["sources"].append("Analyse/PHI-11/ergebnis-2026-10-02.md")
+p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+result = {
+    "status": "abgeschlossen",
+    "stand": "2026-10-02T10:49:21+02:00",
+    "backupordner": "Backups/PHI-11-2026-10-02",
+    "zusaetzliche_pfade": 12,
+    "pruefung": "Offline-Inhalt und SHA256 erfolgreich; kein Produktiv-Restore",
+    "bericht": "Analyse/PHI-11/ergebnis-2026-10-02.md",
+    "nur_aktive_aenderung": "/etc/sysupgrade.conf erweitert",
+}
+for relative in ["Analyse/tunnel-erkenntnisse-2026-10-02.json", "Chats/02-config.json"]:
+    p = ROOT / relative
+    data = json.loads(p.read_text(encoding="utf-8"))
+    data["backup_aktueller_stand"] = result
+    p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+p = ROOT / "Analyse/config-pruefung-2026-10-02.txt"
+old = p.read_text(encoding="utf-8")
+note = @@PYTHON_STRING_019@@
+if not old.startswith(note):
+    p.write_text(note + old, encoding="utf-8")
+print("PHI-11-Abschluss und Folgebefunde dokumentiert.")

@@ -1,0 +1,6 @@
+ls -l /etc/init.d/collectd /etc/rc.d/*collectd*
+cat /etc/init.d/collectd
+uci show luci_statistics | grep -E 'collectd|mqtt|enable|Host|Port|Prefix|StoreRates'
+ls -l /tmp/collectd.conf /usr/lib/collectd/mqtt.so
+logread | grep -Ei 'collectd|mqtt' | tail -30
+/usr/sbin/collectd -t -C /etc/collectd.conf

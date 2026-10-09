@@ -1,0 +1,7 @@
+SPDX-FileCopyrightText: Andrea Covelli
+SPDX-FileCopyrightText: The Linux/mac80211 contributors
+SPDX-FileCopyrightText: 2026 palbiez
+SPDX-License-Identifier: GPL-2.0-only
+
+Source: https://github.com/openwrt/openwrt/pull/23181
+Changes: Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained.

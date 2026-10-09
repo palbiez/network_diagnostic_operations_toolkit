@@ -1,0 +1,5 @@
+command -v python3; command -v ip; command -v nft
+ip netns list 2>/dev/null || true
+uci -q show dhcp.vlan@@VLAN_002@@
+grep -nE 'restart|reload|start_service' /etc/init.d/dnsmasq | tail -12
+nft list chain inet fw4 dstnat_lan

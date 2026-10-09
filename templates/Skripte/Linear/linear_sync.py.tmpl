@@ -1,0 +1,185 @@
+"""Project-scoped, field-wise two-way sync. Run bootstrap once, then sync."""
+import argparse
+from contextlib import contextmanager
+from datetime import datetime, timezone
+import json
+import os
+from pathlib import Path
+import sys
+import uuid
+from linear_api import ROOT, Linear
+
+DIR=ROOT/'Linear'
+FIELDS=('title','description','priority','stateId')
+ISSUE_FIELDS='id identifier title description priority state { id name type } url updatedAt archivedAt team { id } project { id }'
+
+def now(): return datetime.now(timezone.utc).isoformat()
+def read(path, default=None):
+    return json.loads(path.read_text(encoding='utf-8')) if path.exists() else default
+def save(path,data):
+    path.parent.mkdir(parents=True,exist_ok=True)
+    tmp=path.with_suffix(path.suffix+'.tmp')
+    tmp.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    os.replace(tmp,path)
+
+@contextmanager
+def lock():
+    path=DIR/'sync.lock'
+    try: descriptor=os.open(path,os.O_CREAT|os.O_EXCL|os.O_WRONLY)
+    except FileExistsError: raise RuntimeError('Sync already running; if an earlier process crashed, verify it ended before removing Linear/sync.lock.')
+    os.write(descriptor,str(os.getpid()).encode())
+    os.close(descriptor)
+    try: yield
+    finally: path.unlink(missing_ok=True)
+
+def values(issue):
+    return {'title':issue['title'],'description':issue.get('description') or '', 'priority':issue['priority'],'stateId':issue['state']['id']}
+
+def project_issues(client,config):
+    items=[];cursor=None
+    while True:
+        data=client.query('query($id:String!,$cursor:String){project(id:$id){id issues(first:50,after:$cursor,includeArchived:true){nodes{'+ISSUE_FIELDS+'} pageInfo{hasNextPage endCursor}}}}',{'id':config['projectId'],'cursor':cursor})
+        if not data['project']: raise RuntimeError('Configured project no longer accessible')
+        connection=data['project']['issues'];items.extend(connection['nodes'])
+        if not connection['pageInfo']['hasNextPage']:break
+        cursor=connection['pageInfo']['endCursor']
+    return items
+
+def write_local(issue,v=None):
+    v=v or values(issue)
+    folder=DIR/'issues';folder.mkdir(exist_ok=True)
+    old=read(folder/(issue['identifier']+'.json'),{})
+    meta={**old,'id':issue['id'],'identifier':issue['identifier'],'url':issue['url'],'title':v['title'],'priority':v['priority'],'stateId':v['stateId'],'remoteStateName':issue['state']['name'],'remoteUpdatedAt':issue['updatedAt'],'archivedAt':issue.get('archivedAt'),'teamId':issue['team']['id'],'projectId':issue['project']['id'] if issue.get('project') else None}
+    save(folder/(issue['identifier']+'.json'),meta)
+    md=folder/(issue['identifier']+'.md');tmp=md.with_suffix('.md.tmp')
+    tmp.write_text(v['description'],encoding='utf-8');os.replace(tmp,md)
+
+def local_values(issue):
+    folder=DIR/'issues'
+    meta=read(folder/(issue['identifier']+'.json'))
+    if meta is None:return None
+    if meta.get('id')!=issue['id']:raise RuntimeError(f'Immutable ID changed in {issue["identifier"]}.json')
+    md=folder/(issue['identifier']+'.md')
+    if not md.exists():raise RuntimeError(f'Missing description file for {issue["identifier"]}; local deletion never deletes Linear issues.')
+    return {'title':meta['title'],'priority':meta['priority'],'stateId':meta['stateId'],'description':md.read_text(encoding='utf-8')}
+
+def verify_workspace(client,config):
+    org=client.query('{viewer{organization{id urlKey}}}')['viewer']['organization']
+    if org['id']!=config['organizationId'] or org['urlKey']!=config['workspace']:
+        raise RuntimeError('Workspace mismatch; no writes performed')
+
+def bootstrap(client,config):
+    packages=read(DIR/'work-packages.json')
+    mapping=read(DIR/'issue-map.json',{})
+    existing=project_issues(client,config)
+    states={s['name']:s['id'] for s in config['states']}
+    for package in packages:
+        marker='omr-workpackage:'+package['key']
+        issue=next((i for i in existing if marker in (i.get('description') or '')),None)
+        if issue is None:
+            deterministic_id=str(uuid.UUID(bytes=uuid.uuid5(uuid.UUID(config['projectId']),package['key']).bytes, version=4))
+            payload={'id':deterministic_id,'teamId':config['teamId'],'projectId':config['projectId'],'title':package['title'],'description':package['description'],'priority':package['priority'],'stateId':states[package['state']]}
+            response=client.query('mutation($input:IssueCreateInput!){issueCreate(input:$input){success issue{'+ISSUE_FIELDS+'}}}',{'input':payload})['issueCreate']
+            if not response['success'] or not response['issue']:raise RuntimeError('Issue creation not confirmed')
+            issue=response['issue'];existing.append(issue)
+            print('Created',issue['identifier'],issue['title'])
+        else:print('Exists',issue['identifier'])
+        mapping[package['key']]={'id':issue['id'],'identifier':issue['identifier'],'url':issue['url'],'sources':package['sources']}
+        save(DIR/'issue-map.json',mapping)
+    # Idempotent dependency relations. Source issue blocks related dependent issue.
+    relations=read(DIR/'dependency-map.json',{})
+    for package in packages:
+        for dependency in package['dependsOn']:
+            key=dependency+'->'+package['key']
+            if key in relations:continue
+            relation_id=str(uuid.UUID(bytes=uuid.uuid5(uuid.UUID(config['projectId']),'blocks:'+key).bytes, version=4))
+            response=client.query('mutation($input:IssueRelationCreateInput!){issueRelationCreate(input:$input){success issueRelation{id type}}}',{'input':{'id':relation_id,'type':'blocks','issueId':mapping[dependency]['id'],'relatedIssueId':mapping[package['key']]['id']}})['issueRelationCreate']
+            if not response['success']:raise RuntimeError('Dependency creation not confirmed')
+            relations[key]=response['issueRelation'];save(DIR/'dependency-map.json',relations)
+    print('Issues and dependencies imported.')
+
+def synchronize(client,config,pull_only=False):
+    config['states']=client.query('query($id:String!){team(id:$id){states(first:50){nodes{id name type position}}}}',{'id':config['teamId']})['team']['states']['nodes']
+    save(DIR/'config.json',config)
+    state=read(DIR/'sync-state.json',{'issues':{}})
+    remote=project_issues(client,config)
+    conflicts=[];changed=0; imported=0
+    valid_states={s['id'] for s in config['states']}
+    for position,issue in enumerate(remote):
+        if issue['team']['id']!=config['teamId']:
+            # Cross-team project issues are visible, but not edited by this sync.
+            continue
+        base=state['issues'].get(issue['id'])
+        rv=values(issue);lv=local_values(issue)
+        if base is None:
+            if lv is not None and lv!=rv:
+                conflicts.append({'identifier':issue['identifier'],'reason':'Local files exist without baseline','local':lv,'remote':rv});continue
+            write_local(issue);state['issues'][issue['id']]={'base':rv,'updatedAt':issue['updatedAt'],'identifier':issue['identifier']};imported+=1
+            save(DIR/'sync-state.json',state);continue
+        if lv is None:
+            write_local(issue);lv=rv
+        bv=base['base'];merged={};field_conflicts=[]
+        for field in FIELDS:
+            if lv[field]==bv[field]:merged[field]=rv[field]
+            elif rv[field]==bv[field] or lv[field]==rv[field]:merged[field]=lv[field]
+            else:field_conflicts.append(field)
+        if field_conflicts:
+            conflicts.append({'identifier':issue['identifier'],'fields':field_conflicts,'base':bv,'local':lv,'remote':rv});continue
+        if issue.get('archivedAt') and merged!=rv:
+            conflicts.append({'identifier':issue['identifier'],'reason':'Archived issue has local changes; no writes performed','local':lv,'remote':rv});continue
+        if merged['stateId'] not in valid_states or not isinstance(merged['priority'],int) or not 0<=merged['priority']<=4 or not merged['title'].strip():
+            conflicts.append({'identifier':issue['identifier'],'reason':'Invalid state, priority or empty title','local':lv});continue
+        if pull_only and merged!=rv:
+            # Preserve pending local changes without advancing the baseline.
+            continue
+        if local_values(issue)!=lv:
+            conflicts.append({'identifier':issue['identifier'],'reason':'Local files changed during sync; no overwrite'});continue
+        updates={field:merged[field] for field in FIELDS if merged[field]!=rv[field]}
+        if updates:
+            latest=client.query('query($id:String!){issue(id:$id){updatedAt project{id}}}',{'id':issue['id']})['issue']
+            if not latest or latest['updatedAt']!=issue['updatedAt'] or not latest.get('project') or latest['project']['id']!=config['projectId']:
+                conflicts.append({'identifier':issue['identifier'],'reason':'Remote changed since read; retry after review'});continue
+            response=client.query('mutation($id:String!,$input:IssueUpdateInput!){issueUpdate(id:$id,input:$input){success issue{'+ISSUE_FIELDS+'}}}',{'id':issue['id'],'input':updates})['issueUpdate']
+            if not response['success'] or not response['issue']:raise RuntimeError('Issue update not confirmed')
+            issue=response['issue'];merged=values(issue);changed+=1
+            remote[position]=issue
+        if local_values(issue)!=lv:
+            conflicts.append({'identifier':issue['identifier'],'reason':'Local files changed while remote update completed; preserved for next sync','remote':merged});continue
+        write_local(issue,merged)
+        state['issues'][issue['id']]={'base':merged,'updatedAt':issue['updatedAt'],'identifier':issue['identifier']}
+        save(DIR/'sync-state.json',state)
+    # Do not recreate/delete issues removed from the project. Preserve local files for review.
+    remote_ids={i['id'] for i in remote}
+    missing=[v['identifier'] for k,v in state['issues'].items() if k not in remote_ids]
+    state['lastSync']=now();state['missingFromProject']=missing;save(DIR/'sync-state.json',state)
+    save(DIR/'conflicts.json',{'checkedAt':now(),'conflicts':conflicts,'missingFromProject':missing})
+    if conflicts:
+        history=DIR/'conflicts-history.jsonl'
+        with history.open('a',encoding='utf-8') as f:f.write(json.dumps({'time':now(),'conflicts':conflicts},ensure_ascii=False)+'\n')
+    index=['# OpenMPTCP – Linear-Issues','',f'Projekt: {config["projectUrl"]}', '',f'Letzter Sync (UTC): {state["lastSync"]}', '', '| Issue | Status | Priorität | Titel |','|---|---|---|---|']
+    for issue in sorted(remote,key=lambda i:int(i['identifier'].rsplit('-',1)[-1])):
+        title=issue['title'].replace('|','\\|')
+        index.append(f'| [{issue["identifier"]}]({issue["url"]}) | {issue["state"]["name"]} | {issue["priority"]} | {title} |')
+    index.extend(['',f'Konflikte: {len(conflicts)}. Details in conflicts.json.','', 'Prioritäten: 0 keine, 1 dringend, 2 hoch, 3 mittel, 4 niedrig.'])
+    (DIR/'INDEX.md').write_text('\n'.join(index)+'\n',encoding='utf-8')
+    result={'time':now(),'mode':'pull' if pull_only else 'sync','issues':len(remote),'imported':imported,'updatedInLinear':changed,'conflicts':len(conflicts),'missingFromProject':missing}
+    with (DIR/'sync-log.jsonl').open('a',encoding='utf-8') as f:f.write(json.dumps(result,ensure_ascii=False)+'\n')
+    print(json.dumps(result,ensure_ascii=False))
+    return 2 if conflicts else 0
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('command',choices=['bootstrap','sync','pull'])
+    args=parser.parse_args()
+    config=read(DIR/'config.json')
+    if not config:raise RuntimeError('Run prepare_work_packages.py first')
+    with lock():
+        client=Linear();verify_workspace(client,config)
+        if args.command=='bootstrap':bootstrap(client,config)
+        return synchronize(client,config,pull_only=args.command=='pull')
+
+if __name__=='__main__':
+    try:sys.exit(main())
+    except Exception as error:
+        print('Linear sync failed:',str(error),file=sys.stderr)
+        sys.exit(1)

@@ -1,0 +1,17 @@
+$ErrorActionPreference = 'Stop'
+$taskRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
+$taskPythonPath = 'C:\Program Files\Python313\python.exe'
+$taskSyncScript = Join-Path $PSScriptRoot 'linear_sync.py'
+$taskLog = Join-Path $taskRoot 'Linear\task-run.log'
+$env:PYTHONIOENCODING = 'utf-8'
+Set-Location -LiteralPath $taskRoot
+if ((Test-Path -LiteralPath $taskLog) -and (Get-Item -LiteralPath $taskLog).Length -gt 5MB) {
+    Move-Item -LiteralPath $taskLog -Destination ($taskLog + '.previous') -Force
+}
+try {
+    & $taskPythonPath $taskSyncScript sync >> $taskLog 2>&1
+    exit $LASTEXITCODE
+} catch {
+    ('Sync launcher failed: ' + $_.Exception.Message) | Add-Content -LiteralPath $taskLog
+    exit 1
+}

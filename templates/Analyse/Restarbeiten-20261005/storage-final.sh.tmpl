@@ -1,0 +1,15 @@
+python3 - <<'PY'
+import urllib.request,urllib.parse,json
+for expression in ['network_archive_run_success','network_archive_free_bytes']:
+    url='http://127.0.0.1:9090/api/v1/query?'+urllib.parse.urlencode({'query':expression})
+    data=json.load(urllib.request.urlopen(url,timeout=10));rows=data['data']['result']
+    print(expression,json.dumps([{'instance':r['metric'].get('instance'),'value':r['value'][1]} for r in rows]))
+    assert rows,'Metric not scraped yet'
+data=json.load(urllib.request.urlopen('http://127.0.0.1:9090/api/v1/rules',timeout=10))
+names=[r['name'] for g in data['data']['groups'] if g['name']=='network_archive' for r in g['rules']]
+assert len(names)==3,names
+print('Archive alerts loaded:',','.join(names))
+PY
+systemctl show network-archive-compress.service -p Result -p ExecMainStatus
+sha256sum /usr/local/libexec/network-storage-pressure.py /etc/loki/config.yml /etc/systemd/system/network-archive-compress.service /etc/systemd/system/network-archive-compress.timer /etc/prometheus/prometheus.yml
+df -B1 /var/log

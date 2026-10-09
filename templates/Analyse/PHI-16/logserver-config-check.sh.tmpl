@@ -1,0 +1,5 @@
+printf '\nGLOBAL OPTIONS AND RAW ARCHIVE\n'
+sed -n '1,28p;81,99p' /etc/syslog-ng/syslog-ng.conf
+printf '\nSYNTAX CHECK\n'
+syslog-ng --syntax-only 2>&1
+printf 'syntax_exit=%s\n' "$?"

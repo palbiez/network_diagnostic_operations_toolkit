@@ -1,0 +1,12 @@
+$ErrorActionPreference = 'Stop'
+$root = Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent
+$pythonExe = (Get-Command python.exe).Source
+$pythonHidden = Join-Path (Split-Path $pythonExe -Parent) 'pythonw.exe'
+if (-not (Test-Path -LiteralPath $pythonHidden)) { throw 'pythonw.exe not found' }
+$offloadScript = Join-Path $PSScriptRoot 'offload.py'
+$action = New-ScheduledTaskAction -Execute $pythonHidden -Argument ('"' + $offloadScript + '"') -WorkingDirectory $root
+$trigger = New-ScheduledTaskTrigger -Once -At ([datetime]'2026-10-03 11:35:00') -RepetitionInterval ([timespan]::FromMinutes(15)) -RepetitionDuration ([timespan]::FromHours(13))
+$principal = New-ScheduledTaskPrincipal -UserId ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name) -LogonType Interactive -RunLevel Limited
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit ([timespan]::FromMinutes(3)) -MultipleInstances IgnoreNew -Hidden -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+Register-ScheduledTask -TaskName 'PHI12-Diagnose-Offload-20261003' -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description 'Datierte Router-Archivierung und lokale Ereignis-/Pingkorrelation; keine Routerkonfigurationsaenderung.' -Force | Out-Null
+Get-ScheduledTaskInfo -TaskName 'PHI12-Diagnose-Offload-20261003' | Select-Object NextRunTime,LastTaskResult

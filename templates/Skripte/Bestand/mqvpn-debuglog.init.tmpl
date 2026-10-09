@@ -1,0 +1,21 @@
+#!/bin/sh /etc/rc.common
+
+# Temporärer Debug-Logger für MQVPN/XQUIC.
+# Start: /etc/init.d/mqvpn-debuglog start
+# Stop:  /etc/init.d/mqvpn-debuglog stop
+
+START=99
+STOP=01
+USE_PROCD=1
+
+LOGFILE=/root/mqvpn-debug-24h.log
+
+start_service() {
+    mkdir -p /root
+    touch "$LOGFILE"
+
+    procd_open_instance
+    procd_set_param command /bin/sh -c "exec /sbin/logread -f -e 'mqvpn|xquic' -t >> '$LOGFILE' 2>&1"
+    procd_set_param respawn 3600 5 5
+    procd_close_instance
+}

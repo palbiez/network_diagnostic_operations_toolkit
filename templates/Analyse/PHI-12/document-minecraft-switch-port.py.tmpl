@@ -1,0 +1,17 @@
+from pathlib import Path
+import json
+ROOT=Path(__file__).resolve().parents[2]
+proof='Analyse/PHI-12/switch-management-20261003/minecraft-port/summary.json'
+live=json.loads((ROOT/proof).read_text(encoding='utf-8'))
+topology={'date':'2026-10-03','device':{'role':'Minecraft-PC','ip':'@@IPV4_018@@','mac':'@@MAC_003@@'},'attachment':{'switch_model':'SL902-SWTGW218AS','management_ip':'@@IPV4_020@@','port':2,'source':'User cable/port confirmation and live MAC table','vlan_id':130,'link':'2500 Mbit/s Full Duplex','link_state':'Up'},'router_direction':{'switch_port':4,'source':'Earlier live router-MAC observation on same switch, 03.10.2026'},'evidence':proof,'observation_utc':live['utc'],'limitations':['Collected Sodola statistics show Good counters only, not distinct CRC/FCS/drop counters','Current link status is not proof of historical disconnect cause']}
+(ROOT/'Inventar/topologie_minecraft_192_168_130_147_2026_10_03.json').write_text(json.dumps(topology,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+heading='\n\n## Minecraft-Anschluss am Sodola: live bestaetigt 03.10.2026\n\n'
+text=@@PYTHON_STRING_031@@+proof+' und Inventar/topologie_minecraft_192_168_130_147_2026_10_03.json.\n'
+for rel in ['Analyse/PHI-12/messung-2026-10-03.md','Analyse/PHI-12/diagnoseplan-2026-10-02.md','Linear/issues/PHI-6.md','Linear/issues/PHI-12.md']:
+ p=ROOT/rel;old=p.read_text(encoding='utf-8')
+ if heading not in old:p.write_text(old.rstrip()+heading+text,encoding='utf-8')
+p=ROOT/'Linear/work-packages.json';data=json.loads(p.read_text(encoding='utf-8'))
+for key,n in [('measurement',6),('restart-routing',12)]:
+ next(x for x in data if x['key']==key)['description']=(ROOT/f'Linear/issues/PHI-{n}.md').read_text(encoding='utf-8')
+p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print('Minecraft-Switchport und aktuelle Linkdaten dokumentiert.')

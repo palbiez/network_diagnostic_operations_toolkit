@@ -1,0 +1,20 @@
+import importlib.util,tempfile,os
+from pathlib import Path
+from datetime import datetime,timezone,timedelta
+spec=importlib.util.spec_from_file_location('pressure',Path(__file__).with_name('storage-pressure.py'));m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+assert m.stages(10_000_000_000)==[]
+assert m.stages(9_999_999_999)==[90,60]
+assert m.stages(15_000_000_000,True)==[90,60]
+assert m.stages(20_000_000_000,True)==[]
+now=datetime.now(timezone.utc)
+with tempfile.TemporaryDirectory() as folder:
+    root=Path(folder);old=root/'old.log';old.write_text('old');os.utime(old,((now-timedelta(days=100)).timestamp(),)*2)
+    active=root/'active.log';active.write_text('active');os.utime(active,((now-timedelta(days=100)).timestamp(),)*2)
+    recent=root/'recent.log';recent.write_text('new')
+    link=root/'escape';link.symlink_to(old)
+    with active.open():
+        actual=[p.name for p,s in m.candidates(now,90,root)]
+        assert actual==['old.log'],actual
+    assert old.read_text()=='old'
+    assert m.file_day(recent,now)==now.date()
+print('Pressure boundaries, hysteresis, open-file and symlink protection passed; no production deletion')

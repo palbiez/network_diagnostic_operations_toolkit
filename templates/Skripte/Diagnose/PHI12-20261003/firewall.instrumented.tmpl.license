@@ -1,0 +1,6 @@
+SPDX-FileCopyrightText: 2021 Jo-Philipp Wich
+SPDX-FileCopyrightText: 2026 palbiez
+SPDX-License-Identifier: ISC
+
+Source: https://git.openwrt.org/project/firewall4.git
+Changes: Sanitized/parameterized source; local instrumentation or fix where present. Preparation and notices updated 2026-10-09. Original upstream notices retained.

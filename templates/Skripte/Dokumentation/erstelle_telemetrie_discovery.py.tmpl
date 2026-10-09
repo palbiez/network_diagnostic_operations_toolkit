@@ -1,0 +1,231 @@
+"""Erzeugt Discovery aus den Abschlussnachweisen vom 04.10.; keine Gerätezugriffe."""
+import ast
+import hashlib
+import json
+import os
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / 'Dokumentation'
+DETAIL = OUT / 'Discovery' / '2026-10-04'
+EVIDENCE = ROOT / 'Analyse' / 'Zentrale-Telemetrie-20261004'
+STAND = '2026-10-04'
+PREFIX = 'Analyse/Zentrale-Telemetrie-20261004/'
+
+
+def read(name):
+    return json.loads((EVIDENCE / name).read_text(encoding='utf-8'))
+
+
+def link(source, parent):
+    return Path(os.path.relpath(ROOT / source, parent)).as_posix()
+
+
+def pair(stem, data, markdown, sources):
+    data = dict(schema_version='1.0', stand=STAND, zeitzone='Europe/Berlin',
+                grundlage='Abschlussnachweise; keine erneute Liveabfrage bei Dokumenterzeugung',
+                **data)
+    data['quellen'] = [dict(pfad=s, sha256=hashlib.sha256((ROOT / s).read_bytes()).hexdigest())
+                       for s in dict.fromkeys(sources)]
+    data['markdown'] = markdown
+    stem.parent.mkdir(parents=True, exist_ok=True)
+    stem.with_suffix('.md').write_text(markdown, encoding='utf-8')
+    stem.with_suffix('.json').write_text(json.dumps(data, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+
+
+def main():
+    final_name = 'final-telemetry-latency-verification.json'
+    final = read(final_name)
+    assert final['exit'] == 0
+    targets = ast.literal_eval(re.search(r'^PROM up (.+)$', final['output'], re.M).group(1))
+    assert len(targets) == 14 and all(value == '1' for _, value in targets)
+    switch_results = ast.literal_eval(re.search(r'^PROM network_switch_up (.+)$', final['output'], re.M).group(1))
+    assert len(switch_results) == 5 and all(value == '1' for _, value in switch_results)
+    common = [PREFIX+final_name, PREFIX+'final-sender-services.json',
+              PREFIX+'final-receiver-verification.json', PREFIX+'extra-app-pattern-verification.json',
+              PREFIX+'Ergebnis-und-Rueckweg.md']
+    # Explizite Zuordnung aus Abschlussmatrix; keine ungeprüfte Topologie ableiten.
+    rows = [
+        ('omr-router', 'OpenMPTCProuter', '@@IPV4_008@@', 'Router', 'OpenMPTCProuter', 'router_node'),
+        ('proxmox', 'Proxmox', '@@IPV4_022@@', 'Virtualisierung', 'pve', 'pve_node'),
+        ('fileserver', 'Fileserver', '@@IPV4_086@@', 'Dateidienste', 'fileserver2', 'fileserver_node'),
+        ('elk', 'ELK / Grafana', '@@IPV4_033@@', 'Visualisierung', 'elk2', 'elk_node'),
+        ('logserver', 'Logserver', '@@IPV4_007@@', 'Zentrale Telemetrie', 'logserver2', 'logserver_node'),
+        ('webserver', 'Webserver', '@@IPV4_087@@', 'Webdienste', 'webserver', 'webserver_node'),
+        ('n8n', 'n8n', '@@IPV4_088@@', 'Automation; laut Nutzer derzeit ungenutzt', 'n8n', 'n8n_node'),
+        ('cudy-ap1', 'Cudy AP1', '@@IPV4_084@@', 'WLAN-Accesspoint', 'WR1300v3', 'wlan ap'),
+        ('cudy-ap2', 'Cudy AP2', '@@IPV4_085@@', 'WLAN-Accesspoint', 'WR1300ap', 'wlan ap'),
+        ('omr-vps', 'Hetzner OMR-VPS', '@@IPV4_012@@', 'Tunnelgegenstelle', 'omr-vps-01', 'omr_vps_node'),
+        ('webshop-vps', 'Hetzner Webshop-VPS', '@@IPV4_089@@', 'Webshop / externer Zugang', '@@PRIVATE_VALUE_004@@', 'hetzner_node'),
+        ('homeassistant', 'Home Assistant', '@@IPV4_034@@', '@@SECTION_004@@', None, 'homeassistant'),
+    ]
+    assets = []
+    for slug, title, ip, role, hostname, job in rows:
+        ha = slug == 'homeassistant'
+        router = slug in {'omr-router', 'cudy-ap1', 'cudy-ap2'}
+        instance = 'omr-vps-01' if slug == 'omr-vps' else 'localhost:9100' if slug == 'logserver' else ip+':9100'
+        match = [labels for labels, value in targets if labels['job'] == job and labels['instance'] == instance]
+        assert len(match) == 1
+        archive_host = '@@IPV4_002@@' if slug == 'omr-vps' else 'logserver2' if slug == 'logserver' else ip
+        asset = dict(id=slug, name=title, rolle=role, adresse=ip, hostname=hostname,
+                     zugang=dict(typ='UI nicht erreichbar; kein eingerichteter SSH-Zugang laut Nutzer' if ha else 'SSH',
+                                 port=None if ha else 65222 if slug == 'omr-vps' else 22,
+                                 verifiziert=not ha),
+                     syslog=dict(status='offen_PHI-28' if ha else 'frischer_marker_verifiziert',
+                                 ziel=None if ha else '@@IPV4_007@@:514/TCP',
+                                 archiv=None if ha else f'/var/log/network/{archive_host}/YYYY-MM-DD-syslog.log'),
+                     prometheus=dict(status='UP', job=job, instance=instance),
+                     anwendungsdateien=dict(status='ausstehend' if ha else 'systemlog' if router else 'angebunden',
+                                            verzeichnisse=[], dateien=[], zusaetzliche_muster=[]),
+                     mqtt=None, offene_punkte=[], nachweise=list(common))
+        if slug == 'webshop-vps':
+            asset['oeffentliche_adresse'] = '@@IPV4_025@@'
+            asset['zugang']['transport'] = 'WireGuard'
+        if slug == 'omr-vps':
+            asset['syslog']['transportweg'] = 'bestehender MQVPN-Syslogweg'
+            asset['prometheus']['transportweg'] = 'Logserver 127.0.0.1:19100 -> SSH:65222 -> VPS 127.0.0.1:9100'
+        if not ha and not router:
+            hostfile = ip if slug != 'omr-vps' else ip+'_65222'
+            source = hostfile+'-app-log-forwarding-result.json'
+            evidence = read(source)
+            assert evidence['exit'] == 0
+            parsed = re.search(r'dirs (\[.*?\]) files (\[.*?\])', evidence['output'])
+            assert parsed, source
+            asset['anwendungsdateien'].update(verzeichnisse=ast.literal_eval(parsed.group(1)),
+                                             dateien=ast.literal_eval(parsed.group(2)),
+                                             methode='rsyslog imfile: konfigurierte Verzeichnismuster' if slug == 'webshop-vps' else 'syslog-ng: rekursives *.log und Einzeldateien')
+            asset['nachweise'].append(PREFIX+source)
+        if slug == 'fileserver':
+            asset['anwendungsdateien']['zusaetzliche_muster'].append('/var/log/samba/log.*')
+        if slug == 'proxmox':
+            asset['anwendungsdateien']['zusaetzliche_muster'].append('/var/log/pve/tasks/**/UPID:*')
+        if router:
+            mqtt_host = 'wr1300ap' if slug == 'cudy-ap2' else hostname
+            topic = ('openmptcp/' if slug == 'omr-router' else 'collectd/')+mqtt_host+'/#'
+            latency = re.search(r'MQTT_FINAL '+re.escape(mqtt_host)+r' qos (\d+) latency_seconds_min_max ([\d.]+) ([\d.]+) last_received (\S+)', final['output'])
+            assert latency
+            asset['mqtt'] = dict(status='frische_daten_archiviert', hostname=mqtt_host, topic=topic,
+                                 broker='@@IPV4_007@@:1883', qos=int(latency.group(1)),
+                                 archiv=f'/var/log/network/mqtt/{mqtt_host}/YYYY-MM-DD.jsonl',
+                                 latenzen_sekunden=dict(min=float(latency.group(2)), max=float(latency.group(3))),
+                                 letzter_gepruefter_empfang_utc=latency.group(4))
+            asset['offene_punkte'].append('Lokale stat-genconfig-Korrektur nach Paketupgrade erneut prüfen.')
+            if slug == 'omr-router':
+                asset['offene_punkte'].append('QoS 0: bei Verbindungsunterbrechungen keine Zustellgarantie.')
+        if ha:
+            asset['offene_punkte'] = ['PHI-28: UI, SSH-Zugang und zentrale HA-Logs einrichten/reparieren.',
+                                      'Node-RED-MQTT-Anmeldefehler untersuchen; vorhandene Exportermetriken erhalten.']
+            asset['nachweise'].append('Linear/issues/PHI-28.md')
+        if slug == 'logserver':
+            asset['offene_punkte'] = ['Gemischte Ubuntu-/Debian-Paketstände gesondert bereinigen.',
+                                      'Archiv wächst ohne automatische Löschung; Speicher beobachten.']
+        assets.append(asset)
+    for suffix, vendor, ports in [(3,'TP-Link',5),(4,'Sodola',9),(5,'TP-Link',5),(6,'TP-Link',5),(7,'Sodola',6)]:
+        ip = f'@@NETWORK_PREFIX_003@@@@VLAN_004@@.{suffix}'
+        assets.append(dict(id=f'switch-{suffix}', name=f'{vendor} Switch {ip}', rolle='Switch', adresse=ip,
+                           hostname=None, zugang=dict(typ='HTTP-Weboberfläche, authentifiziert', port=80, verifiziert=True),
+                           syslog=dict(status='keine_nutzbare_native_einstellung_gefunden', ziel=None, archiv=None),
+                           prometheus=dict(status='UP', job='logserver_node', instance='localhost:9100', methode='Textfile-Collector', up_metrik='network_switch_up'),
+                           portstatistik=dict(status='verifiziert', ports=ports, intervall_sekunden=60,
+                                              archiv=f'/var/log/network/switches/{ip}/YYYY-MM-DD.jsonl',
+                                              geraetekonfiguration_geaendert=False, zaehler_zurueckgesetzt=False),
+                           anwendungsdateien=None, mqtt=None,
+                           offene_punkte=['Port 1: hoher steigender kumulativer Rx-Fehlerzähler (~29,88 Mio.); Ursache offen.'] if suffix==3 else [],
+                           nachweise=[PREFIX+final_name, PREFIX+'switch-prometheus-final.json', PREFIX+'Ergebnis-und-Rueckweg.md']))
+    # Detailseiten enthalten keine Zugangsdaten, Tokens oder Inhalte der Rohlogs.
+    for a in assets:
+        stem = DETAIL / a['id']
+        md = f"# Discovery: {a['name']}\n\nStand: {STAND} · belegter Abschlussstand, keine laufende Statusabfrage.\n\n"
+        md += f"| Merkmal | Befund |\n|---|---|\n| Rolle | {a['rolle']} |\n| Adresse | {a['adresse']} |\n| Hostname | {a['hostname'] or 'nicht gesondert festgestellt'} |\n| Zugang | {a['zugang']['typ']} |\n| Port | {a['zugang']['port'] or 'nicht eingerichtet'} |\n| Syslog | {a['syslog']['status']} |\n| Prometheus | {a['prometheus']['status']}, Job `{a['prometheus']['job']}` |\n\n"
+        for heading, field in [('Syslog','syslog'),('Prometheus','prometheus'),('Anwendungsdateien','anwendungsdateien'),('Collectd / MQTT','mqtt'),('Switchstatistiken','portstatistik')]:
+            if a.get(field) is not None:
+                md += f"## {heading}\n\n```json\n{json.dumps(a[field], ensure_ascii=False, indent=2)}\n```\n\n"
+        md += '## Offene Punkte\n\n'+('\n'.join('- '+s for s in a['offene_punkte']) or 'Keine weiteren gerätespezifischen Punkte in dieser Prüfung festgestellt.')+'\n\n'
+        md += '## Nachweise\n\n'+'\n'.join(f'- [{s}]({link(s,DETAIL)})' for s in dict.fromkeys(a['nachweise']))+'\n\n[Gesamtübersicht](../../telemetrie-uebersicht-2026-10-04.md)\n'
+        pair(stem, dict(titel='Discovery: '+a['name'], geraet=a), md, a['nachweise'])
+    flows = [
+        dict(typ='syslog', quelle='elf zugängliche Systeme + konfigurierte Anwendungsdateien', ziel='@@IPV4_007@@:514/TCP', archiv='/var/log/network/<HOST>/YYYY-MM-DD-syslog.log'),
+        dict(typ='prometheus', quelle='zwölf Exporter und zwei zusätzliche Ziele', ziel='Prometheus auf Logserver; Pull/Scrape', archiv='bestehende Prometheus-TSDB; Aufbewahrung hier nicht neu festgestellt'),
+        dict(typ='mqtt', quelle='OMR und zwei Cudy-APs', ziel='Mosquitto @@IPV4_007@@:1883 -> mqtt-archive.service', archiv='/var/log/network/mqtt/<Hostname>/YYYY-MM-DD.jsonl'),
+        dict(typ='switches', quelle='fünf authentifizierte Weboberflächen', ziel='switch-monitor.timer, alle 60 Sekunden -> Textfile-Collector', archiv='/var/log/network/switches/<IP>/YYYY-MM-DD.jsonl'),
+        dict(typ='telegraf', quelle='bestehende Inputs einschließlich Syslog 127.0.0.1:6514/TCP', ziel='InfluxDB v2, Organisation monitor, Bucket telegraf; Loki-Output erhalten', archiv='telegraf-Bucket: 30 Tage'),
+    ]
+    overview = dict(titel='Discovery-Übersicht: zentrale Telemetrie',
+                    zusammenfassung=dict(geraete=17, syslog_sender_verifiziert=11, prometheus_ziele=14,
+                                         prometheus_ziele_up=14, mqtt_sender_verifiziert=3, switches_verifiziert=5,
+                                         switch_ports=30, homeassistant_logs='offen, PHI-28'),
+                    geraete=assets, datenwege=flows,
+                    prometheus_ziele=[dict(job=l['job'], instance=l['instance'], up=int(v)) for l,v in targets],
+                    zentrale_dienste=['syslog-ng','prometheus','node_exporter','mosquitto','mqtt-archive',
+                                     'omr-node-exporter-tunnel','telegraf','switch-monitor.timer','network-archive-compress.timer'],
+                    aufbewahrung=dict(dateiarchiv_loeschung=False, kompression='ältere geschlossene Datumsdateien nach zwei Tagen, täglich geprüft',
+                                      influx_telegraf_tage=30, freier_speicher_gib_snapshot=48),
+                    grenzen=['Snapshot vom 04.10.2026, keine Langzeit-Verfügbarkeitsgarantie.',
+                             'HA-Logs und administrativer Zugang ausstehend; Metriken UP.',
+                             'OMR QoS 0 kann Nachrichten bei Verbindungsausfällen verlieren.',
+                             'Neue Anwendungslogpfade/-muster benötigen Konfigurationsergänzung.',
+                             'Loki-Output erhalten, kein neuer Loki-End-to-End-Nachweis und keine Dashboardmigration.',
+                             'Switch-Webstatistiken ersetzen keinen nativen Syslog-Eventstrom.'],
+                    issues=['PHI-27','PHI-28'], neustarts=dict(rechner=False, zentraler_router=False, omr_vps=False))
+    md = @@PYTHON_STRING_102@@
+    md += @@PYTHON_STRING_103@@
+    md += @@PYTHON_STRING_104@@
+    for a in assets:
+        extra = f"MQTT QoS {a['mqtt']['qos']}" if a['mqtt'] else '60-s-Portstatistik' if 'portstatistik' in a else '—'
+        syslog = 'verifiziert' if a['syslog']['status']=='frischer_marker_verifiziert' else 'offen: PHI-28' if a['id']=='homeassistant' else 'kein nativer Weg gefunden'
+        md += f"| {a['name']} | {a['adresse']} | {syslog} | UP | {extra} | [MD](Discovery/{STAND}/{a['id']}.md) · [JSON](Discovery/{STAND}/{a['id']}.json) |\n"
+    md += '\n## Datenwege und Ablage\n\n'
+    for flow in flows:
+        md += f"- **{flow['typ']}**: {flow['quelle']} → {flow['ziel']}. Ablage: `{flow['archiv']}`.\n"
+    md += '\n## Betrieb und Grenzen\n\n'+ '\n'.join('- '+x for x in overview['grenzen'])+'\n\n'
+    md += @@PYTHON_STRING_105@@
+    md += @@PYTHON_STRING_106@@
+    md += '## Nachweise und Rückweg\n\n'+ '\n'.join(f'- [{s}]({link(s,OUT)})' for s in common)+'\n\n'
+    md += @@PYTHON_STRING_107@@
+    sources = list(dict.fromkeys(s for a in assets for s in a['nachweise']))
+    pair(OUT/'telemetrie-uebersicht-2026-10-04', overview, md, sources)
+    sections = [
+        ('Ausgangslage', @@PYTHON_STRING_108@@),
+        ('Discovery und konkrete Korrekturen', @@PYTHON_STRING_109@@),
+        ('Ergebnis und Belegstärke', @@PYTHON_STRING_110@@),
+        ('Warum der MQTT-Zeitstempel entscheidend war', @@PYTHON_STRING_111@@),
+        ('Grenzen und Folgeaufgaben', @@PYTHON_STRING_112@@),
+        ('Rolle von Codex und Ansatz für einen Artikel', @@PYTHON_STRING_113@@),
+    ]
+    article = @@PYTHON_STRING_114@@
+    for heading, body in sections:
+        article += f'## {heading}\n\n{body}\n\n'
+    article += @@PYTHON_STRING_115@@
+    article += '\n'.join(f'- [{s}]({link(s,OUT)})' for s in common)+'\n\nArbeitspakete: [PHI-27](../Linear/issues/PHI-27.md), [PHI-28](../Linear/issues/PHI-28.md).\n'
+    pair(OUT/'07-discovery-zentrale-telemetrie', dict(titel='Discovery: Zentrale Logs und Metriken tatsächlich bis zum Archiv prüfen',
+         dokumenttyp='Discovery und Bloggrundlage aus Abschlussnachweisen', issues=['PHI-27','PHI-28'],
+         abschnitte=[dict(ueberschrift=h, markdown=b) for h,b in sections]), article, common)
+    marker = '\n## Ergänzung: Telemetrie-Discovery vom 04.10.2026\n'
+    readme_path = OUT/'README.md'
+    readme = readme_path.read_text(encoding='utf-8').split(marker, 1)[0].rstrip()+'\n'
+    readme += marker+@@PYTHON_STRING_116@@
+    readme += @@PYTHON_STRING_117@@
+    readme += @@PYTHON_STRING_118@@
+    readme += @@PYTHON_STRING_119@@
+    meta = json.loads((OUT/'README.json').read_text(encoding='utf-8'))
+    new_docs = [('07-discovery-zentrale-telemetrie', 'Discovery: Zentrale Telemetrie'),
+                ('telemetrie-uebersicht-2026-10-04', 'Discovery-Übersicht: zentrale Telemetrie')]
+    meta['dokumente'] = [d for d in meta['dokumente'] if d['markdown_datei'] not in {s+'.md' for s,t in new_docs}]
+    meta['dokumente'] += [dict(titel=t, markdown_datei=s+'.md', json_datei=s+'.json') for s,t in new_docs]
+    meta['letzte_ergaenzung'] = STAND
+    meta['markdown'] = readme
+    readme_path.write_text(readme, encoding='utf-8')
+    (OUT/'README.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+    generated = [OUT/'07-discovery-zentrale-telemetrie.json', OUT/'telemetrie-uebersicht-2026-10-04.json', *DETAIL.glob('*.json')]
+    assert len(generated) == 19
+    for path in generated:
+        obj = json.loads(path.read_text(encoding='utf-8'))
+        assert obj['markdown'] == path.with_suffix('.md').read_text(encoding='utf-8')
+        for target in re.findall(r'\]\(([^)]+)\)', obj['markdown']):
+            assert (path.parent/target).resolve().exists(), (path, target)
+    print('19 Markdown/JSON-Paare erzeugt; JSON, Inhaltspaare und lokale Links validiert.')
+
+
+if __name__ == '__main__':
+    main()

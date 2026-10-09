@@ -1,0 +1,212 @@
+"""Exercise actual patched functions with isolated UCI packages on the router."""
+from pathlib import Path
+P = Path(__file__).resolve().parent
+server = (P/'omr-tracker-server').read_text()
+functions = server[server.index('_log() {'):server.index('\n. /lib/functions.sh')]
+services = (P/'010-services').read_text()
+lan_functions = services[services.index('_intf_zone_forwards_to_wan() {'):services.index('\nconfig_load network', services.index('set_lan_ips() {'))]
+common = r'''#!/bin/bash
+umask 077
+fail() { echo "FAIL: $*"; exit 1; }
+assert_eq() { [ "$1" = "$2" ] || fail "$3: expected $2, got $1"; }
+# Unique package names also isolate the default /tmp/.uci search path.
+uci() {
+ local quiet='' command target
+ [ "${1:-}" != "-q" ] || { quiet=-q; shift; }
+ command=$1; shift
+ if [ "$#" -gt 0 ]; then target="probe_$1"; shift; else target=''; fi
+ if [ "$command" = batch ]; then
+  sed -E 's/^([[:space:]]*[a-z_]+[[:space:]]+)/\1probe_/' | /sbin/uci -c "$D" -t "$D/state" -p "$D/state" $quiet batch
+ elif [ "$command" = show ]; then
+  /sbin/uci -c "$D" -t "$D/state" -p "$D/state" $quiet "$command" ${target:+"$target"} "$@" | sed 's/^probe_//'
+ else
+  /sbin/uci -c "$D" -t "$D/state" -p "$D/state" $quiet "$command" ${target:+"$target"} "$@"
+ fi
+}
+fixture() {
+ D=$(mktemp -d /tmp/phi12-fix-test.XXXXXX); mkdir "$D/state"
+ for p in shadowsocks-libev shadowsocks-rust; do
+  cat > "$D/probe_$p" <<'EOF'
+config server 'sss0'
+ option server '@@IPV4_012@@'
+ option disabled '0'
+config ss_redir 'hi1'
+ option server 'sss0'
+ option disabled '0'
+config ss_rules 'ss_rules'
+ list ifnames '@@INTERFACE_010@@'
+EOF
+ done
+ cat > "$D/probe_openvpn" <<'EOF'
+config openvpn 'omr'
+ list remote '@@IPV4_012@@'
+ option enabled '0'
+EOF
+ cat > "$D/probe_openmptcprouter" <<'EOF'
+config server 'vps'
+ option current '1'
+config settings 'settings'
+ option proxy 'shadowsocks-rust'
+ option vpn 'mqvpn'
+ option restrict_to_lan '1'
+EOF
+ cat > "$D/probe_omr-tracker" <<'EOF'
+config proxy 'proxy'
+config server 'server'
+ option mail_alert '0'
+EOF
+}
+'''
+server_tests = r'''
+logger() { :; }
+_send_mail_alert() { :; }
+_restart_proxy_services() { restart_requests=$((restart_requests+1)); }
+_apply_server_config() { uci -q delete openvpn.omr.remote; uci -q add_list "openvpn.omr.remote=$1"; uci -q commit openvpn; }
+config_load() { loaded_package=$1; }
+config_get() {
+ local destination=$1 section=$2 option=$3 value=''
+ case "$option" in
+ master) value=$((role==0));;
+ backup) value=$((role==1));;
+ ip) value=$expected_ip;;
+ port) value=65500;;
+ disabled) value=0;;
+ server) value=$(uci -q get "$loaded_package.$section.server");;
+ esac
+ printf -v "$destination" '%s' "$value"
+}
+config_foreach() {
+ case "$1" in
+ _enable_redir) _enable_redir hi1 "$3";;
+ _get_server_name) _get_server_name sss0 "$3";;
+ _disable_redir) _disable_redir hi1 "$3" "$4";;
+ _disable_current) _disable_current vps;;
+ *) fail "unexpected callback $1";;
+ esac
+}
+config_list_foreach() {
+ serverip=$expected_ip; server_ping=$probe_ok; oneserverup=0; countips=1
+ [ "$probe_ok" != true ] || oneserverup=1
+ set_ip
+}
+check_server() {
+ if [ "$role" -eq 0 ]; then _check_master vps; else _check_backup vps; fi
+ return 0
+}
+waittest=0
+declare -A _srv_prev_up
+for role in 0 1; do
+ prefix=m; [ "$role" -eq 0 ] || prefix=b
+ for test_case in healthy foreign-ifnames foreign-openvpn first-healthy genuine-ip redir-recovery down-up; do
+  fixture
+  expected_ip=@@IPV4_012@@; probe_ok=true; restart_requests=0
+  _srv_prev_up=(); _srv_prev_up["$prefix:vps:1"]=1
+  case "$test_case" in
+   healthy) check_server; assert_eq "$restart_requests" 0 "$prefix healthy";;
+   foreign-ifnames)
+    uci -q del_list shadowsocks-rust.ss_rules.ifnames=@@INTERFACE_010@@
+    uci -q add_list shadowsocks-rust.ss_rules.ifnames=@@INTERFACE_010@@
+    check_server; assert_eq "$restart_requests" 0 "$prefix foreign ifnames"
+    [ -n "$(uci -q changes shadowsocks-rust)" ] || fail 'foreign changes committed unexpectedly'
+   ;;
+   foreign-openvpn)
+    uci -q set openvpn.omr.enabled=1
+    check_server; assert_eq "$restart_requests" 0 "$prefix foreign openvpn"
+    [ -n "$(uci -q changes openvpn)" ] || fail 'foreign OpenVPN changes committed unexpectedly'
+   ;;
+   first-healthy)
+    _srv_prev_up=(); check_server
+    assert_eq "$restart_requests" 0 "$prefix first healthy, no actual repair"
+    assert_eq "$(uci -q changes shadowsocks-rust)" '' 'no no-op enabled delta'
+   ;;
+   genuine-ip)
+    expected_ip=@@IPV4_100@@; check_server
+    assert_eq "$restart_requests" 1 "$prefix real server switch"
+    assert_eq "$(uci -q get shadowsocks-rust.sss0.server)" "$expected_ip" 'server address repaired'
+    check_server; assert_eq "$restart_requests" 1 'no repeat restart after repair'
+   ;;
+   redir-recovery)
+    uci -q set shadowsocks-rust.hi1.disabled=1; uci -q commit shadowsocks-rust
+    _srv_prev_up["$prefix:vps:1"]=0; check_server
+    assert_eq "$restart_requests" 1 "$prefix redir reenabled"
+    assert_eq "$(uci -q get shadowsocks-rust.hi1.disabled)" 0 'redir recovery preserved'
+   ;;
+   down-up)
+    probe_ok=false; check_server
+    assert_eq "$(uci -q get shadowsocks-rust.hi1.disabled)" 1 'down path disables redirect'
+    assert_eq "$restart_requests" 1 'down transition service action'
+    check_server; assert_eq "$restart_requests" 1 'steady down no repeat restart'
+    probe_ok=true; check_server
+    assert_eq "$(uci -q get shadowsocks-rust.hi1.disabled)" 0 'up path enables redirect'
+    assert_eq "$restart_requests" 2 'up transition service action'
+   ;;
+  esac
+  echo "PASS server role=$prefix case=$test_case"
+ done
+done
+'''
+lan_tests = r'''
+fixture
+cat > "$D/probe_firewall" <<'EOF'
+config zone 'lan_zone'
+ option name 'lan'
+ list network 'lan'
+config zone 'isolated_zone'
+ option name 'isolated'
+ list network 'isolated'
+config zone 'wan_zone'
+ option name 'wan'
+ list network 'wan'
+config forwarding 'lan_wan'
+ option src 'lan'
+ option dest 'wan'
+EOF
+cat > "$D/probe_unbound" <<'EOF'
+config unbound 'ub_main'
+ list iface_lan 'lan'
+ list iface_lan 'isolated'
+ list iface_wan 'wan'
+EOF
+cat > "$D/probe_dhcp" <<'EOF'
+config dnsmasq
+ list interface 'lan'
+ list interface 'isolated'
+ list notinterface 'wan'
+EOF
+config_get() {
+ local destination=$1 section=$2 option=$3 value=''
+ case "$option" in
+ device) case "$section" in lan) value=@@INTERFACE_010@@;; wan) value=@@INTERFACE_002@@;; isolated) value=@@INTERFACE_019@@;; esac;;
+ proto) value=static;;
+ multipath) value=off; [ "$section" != wan ] || value=on;;
+ esac
+ printf -v "$destination" '%s' "$value"
+}
+for intf in lan isolated wan; do set_lan_ips "$intf"; done
+for pkg in shadowsocks-libev shadowsocks-rust unbound dhcp; do
+ assert_eq "$(uci -q changes "$pkg")" '' "unchanged scheduler produces no deltas for $pkg"
+done
+echo 'PASS scheduler: unchanged LAN/WAN/isolated lists stage no changes'
+assert_eq "$(uci -q get shadowsocks-rust.ss_rules.ifnames)" @@INTERFACE_010@@ 'isolated VLAN and WAN excluded from proxy scope'
+uci -q delete firewall.lan_wan; uci -q commit firewall
+set_lan_ips lan
+assert_eq "$(uci -q get shadowsocks-rust.ss_rules.ifnames)" '' 'removing forwarding removes proxy scope'
+assert_eq "$(uci -q get dhcp.@dnsmasq[0].interface)" 'lan isolated' 'DNS LAN classification preserved'
+echo 'PASS scheduler: zone isolation change removes proxy membership'
+for pkg in shadowsocks-libev shadowsocks-rust unbound dhcp; do uci -q commit "$pkg"; done
+set_lan_ips lan
+for pkg in shadowsocks-libev shadowsocks-rust unbound dhcp; do assert_eq "$(uci -q changes "$pkg")" '' 'repeat isolated membership is idempotent'; done
+uci -q set firewall.lan_wan=forwarding; uci -q set firewall.lan_wan.src=lan; uci -q set firewall.lan_wan.dest=wan; uci -q commit firewall
+set_lan_ips lan
+assert_eq "$(uci -q get shadowsocks-rust.ss_rules.ifnames)" @@INTERFACE_010@@ 'restoring forwarding restores membership'
+echo 'PASS scheduler: legitimate forwarding recovery restores proxy membership'
+for pkg in shadowsocks-libev shadowsocks-rust unbound dhcp; do uci -q commit "$pkg"; done
+set_lan_ips lan
+assert_eq "$(uci -q changes shadowsocks-rust)" '' 'repeat add does not duplicate or reorder'
+echo 'PASS scheduler: repeated desired state stages no writes'
+echo 'ALL TESTS PASSED (14 server scenarios and scheduler policy/idempotency checks)'
+'''
+(P/'test-server.sh').write_text(common+functions+server_tests, encoding='utf-8', newline='\n')
+(P/'test-scheduler.sh').write_text(common+lan_functions+lan_tests, encoding='utf-8', newline='\n')
+(P/'test-functions.sh').write_text('#!/bin/sh\n# Run the separately licensed tracker and scheduler tests as independent programs.\nset -eu\ntest_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nbash "$test_dir/test-server.sh"\nbash "$test_dir/test-scheduler.sh"\necho \'ALL TESTS PASSED (independent tracker and scheduler test programs)\'\n', encoding='utf-8', newline='\n')
+print('Generated separate tracker and scheduler test programs.')

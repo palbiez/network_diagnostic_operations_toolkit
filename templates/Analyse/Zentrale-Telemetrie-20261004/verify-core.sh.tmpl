@@ -1,0 +1,23 @@
+python3 - <<'PY'
+import urllib.request,json,pathlib,collections
+op=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+d=json.load(op.open('http://127.0.0.1:9090/api/v1/targets',timeout=5))
+for t in d['data']['activeTargets']:print('PROM',t['labels'],t['health'],t['lastError'])
+for p in pathlib.Path('/var/log/network').glob('*/2026-10-04-syslog.log'):
+ count=0;markers=collections.deque(maxlen=3);appcount=0;appmarkers=set()
+ with p.open(errors='replace') as stream:
+  for l in stream:
+   count+=1
+   if 'CENTRAL-AUDIT-20261004' in l:markers.append(l.strip())
+   if 'filelog' in l:appcount+=1
+   if 'CENTRAL-APPFILE-20261004' in l:appmarkers.add(l.strip())
+ print('SYSLOG',p,count,'appfile lines',appcount,'app source markers',len(appmarkers));print('\n'.join(markers));print('\n'.join(sorted(appmarkers)))
+for p in pathlib.Path('/var/log/network/mqtt').glob('*/*.jsonl'):
+ count=live=qos1=0;last=None
+ with p.open() as stream:
+  for l in stream:
+   last=json.loads(l);count+=1;live+=not last['retained'];qos1+=last['qos']==1
+ print('MQTT',p,'total',count,'live',live,'qos1',qos1,'last',last)
+PY
+systemctl is-active syslog-ng prometheus mqtt-archive omr-node-exporter-tunnel
+journalctl -u mqtt-archive -u omr-node-exporter-tunnel --since '10 min ago' --no-pager | tail -20

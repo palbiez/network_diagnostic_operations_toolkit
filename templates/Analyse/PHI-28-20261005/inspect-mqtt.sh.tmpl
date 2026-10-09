@@ -1,0 +1,8 @@
+sudo -n sh -c '
+docker inspect app_a0d7b954_nodered --format "{{json .Mounts}}"
+ls -la /addon_configs/a0d7b954_nodered
+ls -la /addon_configs/a0d7b954_nodered/node-red
+docker logs --tail 500 homeassistant 2>&1 | grep -E "Starting Home Assistant|Home Assistant initialized|HTTP|8123|ERROR|CRITICAL" | tail -n 20
+docker logs --tail 80 hassio_supervisor 2>&1 | tail -n 20
+'
+bash -lc 'ha core info'

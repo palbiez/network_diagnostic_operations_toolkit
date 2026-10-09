@@ -1,0 +1,65 @@
+from pathlib import Path
+import sys,json,base64,hashlib
+ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'Skripte/Diagnose'))
+import central_observability as obs
+folder=Path(__file__).resolve().parent;backup=ROOT/'Backups/Restarbeiten-20261005'
+c=obs.connect('@@IPV4_008@@')
+try:
+    _,o,e=c.exec_command('cat /etc/init.d/omr-bypass');original=o.read();assert o.channel.recv_exit_status()==0
+finally:c.close()
+assert hashlib.sha256(original).hexdigest()=='b52edcec3d1d580eb68f659dfd10e02b49eb37fae5a06fc32d7d648c44440529'
+target=backup/'omr-bypass.init.post-reboot.before';assert not target.exists();target.write_bytes(original)
+candidate=original.replace(b'omr_dscp',b'omr_bypass_dscp')
+(folder/'omr-bypass.init.fixed').write_bytes(candidate)
+blob=base64.b64encode(candidate).decode()
+script="""set -e
+mkdir -p /root/phi10-owner-backup-20261005
+chmod 700 /root/phi10-owner-backup-20261005
+test ! -e /root/phi10-owner-backup-20261005/omr-bypass
+cp -p /etc/init.d/omr-bypass /root/phi10-owner-backup-20261005/omr-bypass
+cp -p /etc/config/firewall /etc/config/dhcp /root/phi10-owner-backup-20261005/
+chmod 600 /root/phi10-owner-backup-20261005/*
+printf '%s' '"""+blob+"""' | base64 -d > /tmp/phi10-bypass-fixed
+sh -n /tmp/phi10-bypass-fixed
+# Exercise actual cleanup functions against isolated UCI with fully generated DSCP rules.
+probe_dir=/tmp/phi10-start.KiFlfL
+test -f "$probe_dir/firewall"
+mkdir -p "$probe_dir/fixed-test" "$probe_dir/fixed-test/state"
+cp "$probe_dir/firewall" "$probe_dir/fixed-test/firewall"
+cp "$probe_dir/dhcp" "$probe_dir/fixed-test/dhcp"
+export UCI_CONFIG_DIR="$probe_dir/fixed-test"
+set +eu
+. /lib/functions.sh
+uci() { /sbin/uci -c "$UCI_CONFIG_DIR" -t "$UCI_CONFIG_DIR/state" -p "$UCI_CONFIG_DIR/state" "$@"; }
+eval "$(sed -n '/^_delete_firewall_rules() {/,/^}/p' /etc/init.d/omr-bypass)"
+_fw_delete_batch=''
+config_load firewall
+config_foreach _delete_firewall_rules rule
+case "$_fw_delete_batch" in *'delete firewall.omr_dscp_rule2'*) echo 'Old cleanup reproduced: would delete DSCP classify rules';; *) exit 1;; esac
+eval "$(sed -n '/^_delete_firewall_rules() {/,/^}/p' /tmp/phi10-bypass-fixed)"
+_fw_delete_batch=''
+config_foreach _delete_firewall_rules rule
+case "$_fw_delete_batch" in *'delete firewall.omr_dscp_rule2'*) exit 1;; esac
+eval "$(sed -n '/^_soft_wipe_dynamic() {/,/^}/p' /tmp/phi10-bypass-fixed)"
+before=$(uci -q get firewall.omr_dscp_rule2.src_port)
+_soft_wipe_dynamic
+after=$(uci -q get firewall.omr_dscp_rule2.src_port)
+test "$before" = '53 123 5353' && test "$after" = "$before" || exit 1
+echo 'Fixed cleanup retains classifier sections and port filters'
+unset UCI_CONFIG_DIR
+unset -f uci
+set -e
+test "$(sha256sum /etc/init.d/omr-bypass | cut -d' ' -f1)" = b52edcec3d1d580eb68f659dfd10e02b49eb37fae5a06fc32d7d648c44440529
+cp /tmp/phi10-bypass-fixed /etc/init.d/omr-bypass
+chmod 755 /etc/init.d/omr-bypass
+/etc/init.d/omr-dscp start
+/etc/init.d/omr-bypass start
+fw4 check >/tmp/phi10-owner-fw4.log 2>&1
+uci get firewall.omr_dscp_rule2.src_port
+uci get firewall.omr_dscp_rule4.dest_port
+nft list chain inet fw4 mangle_forward | grep 'omr_dscp_rule[1-7]'
+nft list chain inet fw4 mangle_output | grep 'omr_dscp_rule[1-7]'
+sha256sum /etc/init.d/omr-bypass
+"""
+r=obs.run('@@IPV4_008@@',script,90)
+(folder/'dscp-owner-fix.json').write_text(json.dumps(r,indent=2),encoding='utf-8');print(json.dumps(r,indent=2))

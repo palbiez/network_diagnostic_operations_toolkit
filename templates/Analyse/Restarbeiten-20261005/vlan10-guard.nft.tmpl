@@ -1,0 +1,17 @@
+chain phi21_vlan10_input {
+    type filter hook input priority -10; policy accept;
+    iifname != "@@INTERFACE_005@@" return
+    meta nfproto ipv4 udp sport 68 udp dport 67 counter accept comment "PHI21 DHCP"
+    ip saddr @@IPV4_039@@/24 ip daddr @@IPV4_038@@ udp dport 53 counter accept comment "PHI21 DNS UDP"
+    ip saddr @@IPV4_039@@/24 ip daddr @@IPV4_038@@ tcp dport 53 counter accept comment "PHI21 DNS TCP"
+    counter drop comment "PHI21 deny router administration and other router IPs"
+}
+chain phi21_vlan10_forward {
+    type filter hook forward priority -10; policy accept;
+    iifname "@@INTERFACE_005@@" meta nfproto ipv6 counter drop comment "PHI21 IPv6 disabled on vlan@@VLAN_002@@"
+    iifname "@@INTERFACE_005@@" ip saddr != @@IPV4_039@@/24 counter drop comment "PHI21 source validation"
+    iifname "@@INTERFACE_005@@" ip daddr { 0.0.0.0/8, @@IPV4_040@@/8, @@IPV4_041@@/10, @@IPV4_042@@/8, @@IPV4_043@@/16, @@IPV4_044@@/12, @@IPV4_045@@/16, @@IPV4_046@@/4, @@IPV4_047@@/4 } counter drop comment "PHI21 deny non-public destinations"
+    iifname "@@INTERFACE_005@@" oifname != { "@@INTERFACE_002@@", "@@INTERFACE_003@@", "@@INTERFACE_001@@", "@@INTERFACE_012@@", "@@INTERFACE_013@@", "@@INTERFACE_014@@" } counter drop comment "PHI21 internet egress only"
+    oifname "@@INTERFACE_005@@" iifname != { "@@INTERFACE_002@@", "@@INTERFACE_003@@", "@@INTERFACE_001@@", "@@INTERFACE_012@@", "@@INTERFACE_013@@", "@@INTERFACE_014@@" } counter drop comment "PHI21 deny other VLAN ingress"
+    oifname "@@INTERFACE_005@@" ct state != { established, related } counter drop comment "PHI21 internet replies only"
+}
